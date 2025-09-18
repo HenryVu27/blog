@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deep Dive Title · Your Blog</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="post-styles.css">
+  <style>
+    /* Override global page styles for centered layout */
+    .page{
+      max-width: 1000px;
+      margin: 80px auto 64px;
+      padding: 0 32px;
+    }
+    
+    @media (max-width: 768px) {
+      .page {
+        margin: 40px auto 32px;
+        padding: 0 16px;
+      }
+    }
+    
+    .layout{display:grid;grid-template-columns:1fr;gap:24px}
+    @media(min-width: 980px){.layout{grid-template-columns: 380px 1fr}}
+    .toc{
+      position:sticky; 
+      top:24px; 
+      height:fit-content;
+      border: none;
+      border-right: 1px solid var(--border);
+      border-radius: 0;
+      padding: 0 24px 0 0;
+      margin-right: 24px;
+      background: transparent;
+    }
+    .toc ul{list-style:none; padding-left:0}
+    .toc li{margin:8px 0}
+    .toc li a{
+      display: flex;
+      align-items: baseline;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.4;
+    }
+    .toc li a:hover{
+      text-decoration: underline;
+    }
+    .toc-section-number{
+      color: var(--text);
+      font-weight: 400;
+      margin-right: 12px;
+      min-width: 24px;
+      font-size: 16px;
+    }
+    .toc-section-title{
+      color: var(--text);
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <nav class="nav">
+      <a href="index.html" class="back-btn">← Back</a>
+    </nav>
+
+    <header>
+      <h1 class="title">Inside Algorithm Z</h1>
+      <div class="meta">Last updated: 2025-09-17 · 18 min read</div>
+      <hr>
+    </header>
+
+    <div class="layout">
+      <aside class="toc">
+        <h2>Contents</h2>
+        <ul>
+          <li><a href="#intro"><span class="toc-section-number">1</span><span class="toc-section-title">Introduction</span></a></li>
+          <li><a href="#theory"><span class="toc-section-number">2</span><span class="toc-section-title">Theory</span></a></li>
+          <li><a href="#impl"><span class="toc-section-number">3</span><span class="toc-section-title">Implementation</span></a></li>
+          <li><a href="#perf"><span class="toc-section-number">4</span><span class="toc-section-title">Performance</span></a></li>
+          <li><a href="#conclusion"><span class="toc-section-number">5</span><span class="toc-section-title">Conclusion</span></a></li>
+        </ul>
+      </aside>
+
+      <article class="post">
+        <section id="intro">
+          <p>In this deep dive we focus on correctness, complexity, and design trade‑offs.</p>
+        </section>
+
+        <section id="theory">
+          <h2>Theory</h2>
+          <p>Outline the problem, assumptions, and notation. Include proofs or citations as needed.</p>
+          <pre><code>// Pseudocode
+function foo(input):
+  ensure invariants
+  return optimal_result</code></pre>
+        </section>
+
+        <section id="impl">
+          <h2>Implementation Notes</h2>
+          <ul class="list-tight">
+            <li>Data structures and invariants</li>
+            <li>Error handling and edge cases</li>
+            <li>Parallelism and memory behavior</li>
+          </ul>
+        </section>
+
+        <section id="perf">
+          <h2>Performance</h2>
+          <p>Discuss complexity, empirical results, and bottlenecks.</p>
+          <table>
+            <thead><tr><th>Case</th><th>Time</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Small N</td><td>1.2ms</td><td>CPU bound</td></tr>
+              <tr><td>Large N</td><td>42ms</td><td>Cache misses dominate</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="conclusion">
+          <h2>Conclusion</h2>
+          <p>Key takeaways and pointers for further work.</p>
+        </section>
+      </article>
+    </div>
+
+    <footer class="footer">© Your Name · <a href="#">RSS</a></footer>
+  </main>
+  
+</body>
+</html>
+
+

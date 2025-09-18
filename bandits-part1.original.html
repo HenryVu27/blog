@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-Armed Bandits Part 1: Foundations · Technical Blog</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="post-styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <style>
+    /* Override global page styles for mixed layout */
+    .page{
+      max-width: none;
+      margin: 80px 0 64px 0;
+      padding: 0;
+    }
+    
+    .page-header {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+    
+    @media (max-width: 768px) {
+      .page {
+        margin: 40px 0 32px 0;
+      }
+      .page-header {
+        padding: 0 16px;
+      }
+    }
+    
+    .layout{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      max-width: 2200px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+    @media(min-width: 1200px){
+      .layout{
+        grid-template-columns: 600px minmax(760px, 900px) 600px;
+        justify-content: center;
+        padding: 0;
+      }
+      .toc{grid-column: 1}
+      .post{grid-column: 2; max-width: 900px; margin: 0 auto}
+    }
+    .toc{
+      position:sticky; 
+      top:24px; 
+      height:fit-content;
+      border: none;
+      border-right: 1px solid var(--border);
+      border-radius: 0;
+      padding: 0 24px 0 0;
+      margin-right: 24px;
+      background: transparent;
+    }
+    .toc ul{list-style:none; padding-left:0}
+    .toc li{margin:8px 0}
+    .toc li a{
+      display: flex;
+      align-items: baseline;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .toc li a:hover{
+      text-decoration: underline;
+    }
+    .toc-section-number{
+      color: var(--text);
+      font-weight: 400;
+      margin-right: 16px;
+      min-width: 28px;
+      font-size: 18px;
+    }
+    .toc-section-title{
+      color: var(--text);
+      font-weight: 400;
+    }
+    .series-nav {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      margin: 24px 0;
+    }
+    .series-nav h3 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+    }
+    .series-nav ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .algorithm-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      background: var(--code-bg);
+    }
+    .algorithm-box h4 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="page-header">
+      <nav class="nav">
+        <a href="index.html" class="back-btn">← Back</a>
+      </nav>
+
+      <header>
+        <h1 class="title">Multi-Armed Bandits Part 1: Foundations</h1>
+        <div class="meta">2025-09-17 · 18 min read</div>
+        <hr>
+      </header>
+
+      <div class="series-nav">
+        <h3>Multi-Armed Bandit Series</h3>
+        <ul>
+          <li><strong>Part 1: Foundations</strong> (current)</li>
+          <li><a href="bandits-part2.html">Part 2: Advanced Algorithms</a></li>
+          <li><a href="bandits-part3.html">Part 3: Modern Theory</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="toc">
+        <h2>Contents</h2>
+        <ul>
+          <li><a href="#intro"><span class="toc-section-number">1</span><span class="toc-section-title">Introduction</span></a></li>
+          <li><a href="#warmup"><span class="toc-section-number">2</span><span class="toc-section-title">Finite-Armed Stochastic Bandits</span></a></li>
+          <li><a href="#etc"><span class="toc-section-number">3</span><span class="toc-section-title">Explore-then-Commit</span></a></li>
+          <li><a href="#ucb"><span class="toc-section-number">4</span><span class="toc-section-title">Upper Confidence Bound</span></a></li>
+          <li><a href="#optimality"><span class="toc-section-number">5</span><span class="toc-section-title">Optimality and Information Theory</span></a></li>
+          <li><a href="#minimax"><span class="toc-section-number">6</span><span class="toc-section-title">Minimax Lower Bounds</span></a></li>
+          <li><a href="#instance"><span class="toc-section-number">7</span><span class="toc-section-title">Instance-Dependent Bounds</span></a></li>
+          <li><a href="#conclusion"><span class="toc-section-number">8</span><span class="toc-section-title">Looking Ahead</span></a></li>
+        </ul>
+      </aside>
+
+      <article class="post">
+        <section id="intro">
+          <h2>Bandits: From Clinical Trials to Modern Learning</h2>
+
+          <p>In 1933, William R. Thompson faced a profound ethical dilemma in medical research. When testing multiple treatments for a disease, how should patients be allocated between experimental drugs and established therapies? Giving all patients the current best treatment ignores potentially superior alternatives, but testing inferior treatments on patients raises serious ethical concerns. Thompson's elegant solution - allocating patients probabilistically based on accumulating evidence - launched the field we now call multi-armed bandits.</p>
+
+          <p>Thompson's seminal paper "On the Likelihood that One Unknown Probability Exceeds Another in View of the Evidence of Two Samples" formalized this sequential allocation problem. The tension he identified - balancing exploration of promising but uncertain treatments with exploitation of currently effective ones - lies at the heart of modern machine learning, from adaptive clinical trials to personalized medicine algorithms.</p>
+
+          <p>The multi-armed bandit problem formalizes sequential decision-making under uncertainty with partial feedback. Unlike supervised learning where we observe all outcomes, clinical trials reveal only the effectiveness of administered treatments. This constraint - seeing outcomes only for chosen actions - creates the fundamental exploration-exploitation trade-off that drives modern online learning theory.</p>
+
+          <p>This foundational post establishes the mathematical framework Thompson pioneered and the algorithms that have evolved from clinical trial design. We'll see how information-theoretic arguments provide fundamental limits on learning performance, and how these limits guide the design of ethical and efficient adaptive trial protocols.</p>
+        </section>
+
+        <section id="warmup">
+          <h2>Finite-Armed Stochastic Bandits: Warming Up</h2>
+
+          <p>Let's formalize the stochastic multi-armed bandit problem in the clinical trial context. We have $K$ treatments (arms), where administering treatment $i$ to patient $t$ yields outcome $X_{i,t}$ drawn from an unknown distribution $\nu_i$ with mean efficacy $\mu_i$. The trial coordinator's goal is to minimize <em>regret</em> - the difference between patient outcomes achieved and those from always using the optimal treatment.</p>
+
+          <p>Define the optimal treatment as $i^* = \arg\max_{i \in [K]} \mu_i$ with optimal efficacy $\mu^* = \mu_{i^*}$. The efficacy gap for treatment $i$ is $\Delta_i = \mu^* - \mu_i$. After treating $T$ patients, the cumulative regret is:</p>
+
+          <p>$$R_T = T\mu^* - \sum_{t=1}^T X_{I_t, t}$$</p>
+
+          <p>where $I_t$ is the treatment assigned to patient $t$. Equivalently, we can express regret in terms of the expected number of patients assigned each treatment:</p>
+
+          <p>$$\mathbb{E}[R_T] = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(T)]$$</p>
+
+          <p>where $N_i(T) = \sum_{t=1}^T \mathbb{1}_{I_t = i}$ counts patients assigned treatment $i$.</p>
+
+          <p>This decomposition reveals the core ethical tension in adaptive trials: regret accumulates from assigning patients suboptimal treatments, weighted by efficacy differences. Effective trial designs must quickly identify and avoid clearly inferior treatments while carefully gathering evidence about treatments with similar efficacy - balancing patient welfare with scientific rigor.</p>
+
+          <div class="algorithm-box">
+            <h4>Problem Setup</h4>
+            <ul>
+              <li>$K$ treatments with unknown efficacy distributions $\nu_1, \ldots, \nu_K$</li>
+              <li>Treatment $i$ has mean efficacy $\mu_i = \mathbb{E}[\nu_i]$</li>
+              <li>Optimal treatment: $i^* = \arg\max_i \mu_i$, efficacy gap: $\Delta_i = \mu^* - \mu_i$</li>
+              <li>Goal: Minimize cumulative regret $R_T$ (patient harm from suboptimal assignments)</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="etc">
+          <h2>First Steps: Explore-then-Commit</h2>
+
+          <p>The simplest principled approach is Explore-then-Commit (ETC): assign $m$ patients to each treatment, then allocate all remaining patients to the empirically best treatment. This two-phase strategy cleanly separates the exploration phase (gathering evidence) from the exploitation phase (helping patients), making it ethically interpretable for clinical review boards.</p>
+
+          <div class="algorithm-box">
+            <h4>Explore-then-Commit Algorithm</h4>
+            <p><strong>Parameters:</strong> Exploration budget $m$</p>
+            <ol>
+              <li><strong>Exploration:</strong> Assign $m$ patients to each treatment</li>
+              <li><strong>Estimation:</strong> Compute empirical efficacies $\hat{\mu}_i = \frac{1}{m}\sum_{j=1}^m X_{i,j}$</li>
+              <li><strong>Commitment:</strong> Select best treatment $\hat{i} = \arg\max_i \hat{\mu}_i$ and assign remaining $T - Km$ patients to it</li>
+            </ol>
+          </div>
+
+          <p>To analyze ETC, we bound the probability of selecting a suboptimal arm. Using Hoeffding's inequality, for any $\delta > 0$:</p>
+
+          <p>$$\mathbb{P}[|\hat{\mu}_i - \mu_i| \geq \delta] \leq 2\exp(-2m\delta^2)$$</p>
+
+          <p>The trial design fails when the empirically best treatment differs from the truly best. This occurs when either:</p>
+          <ol>
+            <li>The optimal treatment's empirical efficacy is underestimated: $\hat{\mu}_{i^*} < \mu^* - \epsilon$</li>
+            <li>Some suboptimal treatment's empirical efficacy is overestimated: $\hat{\mu}_i > \mu_i + \epsilon$</li>
+          </ol>
+
+          <p>Setting $\epsilon = \Delta_i/2$ and applying union bound gives the regret bound:</p>
+
+          <p>$$\mathbb{E}[R_T] \leq \sum_{i: \Delta_i > 0} \left( Km + (T - Km) \cdot 4\exp(-m\Delta_i^2/8) \right) \Delta_i$$</p>
+
+          <p>Choosing $m = \lceil 8\log(T)/\Delta_{\min}^2 \rceil$ where $\Delta_{\min} = \min_{i: \Delta_i > 0} \Delta_i$ yields:</p>
+
+          <p>$$\mathbb{E}[R_T] = O\left(\frac{K\log T}{\Delta_{\min}}\right)$$</p>
+
+          <p>This logarithmic dependence on patient count $T$ is optimal, but the dependence on $\Delta_{\min}$ is problematic - trial performance degrades severely when treatments have similar efficacies, precisely when careful statistical analysis is most needed.</p>
+
+          <pre><code>import numpy as np
+import matplotlib.pyplot as plt
+
+def explore_then_commit(rewards, m, T):
+    """
+    Explore-then-Commit algorithm
+
+    Args:
+        rewards: K x T matrix of rewards
+        m: exploration budget per arm
+        T: time horizon
+
+    Returns:
+        cumulative_regret: array of regret at each time step
+    """
+    K = rewards.shape[0]
+
+    # Exploration phase
+    empirical_means = np.mean(rewards[:, :m], axis=1)
+    best_arm = np.argmax(empirical_means)
+
+    # Track regret
+    optimal_rewards = np.max(np.mean(rewards, axis=1))
+    cumulative_regret = np.zeros(T)
+
+    # Exploration regret
+    for t in range(K * m):
+        arm = t % K
+        reward = rewards[arm, t // K]
+        regret = optimal_rewards - reward
+        cumulative_regret[t] = cumulative_regret[t-1] + regret if t > 0 else regret
+
+    # Exploitation regret
+    for t in range(K * m, T):
+        reward = rewards[best_arm, t - K * m]
+        regret = optimal_rewards - reward
+        cumulative_regret[t] = cumulative_regret[t-1] + regret
+
+    return cumulative_regret</code></pre>
+        </section>
+
+        <section id="ucb">
+          <h2>The Upper Confidence Bound (UCB) Algorithm</h2>
+
+          <p>UCB elegantly addresses ETC's limitations by adaptively balancing evidence gathering and patient treatment. Instead of rigid trial phases, UCB constructs confidence intervals around treatment efficacies and assigns patients to the treatment with highest upper confidence bound - embodying the principle of therapeutic optimism under uncertainty.</p>
+
+          <p>For patient $t$, having treated $N_i(t-1)$ previous patients with treatment $i$ and observed empirical efficacy $\hat{\mu}_i(t-1)$, UCB assigns:</p>
+
+          <p>$$I_t = \arg\max_{i \in [K]} \left( \hat{\mu}_i(t-1) + \sqrt{\frac{2\log t}{N_i(t-1)}} \right)$$</p>
+
+          <p>The confidence radius $\sqrt{\frac{2\log t}{N_i(t-1)}}$ decreases as more patient data is collected, but increases with trial progress to ensure sufficient evaluation of all treatments - maintaining equipoise when evidence is limited.</p>
+
+          <div class="algorithm-box">
+            <h4>UCB Algorithm</h4>
+            <p><strong>Initialization:</strong> Assign one patient to each treatment</p>
+            <p><strong>For patients $t = K+1, K+2, \ldots, T$:</strong></p>
+            <ol>
+              <li>Compute UCB for each treatment: $UCB_i(t) = \hat{\mu}_i(t-1) + \sqrt{\frac{2\log t}{N_i(t-1)}}$</li>
+              <li>Assign treatment: $I_t = \arg\max_i UCB_i(t)$</li>
+              <li>Observe patient outcome and update efficacy estimates</li>
+            </ol>
+          </div>
+
+          <p>UCB's regret analysis relies on therapeutic optimism under uncertainty - a core principle in adaptive clinical trials. The algorithm maintains confidence intervals such that with high probability, the true treatment efficacies lie within these intervals. When sufficient evidence accumulates (tight confidence intervals), the optimal treatment will have the highest UCB and receive most patient assignments.</p>
+
+          <p>The key lemma bounds how often UCB can select suboptimal arms:</p>
+
+          <p><strong>Lemma:</strong> For any suboptimal treatment $i$ with efficacy gap $\Delta_i > 0$, the number of patients assigned treatment $i$ satisfies:</p>
+
+          <p>$$\mathbb{E}[N_i(T)] \leq \frac{8\log T}{\Delta_i^2} + 1 + \frac{\pi^2}{3}$$</p>
+
+          <p>This leads to UCB's regret bound:</p>
+
+          <p>$$\mathbb{E}[R_T] \leq \sum_{i: \Delta_i > 0} \Delta_i \left( \frac{8\log T}{\Delta_i^2} + 1 + \frac{\pi^2}{3} \right) = \sum_{i: \Delta_i > 0} \left( \frac{8\log T}{\Delta_i} + O(1) \right)$$</p>
+
+          <p>Crucially, this scales as $O(\log T / \Delta_i)$ for each suboptimal treatment, automatically adapting to trial difficulty. Treatments with large efficacy gaps are quickly identified and avoided, while treatments with small gaps receive more patients - exactly the ethical behavior desired when treatments have similar effectiveness.</p>
+
+          <pre><code>def ucb(rewards, T):
+    """
+    Upper Confidence Bound algorithm
+
+    Args:
+        rewards: K x T matrix of rewards
+        T: time horizon
+
+    Returns:
+        cumulative_regret: array of regret at each time step
+    """
+    K = rewards.shape[0]
+
+    # Initialize
+    empirical_means = np.zeros(K)
+    num_pulls = np.zeros(K)
+    cumulative_regret = np.zeros(T)
+    optimal_reward = np.max(np.mean(rewards, axis=1))
+
+    # Pull each arm once
+    for k in range(K):
+        reward = rewards[k, k]
+        empirical_means[k] = reward
+        num_pulls[k] = 1
+        regret = optimal_reward - reward
+        cumulative_regret[k] = cumulative_regret[k-1] + regret if k > 0 else regret
+
+    # UCB selection
+    for t in range(K, T):
+        # Compute UCB for each arm
+        ucb_values = empirical_means + np.sqrt(2 * np.log(t) / num_pulls)
+
+        # Select arm with highest UCB
+        arm = np.argmax(ucb_values)
+
+        # Observe reward
+        reward = rewards[arm, int(num_pulls[arm])]
+
+        # Update statistics
+        num_pulls[arm] += 1
+        empirical_means[arm] += (reward - empirical_means[arm]) / num_pulls[arm]
+
+        # Track regret
+        regret = optimal_reward - reward
+        cumulative_regret[t] = cumulative_regret[t-1] + regret
+
+    return cumulative_regret</code></pre>
+        </section>
+
+        <section id="optimality">
+          <h2>Optimality Concepts and Information Theory</h2>
+
+          <p>To understand whether UCB is optimal for clinical trials, we need information-theoretic lower bounds. The fundamental question Thompson posed: what is the minimum harm (regret) any ethical trial design must accept when balancing patient welfare with learning?</p>
+
+          <p>The key insight comes from statistical hypothesis testing in medical research. Consider two clinical scenarios that are statistically "close" but have different optimal treatments. A trial design must distinguish between these scenarios, requiring sufficient patient data from each treatment. This fundamental statistical requirement leads to unavoidable limits on trial efficiency.</p>
+
+          <p>Let $\mathcal{E} = \{\nu_1, \ldots, \nu_K\}$ be a clinical trial instance. The <em>statistical complexity</em> of instance $\mathcal{E}$ is:</p>
+
+          <p>$$H(\mathcal{E}) = \sum_{i: \Delta_i > 0} \frac{1}{\Delta_i}$$</p>
+
+          <p>This measures trial difficulty - scenarios with many treatments having small efficacy differences require more patients to resolve reliably, reflecting the fundamental challenge of comparative effectiveness research.</p>
+
+          <p>The information-theoretic approach uses the Kullback-Leibler (KL) divergence between reward distributions. For distributions $P$ and $Q$:</p>
+
+          <p>$$\text{KL}(P, Q) = \int p(x) \log \frac{p(x)}{q(x)} dx$$</p>
+
+          <p>KL divergence measures the difficulty of distinguishing between distributions. Smaller KL divergence means harder discrimination, requiring more samples.</p>
+
+          <p>The change of measure technique relates regret to KL divergence in clinical trials. Consider a trial protocol $\pi$ and two clinical scenarios $\mathcal{E}$ and $\mathcal{E}'$ differing only in treatments $i$ and $j$. If scenario $\mathcal{E}$ has optimal treatment $i$ and scenario $\mathcal{E}'$ has optimal treatment $j$, then:</p>
+
+          <p>$$\mathbb{E}_{\mathcal{E}}[N_j(T)] \cdot \text{KL}(\nu_j, \nu_j') + \mathbb{E}_{\mathcal{E}}[N_i(T)] \cdot \text{KL}(\nu_i, \nu_i') \geq \text{kl}(\epsilon, 1-\epsilon)$$</p>
+
+          <p>where $\epsilon$ is the probability of misidentifying the optimal treatment, and $\text{kl}(p,q) = p\log(p/q) + (1-p)\log((1-p)/(1-q))$ is the binary KL divergence.</p>
+
+          <p>This inequality captures the fundamental statistical trade-off in clinical trials: to achieve low error probability $\epsilon$ in treatment selection, we must assign many patients to treatment $i$ (if $\text{KL}(\nu_i, \nu_i')$ is small) or to treatment $j$ (if $\text{KL}(\nu_j, \nu_j')$ is small). This mathematical constraint reflects the statistical power requirements that govern clinical trial design.</p>
+        </section>
+
+        <section id="minimax">
+          <h2>More Information Theory and Minimax Lower Bounds</h2>
+
+          <p>The minimax lower bound provides the worst-case regret any algorithm must suffer. It's derived by constructing a particularly challenging family of bandit instances.</p>
+
+          <p><strong>Theorem (Minimax Lower Bound):</strong> For any algorithm and $T \geq K$:</p>
+
+          <p>$$\max_{\mathcal{E}} \mathbb{E}_{\mathcal{E}}[R_T] \geq \frac{1}{20}\sqrt{KT}$$</p>
+
+          <p>This bound is achieved by a construction where $K-1$ arms have mean $1/2 - \Delta$ and one arm has mean $1/2 + \Delta$, with $\Delta = \sqrt{K/(4T)}$.</p>
+
+          <p>The proof uses Fano's inequality, a fundamental result in information theory. For a parameter estimation problem with $M$ hypotheses:</p>
+
+          <p>$$\mathbb{P}[\hat{\theta} \neq \theta] \geq 1 - \frac{I(X; \theta) + \log 2}{\log M}$$</p>
+
+          <p>where $I(X; \theta)$ is the mutual information between observations $X$ and parameter $\theta$.</p>
+
+          <p>Applied to bandits, Fano's inequality lower bounds the probability of misidentifying the optimal arm, which directly translates to regret. The construction ensures that:</p>
+          <ol>
+            <li>The arms are sufficiently similar that many pulls are needed to distinguish them</li>
+            <li>The gaps are large enough that mistakes incur significant regret</li>
+            <li>The time horizon is short enough that perfect identification is impossible</li>
+          </ol>
+
+          <p>Comparing with UCB's $O(\sqrt{KT \log T})$ regret, we see that UCB is near-minimax optimal, suffering only an extra $\log T$ factor.</p>
+
+          <div class="algorithm-box">
+            <h4>Key Results Summary</h4>
+            <ul>
+              <li><strong>ETC:</strong> $O(K \log T / \Delta_{\min})$ regret</li>
+              <li><strong>UCB:</strong> $O(\sum_i \log T / \Delta_i)$ regret</li>
+              <li><strong>Minimax lower bound:</strong> $\Omega(\sqrt{KT})$</li>
+              <li><strong>UCB minimax regret:</strong> $O(\sqrt{KT \log T})$</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="instance">
+          <h2>Instance Dependent Lower Bounds</h2>
+
+          <p>While minimax bounds characterize worst-case performance, instance-dependent bounds reveal that UCB is actually optimal for specific problem instances.</p>
+
+          <p><strong>Theorem (Lai-Robbins Lower Bound):</strong> For any consistent algorithm (one whose regret grows sublinearly), and any bandit instance with gaps $\Delta_i > 0$:</p>
+
+          <p>$$\liminf_{T \to \infty} \frac{\mathbb{E}[N_i(T)]}{\log T} \geq \frac{1}{\text{KL}(\nu_i, \nu_{i^*})}$$</p>
+
+          <p>Here, consistency means $\mathbb{E}[R_T] = o(T^{\alpha})$ for all $\alpha > 0$. The bound states that any reasonable algorithm must pull suboptimal arm $i$ at least $\frac{\log T}{\text{KL}(\nu_i, \nu_{i^*})}$ times.</p>
+
+          <p>For Gaussian rewards with variance 1, $\text{KL}(\mathcal{N}(\mu_i, 1), \mathcal{N}(\mu^*, 1)) = \frac{(\mu^* - \mu_i)^2}{2} = \frac{\Delta_i^2}{2}$. This gives:</p>
+
+          <p>$$\liminf_{T \to \infty} \frac{\mathbb{E}[N_i(T)]}{\log T} \geq \frac{2}{\Delta_i^2}$$</p>
+
+          <p>Comparing with UCB's bound $\mathbb{E}[N_i(T)] \leq \frac{8\log T}{\Delta_i^2} + O(1)$, we see UCB achieves the optimal rate up to constants!</p>
+
+          <p>The Lai-Robbins proof employs the method of mixtures and change of measure. The key insight is that to distinguish between the true instance and a "confusing" alternative where arm $i$ is optimal, the algorithm must observe enough samples to resolve the statistical uncertainty.</p>
+
+          <p>Specifically, consider two instances:</p>
+          <ul>
+            <li>$\mathcal{E}$: True instance with optimal arm $i^*$</li>
+            <li>$\mathcal{E}'$: Modified instance where arm $i$ is optimal (swapping means of arms $i$ and $i^*$)</li>
+          </ul>
+
+          <p>If the algorithm pulls arm $i$ too few times, it cannot distinguish these instances, leading to suboptimal performance on one of them. The number of required samples is determined by the KL divergence between the arm distributions.</p>
+
+          <p>This establishes UCB as an optimal algorithm for the stochastic bandit problem, achieving both minimax optimality (up to log factors) and instance-dependent optimality.</p>
+        </section>
+
+        <section id="conclusion">
+          <h2>Looking Ahead</h2>
+
+          <p>We've established the foundational elements of adaptive clinical trial theory that emerged from Thompson's 1933 insights: the exploration-exploitation trade-off, algorithms like ETC and UCB for ethical patient allocation, and the information-theoretic limits that govern learning from patient data. Key takeaways for modern clinical research include:</p>
+
+          <ul>
+            <li>Regret decomposes as $\sum_i \Delta_i \mathbb{E}[N_i(T)]$, quantifying harm from treating patients with suboptimal therapies</li>
+            <li>UCB achieves optimal instance-dependent regret through adaptive confidence intervals, embodying therapeutic optimism</li>
+            <li>Information theory provides fundamental limits on how quickly we can identify superior treatments</li>
+            <li>The optimal regret for adaptive trials scales as $O(\log T)$ - learning accelerates with patient count</li>
+          </ul>
+
+          <p>This foundation prepares us for advanced clinical applications. In <a href="bandits-part2.html">Part 2</a>, we'll explore adversarial settings where disease progression can adapt to treatments, contextual trials that incorporate patient characteristics, and structured approaches where treatment effects have known relationships. In <a href="bandits-part3.html">Part 3</a>, we'll dive into modern theory including sparse treatment effects, refined statistical bounds, and the elegant duality between Bayesian and frequentist approaches to adaptive trial design.</p>
+
+          <p>The mathematical machinery Thompson pioneered - concentration inequalities, confidence sets, information-theoretic arguments - forms the backbone of modern adaptive trial methodology, extending from simple drug comparisons to complex personalized medicine algorithms and sequential biomarker-driven treatment selection.</p>
+        </section>
+
+        <hr>
+
+        <section>
+          <h2>References</h2>
+          <ul>
+            <li>Thompson, W. R. (1933). On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. <em>Biometrika</em>, 25(3/4), 285-294.</li>
+            <li>Lai, T. L., & Robbins, H. (1985). Asymptotically efficient adaptive allocation rules. <em>Advances in Applied Mathematics</em>, 6(1), 4-22.</li>
+            <li>Auer, P., Cesa-Bianchi, N., & Fischer, P. (2002). Finite-time analysis of the multiarmed bandit problem. <em>Machine Learning</em>, 47(2-3), 235-256.</li>
+            <li>Bubeck, S., & Cesa-Bianchi, N. (2012). Regret analysis of stochastic and nonstochastic multi-armed bandit problems. <em>Foundations and Trends in Machine Learning</em>, 5(1), 1-122.</li>
+            <li>Lattimore, T., & Szepesvári, C. (2020). <em>Bandit Algorithms</em>. Cambridge University Press.</li>
+            <li>Garivier, A., & Cappé, O. (2011). The KL-UCB algorithm for bounded stochastic bandits and beyond. <em>COLT</em>, 359-376.</li>
+            <li>Berry, D. A., & Fristedt, B. (1985). <em>Bandit Problems: Sequential Allocation of Experiments</em>. Chapman and Hall.</li>
+            <li>Thall, P. F., & Wathen, J. K. (2007). Practical Bayesian adaptive randomisation in clinical trials. <em>European Journal of Cancer</em>, 43(6), 859-866.</li>
+          </ul>
+        </section>
+      </article>
+    </div>
+
+    <footer class="footer">Technical Blog · <a href="bandits-part2.html">Next: Advanced Algorithms →</a></footer>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ]
+      });
+    });
+  </script>
+</body>
+</html>

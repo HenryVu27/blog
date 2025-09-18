@@ -34,14 +34,15 @@
     
     .layout{
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 300px 1fr;
       gap: 24px;
-      max-width: 2200px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 0 32px;
     }
-    @media(min-width: 1200px){
+    @media(min-width: 1800px){
       .layout{
+        max-width: 2200px;
         grid-template-columns: 600px minmax(760px, 900px) 600px;
         justify-content: center;
         padding: 0;
@@ -56,9 +57,15 @@
       border: none;
       border-right: 1px solid var(--border);
       border-radius: 0;
-      padding: 0 24px 0 0;
-      margin-right: 24px;
+      padding: 0 16px 0 0;
+      margin-right: 0;
       background: transparent;
+    }
+    @media(min-width: 1800px){
+      .toc{
+        padding: 0 24px 0 0;
+        margin-right: 24px;
+      }
     }
     .toc ul{list-style:none; padding-left:0}
     .toc li{margin:8px 0}
@@ -76,9 +83,15 @@
     .toc-section-number{
       color: var(--text);
       font-weight: 400;
-      margin-right: 16px;
-      min-width: 28px;
+      margin-right: 8px;
+      min-width: 20px;
       font-size: 18px;
+    }
+    @media(min-width: 1800px){
+      .toc-section-number{
+        margin-right: 16px;
+        min-width: 28px;
+      }
     }
     .toc-section-title{
       color: var(--text);

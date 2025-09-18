@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-Armed Bandits Part 3: Modern Theory · Technical Blog</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="post-styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <style>
+    /* Override global page styles for mixed layout */
+    .page{
+      max-width: none;
+      margin: 80px 0 64px 0;
+      padding: 0;
+    }
+    
+    .page-header {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+    
+    @media (max-width: 768px) {
+      .page {
+        margin: 40px 0 32px 0;
+      }
+      .page-header {
+        padding: 0 16px;
+      }
+    }
+    
+    .layout{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      max-width: 2200px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+    @media(min-width: 1200px){
+      .layout{
+        grid-template-columns: 600px minmax(760px, 900px) 600px;
+        justify-content: center;
+        padding: 0;
+      }
+      .toc{grid-column: 1}
+      .post{grid-column: 2; max-width: 900px; margin: 0 auto}
+    }
+    .toc{
+      position:sticky; 
+      top:24px; 
+      height:fit-content;
+      border: none;
+      border-right: 1px solid var(--border);
+      border-radius: 0;
+      padding: 0 24px 0 0;
+      margin-right: 24px;
+      background: transparent;
+    }
+    .toc ul{list-style:none; padding-left:0}
+    .toc li{margin:8px 0}
+    .toc li a{
+      display: flex;
+      align-items: baseline;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.4;
+    }
+    .toc li a:hover{
+      text-decoration: underline;
+    }
+    .toc-section-number{
+      color: var(--text);
+      font-weight: 400;
+      margin-right: 16px;
+      min-width: 28px;
+      font-size: 18px;
+    }
+    .toc-section-title{
+      color: var(--text);
+      font-weight: 400;
+    }
+    .series-nav {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      margin: 24px 0;
+    }
+    .series-nav h3 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+    }
+    .series-nav ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .algorithm-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      background: var(--code-bg);
+    }
+    .algorithm-box h4 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .theorem-box {
+      border-left: 3px solid var(--accent);
+      padding-left: 16px;
+      margin: 16px 0;
+      background: rgba(0,0,0,0.02);
+      border-radius: 0 8px 8px 0;
+    }
+    .duality-box {
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      background: rgba(0,0,0,0.02);
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="page-header">
+      <nav class="nav">
+        <a href="index.html" class="back-btn">← Back</a>
+      </nav>
+
+      <header>
+        <h1 class="title">Multi-Armed Bandits Part 3: Modern Theory</h1>
+        <div class="meta">2025-09-17 · 22 min read</div>
+        <hr>
+      </header>
+
+      <div class="series-nav">
+        <h3>Multi-Armed Bandit Series</h3>
+        <ul>
+          <li><a href="bandits-part1.html">Part 1: Foundations</a></li>
+          <li><a href="bandits-part2.html">Part 2: Advanced Algorithms</a></li>
+          <li><strong>Part 3: Modern Theory</strong> (current)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="toc">
+        <h2>Contents</h2>
+        <ul>
+          <li><a href="#sparse"><span class="toc-section-number">1</span><span class="toc-section-title">Sparse Linear Bandits</span></a></li>
+          <li><a href="#sparse-lower"><span class="toc-section-number">2</span><span class="toc-section-title">Lower Bounds for Sparse Bandits</span></a></li>
+          <li><a href="#adversarial-linear"><span class="toc-section-number">3</span><span class="toc-section-title">Adversarial Linear Bandits</span></a></li>
+          <li><a href="#unit-ball"><span class="toc-section-number">4</span><span class="toc-section-title">Linear Bandits on Unit Ball</span></a></li>
+          <li><a href="#first-order"><span class="toc-section-number">5</span><span class="toc-section-title">First Order Bounds for EXP3</span></a></li>
+          <li><a href="#variance"><span class="toc-section-number">6</span><span class="toc-section-title">Variance Analysis of EXP3</span></a></li>
+          <li><a href="#duality"><span class="toc-section-number">7</span><span class="toc-section-title">Bayesian/Minimax Duality</span></a></li>
+          <li><a href="#conclusion"><span class="toc-section-number">8</span><span class="toc-section-title">Synthesis and Future</span></a></li>
+        </ul>
+      </aside>
+
+      <article class="post">
+        <section id="sparse">
+          <h2>Sparse Treatment Effects in Precision Medicine</h2>
+
+          <p>Real-world therapeutic responses often exhibit sparsity: among thousands of potential biomarkers, genetic variants, and clinical features, only a few truly drive treatment efficacy. This biological sparsity can be exploited for improved learning rates and better clinical interpretability. The challenge lies in simultaneously identifying which biomarkers matter and quantifying their therapeutic importance.</p>
+
+          <p>In sparse clinical response models, we assume the patient response parameter $\theta^* \in \mathbb{R}^d$ has at most $s \ll d$ non-zero entries, corresponding to the small number of biomarkers that actually predict treatment response. The outcome model remains $r_t = \langle \theta^*, x_{I_t} \rangle + \eta_t$, but now we can potentially achieve learning rates that depend on the number of relevant biomarkers $s$ rather than the full feature space dimension $d$.</p>
+
+          <p>The key insight is that standard LinUCB doesn't exploit biological sparsity - its confidence sets scale with all measured features even when only a few biomarkers drive treatment response. We need algorithms that adapt to unknown sparsity in the therapeutic mechanism, mirroring how precision medicine seeks parsimonious biomarker signatures.</p>
+
+          <h3>Lasso-UCB for Biomarker Discovery</h3>
+
+          <p>Lasso-UCB replaces standard regression with Lasso (L1-regularized) estimation to encourage sparse biomarker signatures, automatically identifying which patient characteristics predict treatment response:</p>
+
+          <div class="algorithm-box">
+            <h4>Lasso-UCB Algorithm</h4>
+            <p><strong>Parameters:</strong> Biomarker regularization $\lambda_t$, confidence width $\beta_t$</p>
+            <p><strong>For patient $t = 1, 2, \ldots, T$:</strong></p>
+            <ol>
+              <li>Identify relevant biomarkers: $\hat{\theta}_t = \arg\min_{\theta} \left\{ \sum_{s=1}^{t-1} (r_s - \langle \theta, x_s \rangle)^2 + \lambda_t \|\theta\|_1 \right\}$</li>
+              <li>Define therapeutic confidence: $C_t = \{\theta : \|\theta - \hat{\theta}_t\|_2 \leq \beta_t \}$</li>
+              <li>Select treatment: $I_t = \arg\max_i \max_{\theta \in C_t} \langle \theta, x_i \rangle$</li>
+              <li>Observe patient outcome $r_t$ and update biomarker model</li>
+            </ol>
+          </div>
+
+          <p>The Lasso estimator enjoys sparse biomarker recovery guarantees under appropriate conditions. If the patient-feature matrix satisfies the Restricted Eigenvalue (RE) condition - meaning the relevant biomarkers are not too correlated - the Lasso estimate satisfies:</p>
+
+          <p>$$\|\hat{\theta}_t - \theta^*\|_2 \leq \frac{4\lambda_t \sqrt{s}}{\text{RE}}$$</p>
+
+          <p>with high probability. The RE condition requires that the patient cohort provides sufficient diversity to distinguish between relevant biomarkers - a key requirement for reliable biomarker discovery.</p>
+
+          <div class="theorem-box">
+            <h4>Lasso-UCB Regret Bound</h4>
+            <p>Under appropriate regularity conditions, Lasso-UCB achieves:</p>
+            <p>$$\mathbb{E}[R_T] = O(s \sqrt{T \log d})$$</p>
+          </div>
+
+          <p>This bound has two key improvements over standard LinUCB for precision medicine:</p>
+          <ol>
+            <li><strong>Biomarker dependence:</strong> Scales with number of relevant biomarkers $s$ rather than all measured features $d$</li>
+            <li><strong>High-throughput scaling:</strong> $\log d$ dependence enables genome-wide association studies with minimal performance penalty</li>
+          </ol>
+
+          <p>The challenge is that the confidence set $C_t$ is no longer ellipsoidal, making treatment optimization computationally challenging. Recent work has developed efficient approximations using techniques from high-dimensional statistics - essential for real-time clinical decision support with genome-scale data.</p>
+
+          <h3>OFUL-L1 Algorithm</h3>
+
+          <p>OFUL-L1 (Optimism in the Face of Uncertainty - L1) provides an alternative approach using L1-regularized confidence sets directly:</p>
+
+          <p>$$C_t = \left\{\theta : \left\|\theta - \hat{\theta}_t^{\text{LS}}\right\|_{V_t} \leq \beta_t \text{ and } \|\theta\|_1 \leq B \right\}$$</p>
+
+          <p>This hybrid approach combines the computational tractability of least-squares with L1 constraints to encourage sparsity. The resulting optimization problem can be solved efficiently using convex optimization techniques.</p>
+
+          <pre><code>import numpy as np
+from sklearn.linear_model import Lasso
+from scipy.optimize import minimize
+
+def lasso_ucb(features, rewards, lam=None, s=None, T=None):
+    """
+    Lasso-UCB for sparse linear bandits
+
+    Args:
+        features: T x K x d tensor of arm features
+        rewards: T x K matrix of rewards (observed online)
+        lam: Lasso regularization parameter
+        s: sparsity level (if known)
+        T: time horizon
+
+    Returns:
+        cumulative_regret: regret at each time step
+    """
+    T, K, d = features.shape
+
+    if lam is None and s is not None:
+        lam = np.sqrt(np.log(d) / T)  # Adaptive choice
+
+    # Initialize
+    X_history = []
+    y_history = []
+    cumulative_regret = np.zeros(T)
+
+    # Unknown true theta for regret computation
+    true_theta = np.zeros(d)
+    if s is not None:
+        indices = np.random.choice(d, s, replace=False)
+        true_theta[indices] = np.random.randn(s)
+
+    for t in range(T):
+        if t == 0:
+            # Random initialization
+            arm = np.random.choice(K)
+        else:
+            # Compute Lasso estimate
+            if len(X_history) > 0:
+                X_matrix = np.vstack(X_history)
+                y_vector = np.array(y_history)
+
+                lasso = Lasso(alpha=lam, fit_intercept=False)
+                lasso.fit(X_matrix, y_vector)
+                theta_hat = lasso.coef_
+
+                # Confidence width (simplified)
+                beta = np.sqrt(2 * np.log(d) + 2 * np.log(t))
+
+                # Compute optimistic rewards for each arm
+                ucb_values = np.zeros(K)
+                for k in range(K):
+                    x = features[t, k]
+                    # Optimistic estimate (simplified)
+                    ucb_values[k] = np.dot(theta_hat, x) + beta * np.linalg.norm(x) * np.sqrt(s)
+
+                arm = np.argmax(ucb_values)
+            else:
+                arm = 0
+
+        # Observe reward
+        x_chosen = features[t, arm]
+        reward = rewards[t, arm]
+
+        # Update history
+        X_history.append(x_chosen)
+        y_history.append(reward)
+
+        # Compute regret
+        optimal_reward = np.max([np.dot(true_theta, features[t, k]) for k in range(K)])
+        actual_reward = np.dot(true_theta, x_chosen)
+        regret = optimal_reward - actual_reward
+        cumulative_regret[t] = cumulative_regret[t-1] + regret if t > 0 else regret
+
+    return cumulative_regret
+
+# Sparse vector generation utility
+def generate_sparse_vector(d, s, noise_level=1.0):
+    """Generate s-sparse vector in R^d"""
+    theta = np.zeros(d)
+    support = np.random.choice(d, s, replace=False)
+    theta[support] = noise_level * np.random.randn(s)
+    return theta, support</code></pre>
+        </section>
+
+        <section id="sparse-lower">
+          <h2>Lower Bounds for Stochastic Linear Bandits</h2>
+
+          <p>What are the fundamental limits for sparse linear bandits? The answer depends critically on the geometry of the arm set and the structure of sparsity.</p>
+
+          <p>For standard linear bandits with arbitrary arm sets, the minimax regret is $\Omega(d\sqrt{T})$. But with sparsity, we can hope for improvement. The question is whether we can achieve $O(s\sqrt{T})$ regret, or if dimension must enter in some way.</p>
+
+          <h3>Lower Bound Construction</h3>
+
+          <p>The key insight is that the arm set geometry matters crucially. Consider two cases:</p>
+
+          <p><strong>Case 1: Rich arm set.</strong> If the arm set contains the standard basis vectors $\{e_1, \ldots, e_d\}$, then we can achieve $O(s \sqrt{T \log d})$ regret. The algorithm can efficiently identify which coordinates of $\theta^*$ are non-zero.</p>
+
+          <p><strong>Case 2: Constrained arm set.</strong> If arms lie in a subspace or have restricted structure, sparsity may not help. For example, if all arms lie in a $k$-dimensional subspace, we cannot distinguish between sparse and dense $\theta^*$ in that subspace.</p>
+
+          <div class="theorem-box">
+            <h4>Sparse Linear Bandit Lower Bound</h4>
+            <p>For the class of $s$-sparse $\theta^* \in \mathbb{R}^d$ and arbitrary arm sets in the unit ball:</p>
+            <p>$$\inf_{\text{algorithms}} \sup_{\theta^*, \text{arm sequence}} \mathbb{E}[R_T] \geq \Omega\left(\sqrt{sT \cdot \min(s \log d, d)}\right)$$</p>
+          </div>
+
+          <p>This reveals a phase transition: when $s \ll \sqrt{d/\log d}$, sparsity provides significant benefits. When $s \gtrsim \sqrt{d/\log d}$, the benefits diminish.</p>
+
+          <p>The proof constructs a hard instance by considering $\binom{d}{s}$ possible support sets for $\theta^*$. The algorithm must distinguish between these using observations that depend on $\theta^*$ only through projections onto arm features. When the arm set is rich enough, this can be done efficiently; otherwise, many support sets are indistinguishable.</p>
+
+          <h3>Mutual Coherence and Recovery Conditions</h3>
+
+          <p>The performance of sparse linear bandits depends critically on the <em>mutual coherence</em> of the arm set:</p>
+
+          <p>$$\mu(X) = \max_{i \neq j} \frac{|\langle x_i, x_j \rangle|}{\|x_i\|_2 \|x_j\|_2}$$</p>
+
+          <p>When mutual coherence is small, different arms probe different directions, making sparse recovery easier. High mutual coherence means arms are correlated, making it harder to identify the relevant features.</p>
+
+          <p>The Restricted Eigenvalue condition provides a more general characterization:</p>
+
+          <p>$$\text{RE}(s, X) = \min_{\|\theta\|_0 \leq s, \|\theta\|_2 = 1} \frac{\|X\theta\|_2^2}{n}$$</p>
+
+          <p>When $\text{RE}(s, X)$ is bounded away from zero, sparse recovery is possible with high probability.</p>
+        </section>
+
+        <section id="adversarial-linear">
+          <h2>Adversarial Linear Bandits</h2>
+
+          <p>Adversarial linear bandits combine the robustness requirements of adversarial bandits with the structure of linear rewards. The adversary can choose loss vectors $\ell_t \in \mathbb{R}^d$ at each round, and the loss for arm $x$ at time $t$ is $\langle \ell_t, x \rangle$.</p>
+
+          <p>This setting captures scenarios where:</p>
+          <ul>
+            <li>The environment can adapt to our choices</li>
+            <li>Rewards have linear structure in known features</li>
+            <li>We want robustness against model misspecification</li>
+          </ul>
+
+          <p>The challenge is that we observe only $\langle \ell_t, x_{I_t} \rangle$, not the full loss vector $\ell_t$. This makes it harder to estimate losses for unchosen arms compared to finite-armed adversarial bandits.</p>
+
+          <h3>Exp2 Algorithm</h3>
+
+          <p>Exp2 extends EXP3 to linear bandits by maintaining a distribution over arms and using the linear structure for importance-weighted estimation:</p>
+
+          <div class="algorithm-box">
+            <h4>Exp2 Algorithm</h4>
+            <p><strong>Parameters:</strong> Learning rate $\eta$, exploration parameter $\gamma$</p>
+            <p><strong>Initialize:</strong> Weight vector $w_1 = 0 \in \mathbb{R}^d$</p>
+            <p><strong>For $t = 1, 2, \ldots, T$:</strong></p>
+            <ol>
+              <li>Compute arm probabilities: $p_t(x) \propto \exp(\eta \langle w_t, x \rangle)$</li>
+              <li>Mix with uniform: $q_t(x) = (1-\gamma) p_t(x) + \gamma \mu(x)$</li>
+              <li>Sample arm $X_t \sim q_t$ and observe loss $\ell_t(X_t) = \langle \ell_t, X_t \rangle$</li>
+              <li>Estimate loss vector: $\hat{\ell}_t = \frac{\ell_t(X_t)}{q_t(X_t)} X_t$</li>
+              <li>Update: $w_{t+1} = w_t - \hat{\ell}_t$</li>
+            </ol>
+          </div>
+
+          <p>The key insight is that $\mathbb{E}[\hat{\ell}_t | X_t] = \ell_t$, so the loss vector estimates are unbiased. The algorithm essentially runs online gradient descent on the importance-weighted loss estimates.</p>
+
+          <div class="theorem-box">
+            <h4>Exp2 Regret Bound</h4>
+            <p>For arm sets contained in the unit ball, Exp2 achieves:</p>
+            <p>$$\mathbb{E}[R_T] = O(\sqrt{dT \log K})$$</p>
+            <p>where $K$ is the effective number of arms (or $\log K$ can be replaced by appropriate covering number).</p>
+          </div>
+
+          <p>Compared to adversarial finite-armed bandits with regret $O(\sqrt{KT})$, Exp2 can provide exponential improvements when the arm set is large but has small intrinsic dimension.</p>
+
+          <h3>Online Gradient Descent Perspective</h3>
+
+          <p>Exp2 can be viewed as online gradient descent in the dual space. The primal problem is:</p>
+
+          <p>$$\min_{x \in \mathcal{X}} \sum_{t=1}^T \langle \ell_t, x \rangle$$</p>
+
+          <p>The dual problem involves distributions over arms, and Exp2 performs mirror descent with the entropic regularizer in this dual space.</p>
+
+          <p>This connection reveals why linear structure helps: instead of learning about $K$ arms independently, we learn about the $d$-dimensional loss vectors that determine all arm losses simultaneously.</p>
+        </section>
+
+        <section id="unit-ball">
+          <h2>Adversarial Linear Bandits and the Curious Case of Linear Bandits on the Unit Ball</h2>
+
+          <p>When the arm set is the unit ball $\mathcal{X} = \{x \in \mathbb{R}^d : \|x\|_2 \leq 1\}$, adversarial linear bandits exhibit surprising behavior. This case is particularly clean because any direction can be explored.</p>
+
+          <p>The regret lower bound for this setting is $\Omega(\sqrt{dT})$, achieved by an adversary that chooses $\ell_t$ to be roughly orthogonal to the algorithm's choices. But the upper bound analysis reveals subtleties.</p>
+
+          <h3>The Geometric Challenge</h3>
+
+          <p>The unit ball presents a geometric challenge: how should the exploration distribution $\mu$ be chosen? Natural choices include:</p>
+          <ol>
+            <li><strong>Uniform on sphere:</strong> $\mu$ uniform on $\partial\mathcal{B}_d$</li>
+            <li><strong>Gaussian distribution:</strong> $\mu = \mathcal{N}(0, I/d)$ normalized</li>
+            <li><strong>Uniform on ball:</strong> $\mu$ uniform on $\mathcal{B}_d$</li>
+          </ol>
+
+          <p>Each choice leads to different exploration properties and regret constants. The key insight is that we need to balance exploration across all directions while maintaining computational tractability.</p>
+
+          <h3>Improved Analysis via Self-Concordance</h3>
+
+          <p>Recent work has refined the analysis using self-concordant barriers and interior point methods. The idea is to use the logarithmic barrier function:</p>
+
+          <p>$$F(w) = -\log(1 - \|w\|_2^2)$$</p>
+
+          <p>This barrier is self-concordant, meaning its third derivative is controlled by its second derivative. This property enables refined regret analysis:</p>
+
+          <div class="theorem-box">
+            <h4>Refined Unit Ball Bound</h4>
+            <p>For adversarial linear bandits on the unit ball with self-concordant barriers:</p>
+            <p>$$\mathbb{E}[R_T] \leq \sqrt{dT} + O(d \log T)$$</p>
+          </div>
+
+          <p>The improved analysis removes logarithmic factors in the leading term and provides better constants. The self-concordance property ensures that the Hessian of the barrier provides a good local metric for the geometry.</p>
+
+          <h3>Computational Considerations</h3>
+
+          <p>Implementing Exp2 for continuous arm sets requires solving the optimization problem:</p>
+
+          <p>$$X_t = \arg\max_{x \in \mathcal{X}} \langle w_t, x \rangle + \gamma \log \mu(x)$$</p>
+
+          <p>For the unit ball, this often has closed-form solutions, but for general convex sets, it may require numerical optimization at each round.</p>
+
+          <pre><code>def exp2_unit_ball(losses, eta=None, gamma=None, T=None, d=None):
+    """
+    Exp2 for adversarial linear bandits on unit ball
+
+    Args:
+        losses: T x d matrix of loss vectors (revealed online)
+        eta: learning rate
+        gamma: exploration parameter
+        T: time horizon
+        d: dimension
+
+    Returns:
+        cumulative_regret: regret at each time step
+    """
+    T, d = losses.shape
+
+    if eta is None:
+        eta = 1 / np.sqrt(T)
+    if gamma is None:
+        gamma = np.sqrt(d * np.log(d) / T)
+
+    # Initialize weight vector
+    w = np.zeros(d)
+    cumulative_regret = np.zeros(T)
+
+    # Best fixed arm for comparison
+    best_arm = -np.sum(losses, axis=0)
+    best_arm = best_arm / np.linalg.norm(best_arm)  # Project to unit ball
+    best_reward = -np.sum([np.dot(losses[t], best_arm) for t in range(T)])
+
+    for t in range(T):
+        # Compute optimal arm under current weights
+        if np.linalg.norm(w) < 1e-10:
+            # Random initialization
+            x_star = np.random.randn(d)
+            x_star = x_star / np.linalg.norm(x_star)
+        else:
+            x_star = w / np.linalg.norm(w)
+
+        # Add exploration: mix with random direction
+        if np.random.random() < gamma:
+            x_t = np.random.randn(d)
+            x_t = x_t / np.linalg.norm(x_t)
+        else:
+            x_t = x_star
+
+        # Observe loss
+        loss_value = np.dot(losses[t], x_t)
+
+        # Compute regret
+        regret = loss_value - (-np.dot(losses[t], best_arm))
+        cumulative_regret[t] = cumulative_regret[t-1] + regret if t > 0 else regret
+
+        # Update weights using importance-weighted gradient
+        prob_exploration = gamma / (4 * np.pi)  # Rough approximation for uniform on sphere
+        prob_exploitation = 1 - gamma
+        prob_t = prob_exploration + prob_exploitation if np.allclose(x_t, x_star) else prob_exploration
+
+        gradient_estimate = loss_value / prob_t * x_t
+        w = w - eta * gradient_estimate
+
+        # Project to ensure numerical stability
+        if np.linalg.norm(w) > 10:
+            w = 10 * w / np.linalg.norm(w)
+
+    return cumulative_regret</code></pre>
+        </section>
+
+        <section id="first-order">
+          <h2>First Order Bounds for k-Armed Adversarial Bandits</h2>
+
+          <p>Classical adversarial bandit bounds scale as $O(\sqrt{KT})$, but this can be pessimistic when the loss sequence is "easy". First-order bounds adapt to the difficulty of the instance, achieving better performance when losses are small or when the best arm significantly outperforms others.</p>
+
+          <p>Define the total loss of the best arm: $L^* = \min_i \sum_{t=1}^T \ell_{i,t}$. First-order bounds have the form:</p>
+
+          <p>$$\mathbb{E}[R_T] = O(\sqrt{KL^* \log K})$$</p>
+
+          <p>When $L^* \ll T$, this is much better than the worst-case $O(\sqrt{KT})$ bound. The challenge is achieving such bounds while maintaining worst-case optimality.</p>
+
+          <h3>Adaptive EXP3</h3>
+
+          <p>The key insight is to adapt the learning rate based on observed losses. Standard EXP3 uses fixed $\gamma = \sqrt{\frac{2\log K}{KT}}$, but adaptive versions adjust $\gamma_t$ based on the cumulative loss observed so far.</p>
+
+          <div class="algorithm-box">
+            <h4>Adaptive EXP3 Algorithm</h4>
+            <p><strong>Initialize:</strong> $w_i(1) = 1$ for all $i$, $S_0 = 0$</p>
+            <p><strong>For $t = 1, 2, \ldots, T$:</strong></p>
+            <ol>
+              <li>Set $\gamma_t = \min\left\{1/2, \sqrt{\frac{2\log K}{K(S_{t-1} + 1)}}\right\}$</li>
+              <li>Compute probabilities: $p_i(t) = (1-\gamma_t)\frac{w_i(t)}{\sum_j w_j(t)} + \frac{\gamma_t}{K}$</li>
+              <li>Sample arm $I_t \sim p(t)$ and observe loss $\ell_{I_t,t}$</li>
+              <li>Update: $S_t = S_{t-1} + \ell_{I_t,t}$</li>
+              <li>Update weights: $w_i(t+1) = w_i(t) \exp(-\gamma_t \hat{\ell}_i(t))$</li>
+            </ol>
+          </div>
+
+          <p>The adaptive learning rate $\gamma_t$ decreases as cumulative loss increases, providing more aggressive exploitation when losses are small.</p>
+
+          <div class="theorem-box">
+            <h4>First-Order Bound for Adaptive EXP3</h4>
+            <p>Adaptive EXP3 achieves:</p>
+            <p>$$\mathbb{E}[R_T] \leq 2\sqrt{2K L^* \log K} + O(\log K)$$</p>
+          </div>
+
+          <p>This bound interpolates between first-order and worst-case performance: when $L^* = O(\sqrt{T})$, we get the optimal first-order rate; when $L^* = \Theta(T)$, we recover the standard rate.</p>
+
+          <h3>Connection to Online Mirror Descent</h3>
+
+          <p>The first-order analysis reveals connections to adaptive online mirror descent. The key insight is that the effective learning rate should adapt to the magnitude of gradients observed so far.</p>
+
+          <p>In the online mirror descent framework, we use the update:</p>
+
+          <p>$$w_{t+1} = \arg\min_w \left\{ \langle \hat{\ell}_t, w \rangle + \frac{1}{\eta_t} D_{\psi}(w, w_t) \right\}$$</p>
+
+          <p>where $D_{\psi}$ is the Bregman divergence induced by $\psi$. For entropic regularization, this reduces to the exponential weights update.</p>
+
+          <p>Adaptive step sizes $\eta_t$ that depend on gradient norms can achieve first-order bounds. The general principle is that large gradients suggest we're far from optimal, justifying larger steps, while small gradients suggest we're close to optimal, calling for smaller steps.</p>
+        </section>
+
+        <section id="variance">
+          <h2>The Variance of EXP3</h2>
+
+          <p>A refined understanding of EXP3 comes from analyzing the variance of its importance-weighted estimators. This variance analysis leads to improved algorithms and tighter bounds.</p>
+
+          <p>Recall that EXP3 uses the estimator $\hat{\ell}_i(t) = \frac{\ell_{i,t} \mathbb{1}_{I_t = i}}{p_i(t)}$ with variance:</p>
+
+          <p>$$\text{Var}[\hat{\ell}_i(t)] = \ell_{i,t}^2 \frac{1-p_i(t)}{p_i(t)}$$</p>
+
+          <p>This variance can be large when $p_i(t)$ is small, leading to noisy updates. The key insight is that we can reduce variance by using different estimation strategies.</p>
+
+          <h3>Variance-Reduced Estimators</h3>
+
+          <p>Several approaches can reduce the variance of loss estimates:</p>
+
+          <p><strong>1. Implicit Exploration:</strong> Instead of explicit $\gamma$ mixing, use the implicit exploration from the exponential weights:</p>
+
+          <p>$$\hat{\ell}_i(t) = \frac{\ell_{i,t} \mathbb{1}_{I_t = i}}{p_i(t)} - \frac{\bar{\ell}_t \mathbb{1}_{I_t \neq i}}{1-p_i(t)}$$</p>
+
+          <p>where $\bar{\ell}_t$ is an estimate of the average loss.</p>
+
+          <p><strong>2. Control Variates:</strong> Use correlated random variables to reduce variance:</p>
+
+          <p>$$\hat{\ell}_i(t) = \frac{\ell_{i,t} \mathbb{1}_{I_t = i}}{p_i(t)} - c_{i,t}(X_t - \mathbb{E}[X_t])$$</p>
+
+          <p>where $c_{i,t}$ is chosen to minimize variance.</p>
+
+          <h3>High-Probability Analysis</h3>
+
+          <p>Variance analysis enables high-probability bounds for EXP3. The standard approach uses concentration inequalities for martingales with bounded differences.</p>
+
+          <p>Define the martingale $M_t = \sum_{s=1}^t (\hat{\ell}_{I_s,s} - \ell_{I_s,s})$. Using Azuma's inequality:</p>
+
+          <div class="theorem-box">
+            <h4>High-Probability Bound for EXP3</h4>
+            <p>With probability at least $1-\delta$:</p>
+            <p>$$R_T \leq 2\sqrt{2KT\log K} + \sqrt{\frac{2T\log(2/\delta)}{\gamma}}$$</p>
+          </div>
+
+          <p>The variance-aware analysis can improve the constants and potentially the dependence on confidence level $\delta$.</p>
+
+          <h3>Variance-Adaptive Algorithms</h3>
+
+          <p>Recent work has developed algorithms that adapt to the variance of loss estimates, achieving improved performance when this variance is small. The idea is to use confidence intervals that adapt to the observed variance:</p>
+
+          <p>$$\text{CI}_i(t) = \hat{\mu}_i(t) \pm \sqrt{\frac{\hat{\sigma}_i^2(t) \log t}{N_i(t)}}$$</p>
+
+          <p>where $\hat{\sigma}_i^2(t)$ is an estimate of the variance for arm $i$.</p>
+        </section>
+
+        <section id="duality">
+          <h2>Bayesian/Minimax Duality for Adversarial Bandits</h2>
+
+          <p>One of the most elegant results in modern bandit theory is the duality between Bayesian and minimax approaches for adversarial bandits. This duality provides deep insights into the nature of optimal algorithms and fundamental limits.</p>
+
+          <h3>The Duality Theorem</h3>
+
+          <p>Consider the adversarial bandit game with $K$ arms and horizon $T$. The minimax regret is:</p>
+
+          <p>$$R^*_T = \inf_{\text{algorithms}} \sup_{\text{loss sequences}} \mathbb{E}[\text{Regret}]$$</p>
+
+          <p>On the Bayesian side, consider a prior $\Pi$ over loss sequences and define:</p>
+
+          <p>$$R^{\text{Bayes}}_T(\Pi) = \inf_{\text{algorithms}} \mathbb{E}_{\ell \sim \Pi}[\mathbb{E}[\text{Regret}]]$$</p>
+
+          <div class="duality-box">
+            <h4>Minimax-Bayesian Duality</h4>
+            <p>For adversarial $K$-armed bandits:</p>
+            <p>$$R^*_T = \sup_{\text{priors } \Pi} R^{\text{Bayes}}_T(\Pi)$$</p>
+            <p>Moreover, there exists a least favorable prior $\Pi^*$ such that:</p>
+            <ol>
+              <li>The minimax algorithm is Bayes-optimal against $\Pi^*$</li>
+              <li>The least favorable prior is worst-case for the minimax algorithm</li>
+            </ol>
+          </div>
+
+          <p>This theorem has several profound implications:</p>
+
+          <ol>
+            <li><strong>Algorithmic insight:</strong> The minimax-optimal algorithm can be found by solving a Bayesian problem</li>
+            <li><strong>Lower bound technique:</strong> Lower bounds can be proved by exhibiting challenging priors</li>
+            <li><strong>Adaptive optimality:</strong> The same algorithm that's worst-case optimal is also Bayes-optimal against the hardest prior</li>
+          </ol>
+
+          <h3>Construction of the Least Favorable Prior</h3>
+
+          <p>For the $K$-armed bandit problem, the least favorable prior has a specific structure. It places mass on loss sequences that are "balanced" in a certain sense - no arm is too obviously better than others.</p>
+
+          <p>Specifically, $\Pi^*$ is supported on loss sequences where:</p>
+          <ul>
+            <li>Losses are independent across time and arms</li>
+            <li>Each loss is Bernoulli with carefully chosen parameters</li>
+            <li>The parameters are chosen to make all arms equally attractive a priori</li>
+          </ul>
+
+          <p>The construction proceeds by analyzing the value function of the optimal stopping problem that underlies the Bayesian bandit. The least favorable prior makes this value function as flat as possible.</p>
+
+          <h3>Implications for Algorithm Design</h3>
+
+          <p>The duality result provides a principled approach to algorithm design:</p>
+
+          <ol>
+            <li><strong>Characterize the least favorable prior:</strong> Find the prior that makes the Bayesian problem hardest</li>
+            <li><strong>Solve the Bayesian problem:</strong> Compute the Bayes-optimal algorithm against this prior</li>
+            <li><strong>Verify minimax optimality:</strong> Show that this algorithm achieves the minimax regret</li>
+          </ol>
+
+          <p>This approach has been successfully applied to various bandit settings, including:</p>
+          <ul>
+            <li>Multi-armed bandits with different action sets</li>
+            <li>Linear bandits with structured loss sequences</li>
+            <li>Contextual bandits with adversarial contexts</li>
+          </ul>
+
+          <h3>Connection to Game Theory</h3>
+
+          <p>The duality theorem is a manifestation of the minimax theorem from game theory. The bandit problem can be viewed as a zero-sum game between the algorithm and the adversary, where:</p>
+          <ul>
+            <li>The algorithm chooses a (randomized) strategy</li>
+            <li>The adversary chooses a loss sequence</li>
+            <li>The payoff is the regret</li>
+          </ul>
+
+          <p>Von Neumann's minimax theorem guarantees that:</p>
+
+          <p>$$\inf_{\text{algorithms}} \sup_{\text{sequences}} \mathbb{E}[\text{Regret}] = \sup_{\text{priors}} \inf_{\text{algorithms}} \mathbb{E}_{\Pi}[\text{Regret}]$$</p>
+
+          <p>The right-hand side is precisely the supremum over Bayesian problems, establishing the duality.</p>
+
+          <h3>Computational Aspects</h3>
+
+          <p>While the duality theorem is theoretically elegant, computing the least favorable prior and Bayes-optimal algorithm can be challenging. Recent work has developed approximation algorithms and computational techniques for specific cases.</p>
+
+          <p>For finite-horizon problems, dynamic programming can sometimes compute exact solutions. For infinite-horizon problems, approximation techniques based on convex optimization have been developed.</p>
+
+          <pre><code>def bayesian_bandit_value(prior_params, K, T):
+    """
+    Compute value function for Bayesian bandit via dynamic programming
+
+    Args:
+        prior_params: parameters of Beta priors for each arm
+        K: number of arms
+        T: time horizon
+
+    Returns:
+        value: optimal Bayesian value
+    """
+    from scipy.special import beta as beta_function
+
+    # Dynamic programming for Bayesian bandit
+    # State: (t, alpha_1, beta_1, ..., alpha_K, beta_K)
+    # Value[t][state] = optimal expected reward from time t onwards
+
+    memo = {}
+
+    def value(t, alphas, betas):
+        if t == T:
+            return 0
+
+        state = (t, tuple(alphas), tuple(betas))
+        if state in memo:
+            return memo[state]
+
+        # Compute expected reward for each arm
+        arm_values = np.zeros(K)
+        for i in range(K):
+            # Expected immediate reward
+            expected_reward = alphas[i] / (alphas[i] + betas[i])
+
+            # Expected future value after pulling arm i
+            # Update depends on observed outcome
+            future_value_success = value(t+1,
+                                       [alphas[j] + (1 if j == i else 0) for j in range(K)],
+                                       betas)
+            future_value_failure = value(t+1,
+                                       alphas,
+                                       [betas[j] + (1 if j == i else 0) for j in range(K)])
+
+            prob_success = alphas[i] / (alphas[i] + betas[i])
+            expected_future = (prob_success * future_value_success +
+                             (1 - prob_success) * future_value_failure)
+
+            arm_values[i] = expected_reward + expected_future
+
+        optimal_value = np.max(arm_values)
+        memo[state] = optimal_value
+        return optimal_value
+
+    # Start with prior parameters
+    initial_alphas = [prior_params[i][0] for i in range(K)]
+    initial_betas = [prior_params[i][1] for i in range(K)]
+
+    return value(0, initial_alphas, initial_betas)</code></pre>
+        </section>
+
+        <section id="conclusion">
+          <h2>Synthesis and Future Directions</h2>
+
+          <p>This journey from Thompson's 1933 insights to modern adaptive trial theory reveals the mathematical elegance underlying evidence-based medicine. We've seen how sophisticated techniques from high-dimensional statistics, convex optimization, information theory, and game theory combine to provide both ethical patient allocation algorithms and fundamental limits on clinical learning.</p>
+
+          <h3>Key Theoretical Insights</h3>
+
+          <p>Several overarching themes emerge from modern bandit theory:</p>
+
+          <p><strong>Biological structure enables efficient learning.</strong> From linear dose-response to sparse biomarker effects, exploiting therapeutic structure dramatically improves trial efficiency. The progression from $O(\sqrt{KT})$ for arbitrary treatment comparisons to $O(s\sqrt{T \log d})$ for sparse genomic effects illustrates how mechanistic understanding enables better clinical algorithms.</p>
+
+          <p><strong>Information theory provides fundamental limits on clinical learning.</strong> The Lai-Robbins lower bounds, minimax theory, and mutual information arguments reveal what's statistically possible and impossible in adaptive trials. These limits guide ethical trial design and reveal phase transitions in clinical evidence requirements.</p>
+
+          <p><strong>Adaptive trials are powerful but complex.</strong> Adaptive designs that adjust to emerging evidence can significantly outperform traditional fixed randomized controlled trials when treatment effects are clear. However, this adaptivity requires sophisticated statistical monitoring and regulatory oversight.</p>
+
+          <p><strong>Bayesian-frequentist duality provides deep insights.</strong> The duality reveals that optimal algorithms for worst-case clinical scenarios are also optimal for carefully constructed prior distributions over treatment effects. This connection bridges traditional statistical frameworks in clinical research.</p>
+
+          <h3>Computational Frontiers</h3>
+
+          <p>Modern applications demand computationally efficient algorithms that can handle massive scale:</p>
+
+          <ul>
+            <li><strong>Genomic-scale trials:</strong> With genome-wide data, standard algorithms become computationally prohibitive. Techniques from high-dimensional statistics (sparse recovery, random projections) enable precision medicine at scale.</li>
+            <li><strong>Nonlinear dose-response:</strong> Moving beyond linear models to neural networks and kernel methods while maintaining statistical guarantees for regulatory approval.</li>
+            <li><strong>Multi-site trials:</strong> Coordinating adaptive allocation across multiple clinical sites while handling federated patient data and regulatory requirements.</li>
+          </ul>
+
+          <h3>Beyond Classical Bandits</h3>
+
+          <p>Several extensions push the boundaries of traditional bandit theory:</p>
+
+          <p><strong>Sequential Treatment Regimens:</strong> Multi-armed bandits provide the foundation for sequential treatment decisions, where early interventions affect patient trajectories. The exploration-exploitation trade-off becomes complex when treatments have long-term side effects and drug interactions.</p>
+
+          <p><strong>Causal Treatment Effects:</strong> When treatments have complex causal pathways that need to be learned, traditional algorithms may fail to identify true therapeutic mechanisms. Incorporating causal structure leads to new trial designs and identifiability conditions.</p>
+
+          <p><strong>Population Health Effects:</strong> When multiple patients receive treatments simultaneously, their interactions create new challenges. Network effects (like herd immunity), externalities (antimicrobial resistance), and coordination across health systems all affect optimal treatment policies.</p>
+
+          <h3>Practical Impact</h3>
+
+          <p>The theory developed in this series has found applications across diverse domains:</p>
+
+          <ul>
+            <li><strong>Adaptive clinical trials:</strong> From COVID-19 vaccine trials to cancer immunotherapy, balancing patient welfare with scientific rigor</li>
+            <li><strong>Precision medicine:</strong> Learning individual treatment responses while providing optimal care to current patients</li>
+            <li><strong>Public health policy:</strong> Optimally allocating vaccines, treatments, and interventions during health emergencies</li>
+            <li><strong>Healthcare resource allocation:</strong> Distributing limited medical resources (ICU beds, specialists, medications) across competing patient needs</li>
+          </ul>
+
+          <p>The mathematical rigor of bandit theory provides both principled algorithms and performance guarantees that are essential for high-stakes applications.</p>
+
+          <h3>Open Problems</h3>
+
+          <p>Several fundamental questions remain open:</p>
+
+          <ol>
+            <li><strong>Adaptive vs. Traditional RCTs:</strong> When do adaptive designs provide significant improvements over fixed randomized controlled trials in regulatory settings?</li>
+            <li><strong>Genomic-Scale Limits:</strong> What are the precise statistical requirements for genome-wide adaptive trials with various biological structural assumptions?</li>
+            <li><strong>Computational-Statistical Gaps in Medicine:</strong> For which clinical problems do computationally efficient algorithms achieve optimal statistical performance for regulatory approval?</li>
+            <li><strong>Robustness to Model Misspecification:</strong> How can trial designs maintain patient safety and scientific validity when biological assumptions are violated?</li>
+          </ol>
+
+          <p>The mathematical machinery we've explored - concentration inequalities, ellipsoidal confidence sets, information-theoretic arguments, game-theoretic duality - provides the foundation for attacking these problems. As machine learning systems become more autonomous and consequential, the principled approach to exploration and exploitation that bandit theory provides becomes increasingly valuable.</p>
+
+          <p>The elegance of Thompson's framework lies not just in its mathematical beauty, but in its direct relevance to fundamental questions about medical decision-making under uncertainty. Every time clinicians face the explore-exploit trade-off - whether treating individual patients, designing clinical trials, or implementing public health policies - they're engaging with the core insights that began with Thompson's 1933 paper and continue to shape modern evidence-based medicine.</p>
+        </section>
+
+        <hr>
+
+        <section>
+          <h2>References</h2>
+          <ul>
+            <li>Thompson, W. R. (1933). On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. <em>Biometrika</em>, 25(3/4), 285-294.</li>
+            <li>Carpentier, A., & Munos, R. (2012). Bandit theory meets compressed sensing for high dimensional stochastic linear bandit. <em>AISTATS</em>, 190-198.</li>
+            <li>Abbasi-Yadkori, Y., Pál, D., & Szepesvári, C. (2011). Improved algorithms for linear stochastic bandits. <em>NIPS</em>, 2312-2320.</li>
+            <li>Audibert, J. Y., & Bubeck, S. (2010). Best arm identification in multi-armed bandits. <em>COLT</em>, 13-30.</li>
+            <li>Abernethy, J., Hazan, E., & Rakhlin, A. (2008). Competing in the dark: An efficient algorithm for bandit linear optimization. <em>COLT</em>, 263-274.</li>
+            <li>Rakhlin, A., & Sridharan, K. (2013). Online learning with predictable sequences. <em>COLT</em>, 993-1019.</li>
+            <li>Russo, D., & Van Roy, B. (2016). An information-theoretic analysis of Thompson sampling. <em>Journal of Machine Learning Research</em>, 17(1), 2442-2471.</li>
+            <li>Lattimore, T. (2015). The minimax regret for multi-armed bandits. <em>Theoret. Comput. Sci.</em>, 588, 91-95.</li>
+            <li>Perchet, V., & Rigollet, P. (2013). The multi-armed bandit problem with covariates. <em>Annals of Statistics</em>, 41(2), 693-721.</li>
+            <li>Bubeck, S., Cesa-Bianchi, N., & Kakade, S. M. (2012). Towards minimax policies for online linear optimization with bandit feedback. <em>COLT</em>, 41.1-41.14.</li>
+            <li>Foster, D., Rakhlin, A., & Sridharan, K. (2019). Instance-dependent complexity of contextual bandits and reinforcement learning: A disagreement-based perspective. <em>arXiv preprint</em>.</li>
+            <li>Villar, S. S., Bowden, J., & Wason, J. (2015). Multi-armed bandit models for the optimal design of clinical trials: benefits and challenges. <em>Statistical Science</em>, 30(2), 199-215.</li>
+            <li>Williamson, S. F., Jacko, P., Villar, S. S., & Jaki, T. (2017). A Bayesian adaptive design for clinical trials in rare diseases. <em>Computational Statistics & Data Analysis</em>, 113, 136-153.</li>
+            <li>Wason, J. M., & Trippa, L. (2014). A comparison of Bayesian adaptive randomization and multi-stage designs for multi-arm clinical trials. <em>Statistics in Medicine</em>, 33(13), 2206-2221.</li>
+          </ul>
+        </section>
+      </article>
+    </div>
+
+    <footer class="footer">
+      <a href="bandits-part2.html">← Previous: Advanced Algorithms</a> ·
+      <a href="bandits-part1.html">Back to Part 1</a>
+    </footer>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ]
+      });
+    });
+  </script>
+</body>
+</html>

@@ -173,17 +173,17 @@
 
       <article class="post">
         <section id="adversarial">
-          <h2>Adversarial Clinical Environments</h2>
+          <h2>Adversarial Bandits</h2>
 
-          <p>Thompson's stochastic framework assumes treatment effects are drawn from fixed, unknown distributions. But what if diseases can adapt or environmental factors change treatment effectiveness over time? This leads to adversarial clinical settings, where we face evolving pathogens, drug resistance, or changing patient populations that challenge our treatment strategies.</p>
+          <p>The stochastic framework assumes arm rewards are drawn from fixed, unknown distributions. But what if the environment can adapt or change the reward structure over time? This leads to adversarial settings, where we face evolving reward sequences that may respond to our actions.</p>
 
-          <p>In adversarial clinical environments, we have treatment outcome sequences $\ell_{i,t}$ (losses, representing treatment failures) for each treatment $i$ and time $t$, determined by disease evolution or environmental changes. These factors may respond to treatment usage patterns (like antibiotic resistance) but cannot anticipate our specific randomized allocation decisions. Our goal is to minimize regret against the best fixed treatment strategy in hindsight:</p>
+          <p>In adversarial bandits, we have loss sequences $\ell_{i,t}$ for each arm $i$ and time $t$, determined by an adversary who may respond to our strategy but cannot anticipate our specific randomized decisions. Our goal is to minimize regret against the best fixed arm in hindsight:</p>
 
           <p>$$R_T = \sum_{t=1}^T \ell_{I_t,t} - \min_{i \in [K]} \sum_{t=1}^T \ell_{i,t}$$</p>
 
-          <p>This framework captures scenarios like adaptive pathogens (HIV, influenza), drug resistance development, or changing disease epidemiology that responds to population-level treatment patterns. Unlike stable clinical environments where $O(\log T)$ regret is achievable, adversarial settings have fundamental $\Omega(\sqrt{T})$ regret, reflecting the inherent difficulty of treating evolving diseases.</p>
+          <p>This framework captures scenarios where the environment adapts to our choices. Unlike stochastic settings where $O(\log T)$ regret is achievable, adversarial settings have fundamental $\Omega(\sqrt{T})$ regret, reflecting the inherent difficulty of competing against an adaptive adversary.</p>
 
-          <p>The key challenge is the clinical information bottleneck: we only observe outcomes for administered treatments, not the counterfactual outcomes patients would have experienced under alternative therapies. This partial feedback constraint - fundamental to medical ethics - makes adaptive treatment selection significantly harder than laboratory studies with full information.</p>
+          <p>The key challenge is the information bottleneck: we only observe losses for selected arms, not the counterfactual losses we would have experienced from other arms. This partial feedback constraint makes learning significantly harder than full-information settings.</p>
 
           <div class="theorem-box">
             <h4>Adversarial Lower Bound</h4>
@@ -191,7 +191,7 @@
             <p>$$\mathbb{E}[R_T] \geq \frac{1}{2}\sqrt{\frac{K-1}{2}T}$$</p>
           </div>
 
-          <p>The proof constructs a pathogen that evolves randomly until the treatment protocol reveals which therapy is being avoided, then develops resistance to alternatives. This forces clinical algorithms to maintain sufficient exploration of all available treatments - a principle that aligns with antimicrobial stewardship guidelines.</p>
+          <p>The proof constructs an adversary that acts randomly until the algorithm reveals which arms are being avoided, then assigns high losses to alternatives. This forces algorithms to maintain sufficient exploration of all available arms.</p>
         </section>
 
         <section id="exp3">
@@ -330,11 +330,11 @@ def exp3_full_info(losses, gamma=None):
         <section id="contextual">
           <h2>Contextual Bandits, Prediction with Expert Advice and EXP4</h2>
 
-          <p>Contextual clinical trials extend Thompson's framework by incorporating patient characteristics. Before treating each patient, we observe their context $x_t$ (biomarkers, demographics, medical history). Treatment effectiveness depends on both patient characteristics and the chosen therapy: $r_t = r(x_t, I_t)$.</p>
+          <p>Contextual bandits extend the basic framework by incorporating side information. Before making each decision, we observe a context $x_t$ (features, covariates, side information). Arm rewards depend on both the context and the chosen arm: $r_t = r(x_t, I_t)$.</p>
 
-          <p>This setting interpolates between controlled laboratory studies (where we could test all treatments on identical subjects) and population-level trials (treating all patients identically). Applications include personalized medicine, biomarker-guided therapy selection, and adaptive dosing protocols.</p>
+          <p>This setting interpolates between full-information learning (where we could test all arms on identical contexts) and standard multi-armed bandits (ignoring all context information). Applications include personalized recommendations, adaptive systems, and structured decision making.</p>
 
-          <p>The challenge is clinical generalization: we must learn effective treatments for new patients based on limited outcome data from previous patients and therapies. This requires leveraging structure in how treatment effects depend on patient characteristics and therapeutic mechanisms.</p>
+          <p>The challenge is generalization: we must learn effective arm selection for new contexts based on limited data from previous contexts and arms. This requires leveraging structure in how rewards depend on contexts and arm characteristics.</p>
 
           <h3>Prediction with Expert Advice</h3>
 
@@ -453,28 +453,28 @@ def exp3_full_info(losses, gamma=None):
         <section id="linear">
           <h2>Stochastic Linear Bandits and UCB</h2>
 
-          <p>Linear clinical response models assume treatment outcomes follow $r_t = \langle \theta^*, x_{I_t} \rangle + \eta_t$, where $x_i \in \mathbb{R}^d$ represents the therapeutic profile of treatment $i$ (dosage, mechanism, pharmacokinetics), $\theta^* \in \mathbb{R}^d$ captures patient-specific response parameters, and $\eta_t$ represents individual variation.</p>
+          <p>Linear bandits assume arm rewards follow $r_t = \langle \theta^*, x_{I_t} \rangle + \eta_t$, where $x_i \in \mathbb{R}^d$ represents the feature vector of arm $i$, $\theta^* \in \mathbb{R}^d$ is an unknown parameter vector, and $\eta_t$ represents noise.</p>
 
-          <p>This setting is much richer than comparing fixed treatments - we can consider infinitely many dosing regimens or combination therapies as long as their therapeutic profiles are characterized. The algorithm must learn patient response patterns $\theta^*$ while optimizing treatment selection.</p>
+          <p>This setting is much richer than finite arms - we can consider infinitely many arms as long as their feature vectors are known. The algorithm must learn the parameter vector $\theta^*$ while optimizing arm selection.</p>
 
-          <p>LinUCB extends the therapeutic optimism principle to linear dose-response relationships using confidence ellipsoids around least-squares estimates of patient response parameters $\theta^*$.</p>
+          <p>LinUCB extends the optimism principle to linear settings using confidence ellipsoids around least-squares estimates of the parameter vector $\theta^*$.</p>
 
           <div class="algorithm-box">
             <h4>LinUCB Algorithm</h4>
-            <p><strong>Initialize:</strong> Design matrix $V_0 = \lambda I_d$, response vector $b_0 = 0 \in \mathbb{R}^d$</p>
-            <p><strong>For patient $t = 1, 2, \ldots, T$:</strong></p>
+            <p><strong>Initialize:</strong> Design matrix $V_0 = \lambda I_d$, data vector $b_0 = 0 \in \mathbb{R}^d$</p>
+            <p><strong>For round $t = 1, 2, \ldots, T$:</strong></p>
             <ol>
-              <li>Estimate response parameters: $\hat{\theta}_t = V_{t-1}^{-1} b_{t-1}$</li>
-              <li>Select treatment: $I_t = \arg\max_i \langle \hat{\theta}_t, x_i \rangle + \beta_t \|x_i\|_{V_{t-1}^{-1}}$</li>
-              <li>Observe patient outcome $r_t$ and update:</li>
+              <li>Estimate parameters: $\hat{\theta}_t = V_{t-1}^{-1} b_{t-1}$</li>
+              <li>Select arm: $I_t = \arg\max_i \langle \hat{\theta}_t, x_i \rangle + \beta_t \|x_i\|_{V_{t-1}^{-1}}$</li>
+              <li>Observe reward $r_t$ and update:</li>
               <ul>
                 <li>$V_t = V_{t-1} + x_{I_t} x_{I_t}^T$ (update design matrix)</li>
-                <li>$b_t = b_{t-1} + r_t x_{I_t}$ (update response data)</li>
+                <li>$b_t = b_{t-1} + r_t x_{I_t}$ (update data vector)</li>
               </ul>
             </ol>
           </div>
 
-          <p>The confidence width $\beta_t \|x_i\|_{V_{t-1}^{-1}}$ captures uncertainty in treatment $i$'s therapeutic profile direction. Treatments with profiles in poorly-explored therapeutic space receive larger confidence bonuses, encouraging investigation of novel mechanisms or dosing regimens.</p>
+          <p>The confidence width $\beta_t \|x_i\|_{V_{t-1}^{-1}}$ captures uncertainty in arm $i$'s feature direction. Arms with features in poorly-explored directions receive larger confidence bonuses, encouraging exploration of uncertain regions.</p>
 
           <p>The regret analysis leverages the elliptic potential lemma, which bounds the sum of confidence widths:</p>
 
@@ -484,9 +484,9 @@ def exp3_full_info(losses, gamma=None):
             <p>$$\mathbb{E}[R_T] = O(d\sqrt{T \log T})$$</p>
           </div>
 
-          <p>This $\sqrt{T}$ dependence reflects the difficulty of personalizing medicine in high-dimensional therapeutic space, but the linear dependence on dimension $d$ enables practical application to multi-parameter treatment optimization - much better than testing all possible combinations independently.</p>
+          <p>This $\sqrt{T}$ dependence reflects the difficulty of learning in high-dimensional feature space, but the linear dependence on dimension $d$ enables practical application to structured problems - much better than treating all arms independently.</p>
 
-          <p>The key insight is that the confidence ellipsoid shrinks in therapeutic directions where we've treated many similar patients, enabling generalization across the patient population. The algorithm automatically balances exploration of uncertain therapeutic mechanisms with exploitation of established effective treatments.</p>
+          <p>The key insight is that the confidence ellipsoid shrinks in directions where we've observed many similar feature vectors, enabling generalization across the arm space. The algorithm automatically balances exploration of uncertain directions with exploitation of well-understood regions.</p>
         </section>
 
         <section id="confidence">
@@ -603,20 +603,20 @@ def plot_confidence_ellipsoid(V, theta_hat, beta):
         <section id="conclusion">
           <h2>Integration and Outlook</h2>
 
-          <p>We've explored how adaptive clinical trial algorithms handle increasingly complex medical environments: evolving diseases, patient heterogeneity, and structured therapeutic relationships. Key insights for modern clinical research include:</p>
+          <p>We've explored how bandit algorithms handle increasingly complex environments: adversarial settings, contextual information, and structured relationships. Key insights include:</p>
 
           <ul>
-            <li><strong>Robustness vs. Efficiency:</strong> Adversarial algorithms like EXP3 sacrifice statistical efficiency for worst-case protection against evolving pathogens</li>
-            <li><strong>Patient Stratification:</strong> Contextual trials enable leveraging patient characteristics, requiring balanced exploration across patient-treatment combinations</li>
-            <li><strong>Mechanistic Understanding:</strong> Linear response models achieve scalable personalization by exploiting therapeutic structure</li>
-            <li><strong>Confidence-Based Allocation:</strong> Ellipsoidal confidence regions provide principled therapeutic optimism in high-dimensional treatment spaces</li>
+            <li><strong>Robustness vs. Efficiency:</strong> Adversarial algorithms like EXP3 sacrifice statistical efficiency for worst-case protection against adaptive environments</li>
+            <li><strong>Context Utilization:</strong> Contextual bandits enable leveraging side information, requiring balanced exploration across context-arm combinations</li>
+            <li><strong>Structural Understanding:</strong> Linear models achieve scalable learning by exploiting feature structure</li>
+            <li><strong>Confidence-Based Selection:</strong> Ellipsoidal confidence regions provide principled optimism in high-dimensional feature spaces</li>
           </ul>
 
-          <p>The progression from simple drug comparisons to linear dose-response models illustrates a fundamental theme in clinical research: how mechanistic understanding enables efficient personalization. Without therapeutic structure, we face the curse of dimensionality in treatment space; with appropriate pharmacological assumptions, we can achieve learning rates that scale with intrinsic therapeutic dimensions rather than all possible combinations.</p>
+          <p>The progression from simple arm comparisons to linear feature models illustrates a fundamental theme: how structural understanding enables efficient learning. Without structure, we face the curse of dimensionality; with appropriate assumptions, we can achieve learning rates that scale with intrinsic dimensions rather than all possible combinations.</p>
 
-          <p>Looking ahead to <a href="bandits-part3.html">Part 3</a>, we'll explore the frontiers of adaptive clinical research: sparse treatment effect models that exploit biological pathway structure, refined statistical bounds that reveal when adaptive designs improve over traditional RCTs, and the elegant duality between Bayesian and frequentist approaches that provides deep insights into the nature of evidence-based medicine.</p>
+          <p>Looking ahead to <a href="bandits-part3.html">Part 3</a>, we'll explore the frontiers of bandit theory: sparse linear models that exploit sparsity structure, refined statistical bounds, and the elegant duality between Bayesian and frequentist approaches that provides deep insights into optimal learning.</p>
 
-          <p>The mathematical tools developed here - importance weighting for unbiased estimation, ellipsoidal confidence sets for therapeutic optimism, potential function analysis for regret bounds - form the foundation for modern adaptive trial methodology, extending from simple drug comparisons to complex personalized medicine algorithms and sequential biomarker-driven protocols.</p>
+          <p>The mathematical tools developed here - importance weighting for unbiased estimation, ellipsoidal confidence sets for optimism, potential function analysis for regret bounds - form the foundation for modern bandit algorithms, extending from simple comparisons to complex structured problems.</p>
         </section>
 
         <hr>

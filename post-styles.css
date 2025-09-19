@@ -2,13 +2,22 @@
 
 .post h1{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 28px;
+  font-size: 24px;
   margin: 12px 0 8px;
 }
 
 .post h2{
-  font-size: 20px;
-  margin: 28px 0 8px;
+  font-size: 24px;
+  margin: 64px 0 24px;
+  padding-top: 32px;
+  border-top: 2px solid var(--border);
+  font-weight: 600;
+}
+
+.post section:first-child h2{
+  margin-top: 32px;
+  padding-top: 0;
+  border-top: none;
 }
 
 .post h3{
@@ -17,7 +26,7 @@
 }
 
 .post p{
-  margin: 12px 0;
+  margin: 16px 0;
 }
 
 .post img{

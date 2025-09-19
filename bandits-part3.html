@@ -180,35 +180,35 @@
 
       <article class="post">
         <section id="sparse">
-          <h2>Sparse Treatment Effects in Precision Medicine</h2>
+          <h2>Sparse Linear Bandits</h2>
 
-          <p>Real-world therapeutic responses often exhibit sparsity: among thousands of potential biomarkers, genetic variants, and clinical features, only a few truly drive treatment efficacy. This biological sparsity can be exploited for improved learning rates and better clinical interpretability. The challenge lies in simultaneously identifying which biomarkers matter and quantifying their therapeutic importance.</p>
+          <p>Real-world problems often exhibit sparsity: among many potential features, only a few truly matter for the reward function. This sparsity can be exploited for improved learning rates and better interpretability. The challenge lies in simultaneously identifying which features matter and quantifying their importance.</p>
 
-          <p>In sparse clinical response models, we assume the patient response parameter $\theta^* \in \mathbb{R}^d$ has at most $s \ll d$ non-zero entries, corresponding to the small number of biomarkers that actually predict treatment response. The outcome model remains $r_t = \langle \theta^*, x_{I_t} \rangle + \eta_t$, but now we can potentially achieve learning rates that depend on the number of relevant biomarkers $s$ rather than the full feature space dimension $d$.</p>
+          <p>In sparse linear bandits, we assume the parameter vector $\theta^* \in \mathbb{R}^d$ has at most $s \ll d$ non-zero entries, corresponding to the small number of features that actually affect rewards. The reward model remains $r_t = \langle \theta^*, x_{I_t} \rangle + \eta_t$, but now we can potentially achieve learning rates that depend on the sparsity level $s$ rather than the full feature dimension $d$.</p>
 
-          <p>The key insight is that standard LinUCB doesn't exploit biological sparsity - its confidence sets scale with all measured features even when only a few biomarkers drive treatment response. We need algorithms that adapt to unknown sparsity in the therapeutic mechanism, mirroring how precision medicine seeks parsimonious biomarker signatures.</p>
+          <p>The key insight is that standard LinUCB doesn't exploit sparsity - its confidence sets scale with all features even when only a few matter for rewards. We need algorithms that adapt to unknown sparsity in the reward function.</p>
 
-          <h3>Lasso-UCB for Biomarker Discovery</h3>
+          <h3>Lasso-UCB Algorithm</h3>
 
-          <p>Lasso-UCB replaces standard regression with Lasso (L1-regularized) estimation to encourage sparse biomarker signatures, automatically identifying which patient characteristics predict treatment response:</p>
+          <p>Lasso-UCB replaces standard regression with Lasso (L1-regularized) estimation to encourage sparse solutions, automatically identifying which features matter for rewards:</p>
 
           <div class="algorithm-box">
             <h4>Lasso-UCB Algorithm</h4>
-            <p><strong>Parameters:</strong> Biomarker regularization $\lambda_t$, confidence width $\beta_t$</p>
-            <p><strong>For patient $t = 1, 2, \ldots, T$:</strong></p>
+            <p><strong>Parameters:</strong> Regularization $\lambda_t$, confidence width $\beta_t$</p>
+            <p><strong>For round $t = 1, 2, \ldots, T$:</strong></p>
             <ol>
-              <li>Identify relevant biomarkers: $\hat{\theta}_t = \arg\min_{\theta} \left\{ \sum_{s=1}^{t-1} (r_s - \langle \theta, x_s \rangle)^2 + \lambda_t \|\theta\|_1 \right\}$</li>
-              <li>Define therapeutic confidence: $C_t = \{\theta : \|\theta - \hat{\theta}_t\|_2 \leq \beta_t \}$</li>
-              <li>Select treatment: $I_t = \arg\max_i \max_{\theta \in C_t} \langle \theta, x_i \rangle$</li>
-              <li>Observe patient outcome $r_t$ and update biomarker model</li>
+              <li>Identify relevant features: $\hat{\theta}_t = \arg\min_{\theta} \left\{ \sum_{s=1}^{t-1} (r_s - \langle \theta, x_s \rangle)^2 + \lambda_t \|\theta\|_1 \right\}$</li>
+              <li>Define confidence set: $C_t = \{\theta : \|\theta - \hat{\theta}_t\|_2 \leq \beta_t \}$</li>
+              <li>Select arm: $I_t = \arg\max_i \max_{\theta \in C_t} \langle \theta, x_i \rangle$</li>
+              <li>Observe reward $r_t$ and update model</li>
             </ol>
           </div>
 
-          <p>The Lasso estimator enjoys sparse biomarker recovery guarantees under appropriate conditions. If the patient-feature matrix satisfies the Restricted Eigenvalue (RE) condition - meaning the relevant biomarkers are not too correlated - the Lasso estimate satisfies:</p>
+          <p>The Lasso estimator enjoys sparse recovery guarantees under appropriate conditions. If the design matrix satisfies the Restricted Eigenvalue (RE) condition - meaning the relevant features are not too correlated - the Lasso estimate satisfies:</p>
 
           <p>$$\|\hat{\theta}_t - \theta^*\|_2 \leq \frac{4\lambda_t \sqrt{s}}{\text{RE}}$$</p>
 
-          <p>with high probability. The RE condition requires that the patient cohort provides sufficient diversity to distinguish between relevant biomarkers - a key requirement for reliable biomarker discovery.</p>
+          <p>with high probability. The RE condition requires that the design provides sufficient diversity to distinguish between relevant features - a key requirement for reliable sparse recovery.</p>
 
           <div class="theorem-box">
             <h4>Lasso-UCB Regret Bound</h4>
@@ -216,13 +216,13 @@
             <p>$$\mathbb{E}[R_T] = O(s \sqrt{T \log d})$$</p>
           </div>
 
-          <p>This bound has two key improvements over standard LinUCB for precision medicine:</p>
+          <p>This bound has two key improvements over standard LinUCB:</p>
           <ol>
-            <li><strong>Biomarker dependence:</strong> Scales with number of relevant biomarkers $s$ rather than all measured features $d$</li>
-            <li><strong>High-throughput scaling:</strong> $\log d$ dependence enables genome-wide association studies with minimal performance penalty</li>
+            <li><strong>Sparsity dependence:</strong> Scales with number of relevant features $s$ rather than all features $d$</li>
+            <li><strong>High-dimensional scaling:</strong> $\log d$ dependence enables high-dimensional problems with minimal performance penalty</li>
           </ol>
 
-          <p>The challenge is that the confidence set $C_t$ is no longer ellipsoidal, making treatment optimization computationally challenging. Recent work has developed efficient approximations using techniques from high-dimensional statistics - essential for real-time clinical decision support with genome-scale data.</p>
+          <p>The challenge is that the confidence set $C_t$ is no longer ellipsoidal, making arm optimization computationally challenging. Recent work has developed efficient approximations using techniques from high-dimensional statistics.</p>
 
           <h3>OFUL-L1 Algorithm</h3>
 
@@ -772,67 +772,67 @@ def generate_sparse_vector(d, s, noise_level=1.0):
         <section id="conclusion">
           <h2>Synthesis and Future Directions</h2>
 
-          <p>This journey from Thompson's 1933 insights to modern adaptive trial theory reveals the mathematical elegance underlying evidence-based medicine. We've seen how sophisticated techniques from high-dimensional statistics, convex optimization, information theory, and game theory combine to provide both ethical patient allocation algorithms and fundamental limits on clinical learning.</p>
+          <p>This journey from the 1933 insights to modern bandit theory reveals the mathematical elegance underlying sequential decision making under uncertainty. We've seen how sophisticated techniques from high-dimensional statistics, convex optimization, information theory, and game theory combine to provide both efficient algorithms and fundamental limits on learning.</p>
 
           <h3>Key Theoretical Insights</h3>
 
           <p>Several overarching themes emerge from modern bandit theory:</p>
 
-          <p><strong>Biological structure enables efficient learning.</strong> From linear dose-response to sparse biomarker effects, exploiting therapeutic structure dramatically improves trial efficiency. The progression from $O(\sqrt{KT})$ for arbitrary treatment comparisons to $O(s\sqrt{T \log d})$ for sparse genomic effects illustrates how mechanistic understanding enables better clinical algorithms.</p>
+          <p><strong>Structure enables efficient learning.</strong> From linear rewards to sparse effects, exploiting problem structure dramatically improves performance. The progression from $O(\sqrt{KT})$ for arbitrary arms to $O(s\sqrt{T \log d})$ for sparse linear bandits illustrates how structural understanding enables better algorithms.</p>
 
-          <p><strong>Information theory provides fundamental limits on clinical learning.</strong> The Lai-Robbins lower bounds, minimax theory, and mutual information arguments reveal what's statistically possible and impossible in adaptive trials. These limits guide ethical trial design and reveal phase transitions in clinical evidence requirements.</p>
+          <p><strong>Information theory provides fundamental limits on learning.</strong> The Lai-Robbins lower bounds, minimax theory, and mutual information arguments reveal what's statistically possible and impossible in sequential learning. These limits guide algorithm design and reveal phase transitions in learning requirements.</p>
 
-          <p><strong>Adaptive trials are powerful but complex.</strong> Adaptive designs that adjust to emerging evidence can significantly outperform traditional fixed randomized controlled trials when treatment effects are clear. However, this adaptivity requires sophisticated statistical monitoring and regulatory oversight.</p>
+          <p><strong>Adaptive algorithms are powerful but complex.</strong> Algorithms that adjust to emerging evidence can significantly outperform fixed strategies when problems have favorable structure. However, this adaptivity requires sophisticated analysis and careful implementation.</p>
 
-          <p><strong>Bayesian-frequentist duality provides deep insights.</strong> The duality reveals that optimal algorithms for worst-case clinical scenarios are also optimal for carefully constructed prior distributions over treatment effects. This connection bridges traditional statistical frameworks in clinical research.</p>
+          <p><strong>Bayesian-frequentist duality provides deep insights.</strong> The duality reveals that optimal algorithms for worst-case scenarios are also optimal for carefully constructed prior distributions. This connection bridges different statistical frameworks in learning theory.</p>
 
           <h3>Computational Frontiers</h3>
 
           <p>Modern applications demand computationally efficient algorithms that can handle massive scale:</p>
 
           <ul>
-            <li><strong>Genomic-scale trials:</strong> With genome-wide data, standard algorithms become computationally prohibitive. Techniques from high-dimensional statistics (sparse recovery, random projections) enable precision medicine at scale.</li>
-            <li><strong>Nonlinear dose-response:</strong> Moving beyond linear models to neural networks and kernel methods while maintaining statistical guarantees for regulatory approval.</li>
-            <li><strong>Multi-site trials:</strong> Coordinating adaptive allocation across multiple clinical sites while handling federated patient data and regulatory requirements.</li>
+            <li><strong>High-dimensional problems:</strong> With high-dimensional features, standard algorithms become computationally prohibitive. Techniques from high-dimensional statistics (sparse recovery, random projections) enable scaling to large feature spaces.</li>
+            <li><strong>Nonlinear rewards:</strong> Moving beyond linear models to neural networks and kernel methods while maintaining statistical guarantees.</li>
+            <li><strong>Distributed learning:</strong> Coordinating learning across multiple agents while handling federated data and communication constraints.</li>
           </ul>
 
           <h3>Beyond Classical Bandits</h3>
 
           <p>Several extensions push the boundaries of traditional bandit theory:</p>
 
-          <p><strong>Sequential Treatment Regimens:</strong> Multi-armed bandits provide the foundation for sequential treatment decisions, where early interventions affect patient trajectories. The exploration-exploitation trade-off becomes complex when treatments have long-term side effects and drug interactions.</p>
+          <p><strong>Sequential Decision Making:</strong> Multi-armed bandits provide the foundation for sequential decisions, where early actions affect future states. The exploration-exploitation trade-off becomes complex when actions have long-term consequences and state dependencies.</p>
 
-          <p><strong>Causal Treatment Effects:</strong> When treatments have complex causal pathways that need to be learned, traditional algorithms may fail to identify true therapeutic mechanisms. Incorporating causal structure leads to new trial designs and identifiability conditions.</p>
+          <p><strong>Causal Effects:</strong> When actions have complex causal pathways that need to be learned, traditional algorithms may fail to identify true mechanisms. Incorporating causal structure leads to new designs and identifiability conditions.</p>
 
-          <p><strong>Population Health Effects:</strong> When multiple patients receive treatments simultaneously, their interactions create new challenges. Network effects (like herd immunity), externalities (antimicrobial resistance), and coordination across health systems all affect optimal treatment policies.</p>
+          <p><strong>Multi-Agent Systems:</strong> When multiple agents make decisions simultaneously, their interactions create new challenges. Network effects, externalities, and coordination across agents all affect optimal policies.</p>
 
           <h3>Practical Impact</h3>
 
           <p>The theory developed in this series has found applications across diverse domains:</p>
 
           <ul>
-            <li><strong>Adaptive clinical trials:</strong> From COVID-19 vaccine trials to cancer immunotherapy, balancing patient welfare with scientific rigor</li>
-            <li><strong>Precision medicine:</strong> Learning individual treatment responses while providing optimal care to current patients</li>
-            <li><strong>Public health policy:</strong> Optimally allocating vaccines, treatments, and interventions during health emergencies</li>
-            <li><strong>Healthcare resource allocation:</strong> Distributing limited medical resources (ICU beds, specialists, medications) across competing patient needs</li>
+            <li><strong>Online advertising:</strong> Balancing exploration of new ads with exploitation of proven performers</li>
+            <li><strong>Recommendation systems:</strong> Learning user preferences while providing relevant content</li>
+            <li><strong>Resource allocation:</strong> Optimally distributing limited resources across competing demands</li>
+            <li><strong>A/B testing:</strong> Efficiently comparing alternatives while maximizing performance</li>
           </ul>
 
-          <p>The mathematical rigor of bandit theory provides both principled algorithms and performance guarantees that are essential for high-stakes applications.</p>
+          <p>The mathematical rigor of bandit theory provides both principled algorithms and performance guarantees that are essential for automated decision systems.</p>
 
           <h3>Open Problems</h3>
 
           <p>Several fundamental questions remain open:</p>
 
           <ol>
-            <li><strong>Adaptive vs. Traditional RCTs:</strong> When do adaptive designs provide significant improvements over fixed randomized controlled trials in regulatory settings?</li>
-            <li><strong>Genomic-Scale Limits:</strong> What are the precise statistical requirements for genome-wide adaptive trials with various biological structural assumptions?</li>
-            <li><strong>Computational-Statistical Gaps in Medicine:</strong> For which clinical problems do computationally efficient algorithms achieve optimal statistical performance for regulatory approval?</li>
-            <li><strong>Robustness to Model Misspecification:</strong> How can trial designs maintain patient safety and scientific validity when biological assumptions are violated?</li>
+            <li><strong>Adaptive vs. Fixed Strategies:</strong> When do adaptive algorithms provide significant improvements over fixed strategies in practical settings?</li>
+            <li><strong>High-Dimensional Limits:</strong> What are the precise statistical requirements for high-dimensional bandits with various structural assumptions?</li>
+            <li><strong>Computational-Statistical Gaps:</strong> For which problems do computationally efficient algorithms achieve optimal statistical performance?</li>
+            <li><strong>Robustness to Model Misspecification:</strong> How can algorithms maintain performance guarantees when modeling assumptions are violated?</li>
           </ol>
 
           <p>The mathematical machinery we've explored - concentration inequalities, ellipsoidal confidence sets, information-theoretic arguments, game-theoretic duality - provides the foundation for attacking these problems. As machine learning systems become more autonomous and consequential, the principled approach to exploration and exploitation that bandit theory provides becomes increasingly valuable.</p>
 
-          <p>The elegance of Thompson's framework lies not just in its mathematical beauty, but in its direct relevance to fundamental questions about medical decision-making under uncertainty. Every time clinicians face the explore-exploit trade-off - whether treating individual patients, designing clinical trials, or implementing public health policies - they're engaging with the core insights that began with Thompson's 1933 paper and continue to shape modern evidence-based medicine.</p>
+          <p>The elegance of the framework lies not just in its mathematical beauty, but in its direct relevance to fundamental questions about decision-making under uncertainty. Every time we face the explore-exploit trade-off - whether in online systems, recommendation engines, or resource allocation - we're engaging with the core insights that continue to shape modern learning theory.</p>
         </section>
 
         <hr>

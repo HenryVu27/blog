@@ -10,6 +10,26 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
   <style>
+    /* Safari-specific KaTeX fixes */
+    .katex {
+      line-height: 1 !important;
+    }
+    
+    .katex-display {
+      line-height: 1 !important;
+      margin: 1em 0 !important;
+    }
+    
+    /* Fix for sigma and other large operators in Safari */
+    .katex .mop {
+      vertical-align: baseline !important;
+    }
+    
+    /* Ensure proper alignment of subscripts and superscripts */
+    .katex .msubsup {
+      vertical-align: baseline !important;
+    }
+    
     /* Override global page styles for mixed layout */
     .page{
       max-width: none;
@@ -170,11 +190,13 @@
         <section id="intro">
           <h2>Multi-Armed Bandits and the Exploration–Exploitation Trade-off</h2>
 
-          <p>If you have been around modern LLMs, you have probably heard of reinforcement learning. At its core, RL is an interaction loop: a learner chooses an action, receives feedback (reward), updates its rule for acting next time, and repeats. Much of today’s LLM finetuning to align with human preferences can be seen through this lens.</p>
+          <p>If you have been around modern LLMs, you have probably heard of reinforcement learning. At its core, RL is an interaction loop: a learner chooses an action, receives feedback from the environment (reward), updates its rule for acting next time, and repeats. Much of today’s LLM finetuning to align with human preferences can be seen through this lens.</p>
 
-          <p>The central question in this loop is how to balance exploration and exploitation. Exploitation uses the option that currently looks best to maximize reward now. Exploration tries uncertain options to improve knowledge and future performance. Too much greed misses better options; too much exploration wastes opportunities. Multi-armed bandits isolate this decision problem in its simplest form: a single-state Markov decision process focused only on action selection under uncertainty. </p>
+          <p>Unlike representation learning where the learner tries to "imitate" the data, RL forces the learner to interact with the environment. The central question in this interaction is how to balance <i>exploration</i> and <i>exploitation</i>. Should the learner take advantage of current knowledge and exploit the option that currently looks best to maximize immediate reward? Or should it take some risks to explore, potentially sacrificing short-term gains to improve knowledge and long-term performance? Too much greed misses better options; too much exploration wastes opportunities.</p>
 
-          <p>We now see applications of bandits across industries where information arrives in sequential manner. Examples range from ad placement, recommender systems, packet routing, to more theoretical settings like convex optimization and Brownian motion. But what are bandit problems exactly?</p>
+          <p>This fundamental tension between exploration and exploitation appears everywhere in sequential decision-making. Multi-armed bandits capture this trade-off in its simplest form: a single-state Markov decision process focused only on action selection under uncertainty. We now see applications of bandits across industries where information arrives in sequential manner. Examples range from ad placement, recommender systems, packet routing, to more theoretical settings like convex optimization and Brownian motion.</p>
+
+          <p>But what are bandit problems exactly?</p>
 
           <p>A key early motivation came from clinical trials. <strong>William R. Thompson</strong>, in his 1933 paper, proposed assigning treatments adaptively using accumulating evidence, favoring promising options while still testing alternatives enough to learn.</p>
 
@@ -348,19 +370,19 @@ def explore_then_commit(rewards, m, T):
 
           <p>UCB elegantly addresses ETC's limitations by adaptively balancing exploration and exploitation. Instead of rigid phases, UCB constructs confidence intervals around arm means and selects the arm with highest upper confidence bound - embodying the principle of optimism under uncertainty.</p>
 
-          <p>At time $$t$$, having selected arm $$i$$ a total of $$N_i(t-1)$$ times and observed empirical mean $$\hat{\mu}_i(t-1)$$, UCB selects:</p>
+          <p>At time $t$, having selected arm $i$ a total of $N_i(t-1)$ times and observed empirical mean $\hat{\mu}_i(t-1)$, UCB selects:</p>
 
           <p>$$I_t = \arg\max_{i \in [K]} \left( \hat{\mu}_i(t-1) + \sqrt{\frac{2\log t}{N_i(t-1)}} \right)$$</p>
 
-          <p>The confidence radius $$\sqrt{\frac{2\log t}{N_i(t-1)}}$$ decreases as more data is collected for arm $$i$$, but increases with time to ensure sufficient exploration of all arms when evidence is limited.</p>
+          <p>The confidence radius $\sqrt{\frac{2\log t}{N_i(t-1)}}$ decreases as more data is collected for arm $i$, but increases with time to ensure sufficient exploration of all arms when evidence is limited.</p>
 
           <div class="algorithm-box">
             <h4>UCB Algorithm</h4>
             <p><strong>Initialization:</strong> Pull each arm once</p>
-            <p><strong>For rounds $$t = K+1, K+2, \ldots, T$$:</strong></p>
+            <p><strong>For rounds $t = K+1, K+2, \ldots, T$:</strong></p>
             <ol>
-              <li>Compute UCB for each arm: $$UCB_i(t) = \hat{\mu}_i(t-1) + \sqrt{\frac{2\log t}{N_i(t-1)}}$$</li>
-              <li>Select arm: $$I_t = \arg\max_i UCB_i(t)$$</li>
+              <li>Compute UCB for each arm: $UCB_i(t) = \hat{\mu}_i(t-1) + \sqrt{\frac{2\log t}{N_i(t-1)}}$</li>
+              <li>Select arm: $I_t = \arg\max_i UCB_i(t)$</li>
               <li>Observe reward and update estimates</li>
             </ol>
           </div>
@@ -369,7 +391,7 @@ def explore_then_commit(rewards, m, T):
 
           <p>The key lemma bounds how often UCB can select suboptimal arms:</p>
 
-          <p><strong>Lemma:</strong> For any suboptimal arm $$i$$ with gap $$\Delta_i > 0$$, the number of times arm $$i$$ is selected satisfies:</p>
+          <p><strong>Lemma:</strong> For any suboptimal arm $i$ with gap $\Delta_i > 0$, the number of times arm $i$ is selected satisfies:</p>
 
           <p>$$\mathbb{E}[N_i(T)] \leq \frac{8\log T}{\Delta_i^2} + 1 + \frac{\pi^2}{3}$$</p>
 
@@ -377,7 +399,7 @@ def explore_then_commit(rewards, m, T):
 
           <p>$$\mathbb{E}[R_T] \leq \sum_{i: \Delta_i > 0} \Delta_i \left( \frac{8\log T}{\Delta_i^2} + 1 + \frac{\pi^2}{3} \right) = \sum_{i: \Delta_i > 0} \left( \frac{8\log T}{\Delta_i} + O(1) \right)$$</p>
 
-          <p>Crucially, this scales as $$O(\log T / \Delta_i)$$ for each suboptimal arm, automatically adapting to problem difficulty. Arms with large gaps are quickly identified and avoided, while arms with small gaps are selected more often - exactly the desired behavior when arms have similar performance.</p>
+          <p>Crucially, this scales as $O(\log T / \Delta_i)$ for each suboptimal arm, automatically adapting to problem difficulty. Arms with large gaps are quickly identified and avoided, while arms with small gaps are selected more often - exactly the desired behavior when arms have similar performance.</p>
 
           <pre><code>def ucb(rewards, T):
     """
@@ -435,26 +457,26 @@ def explore_then_commit(rewards, m, T):
 
           <p>The key insight comes from statistical hypothesis testing. Consider two bandit instances that are statistically "close" but have different optimal arms. An algorithm must distinguish between these instances, requiring sufficient data from each arm. This fundamental statistical requirement leads to unavoidable limits on learning efficiency.</p>
 
-          <p>Let $$\mathcal{E} = \{\nu_1, \ldots, \nu_K\}$$ be a bandit instance. The <em>statistical complexity</em> of instance $$\mathcal{E}$$ is:</p>
+          <p>Let $\mathcal{E} = \{\nu_1, \ldots, \nu_K\}$ be a bandit instance. The <em>statistical complexity</em> of instance $\mathcal{E}$ is:</p>
 
           <p>$$H(\mathcal{E}) = \sum_{i: \Delta_i > 0} \frac{1}{\Delta_i}$$</p>
 
           <p>This measures problem difficulty - instances with many arms having small gaps require more samples to resolve reliably.</p>
           <p><span class="edit-green">Remark: in best-arm identification, a common complexity term is $\sum_i 1/\Delta_i^2$. Here we use $\sum_i 1/\Delta_i$ to align with instance-dependent regret scaling.</span></p>
 
-          <p>The information-theoretic approach uses the Kullback-Leibler (KL) divergence between reward distributions. For distributions $$P$$ and $$Q$$:</p>
+          <p>The information-theoretic approach uses the Kullback-Leibler (KL) divergence between reward distributions. For distributions $P$ and $Q$:</p>
 
           <p>$$\text{KL}(P, Q) = \int p(x) \log \frac{p(x)}{q(x)} dx$$</p>
 
           <p>KL divergence measures the difficulty of distinguishing between distributions. Smaller KL divergence means harder discrimination, requiring more samples.</p>
 
-          <p>The change of measure technique relates regret to KL divergence. Consider an algorithm $$\pi$$ and two bandit instances $$\mathcal{E}$$ and $$\mathcal{E}'$$ differing only in arms $$i$$ and $$j$$. If instance $$\mathcal{E}$$ has optimal arm $$i$$ and instance $$\mathcal{E}'$$ has optimal arm $$j$$, then:</p>
+          <p>The change of measure technique relates regret to KL divergence. Consider an algorithm $\pi$ and two bandit instances $\mathcal{E}$ and $\mathcal{E}'$ differing only in arms $i$ and $j$. If instance $\mathcal{E}$ has optimal arm $i$ and instance $\mathcal{E}'$ has optimal arm $j$, then:</p>
 
           <p>$$\mathbb{E}_{\mathcal{E}}[N_j(T)] \cdot \text{KL}(\nu_j, \nu_j') + \mathbb{E}_{\mathcal{E}}[N_i(T)] \cdot \text{KL}(\nu_i, \nu_i') \geq \text{kl}(\epsilon, 1-\epsilon)$$</p>
 
-          <p>where $$\epsilon$$ is the probability of misidentifying the optimal arm, and $$\text{kl}(p,q) = p\log(p/q) + (1-p)\log((1-p)/(1-q))$$ is the binary KL divergence.</p>
+          <p>where $\epsilon$ is the probability of misidentifying the optimal arm, and $\text{kl}(p,q) = p\log(p/q) + (1-p)\log((1-p)/(1-q))$ is the binary KL divergence.</p>
 
-          <p>This inequality captures the fundamental statistical trade-off: to achieve low error probability $$\epsilon$$ in arm identification, we must pull arm $$i$$ many times (if $$\text{KL}(\nu_i, \nu_i')$$ is small) or pull arm $$j$$ many times (if $$\text{KL}(\nu_j, \nu_j')$$ is small). This mathematical constraint reflects the statistical requirements for reliable learning.</p>
+          <p>This inequality captures the fundamental statistical trade-off: to achieve low error probability $\epsilon$ in arm identification, we must pull arm $i$ many times (if $\text{KL}(\nu_i, \nu_i')$ is small) or pull arm $j$ many times (if $\text{KL}(\nu_j, \nu_j')$ is small). This mathematical constraint reflects the statistical requirements for reliable learning.</p>
         </section>
 
         <section id="minimax">

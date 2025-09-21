@@ -2,26 +2,22 @@
 
 .post h1{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 24px;
+  font-size: 29px;
   margin: 12px 0 8px;
 }
 
 .post h2{
-  font-size: 24px;
-  margin: 64px 0 24px;
-  padding-top: 32px;
-  border-top: 2px solid var(--border);
+  font-size: 36px;
+  margin: 24px 0 16px;
   font-weight: 600;
 }
 
 .post section:first-child h2{
   margin-top: 32px;
-  padding-top: 0;
-  border-top: none;
 }
 
 .post h3{
-  font-size: 16px;
+  font-size: 19px;
   margin: 20px 0 6px;
 }
 
@@ -61,6 +57,22 @@
 
 .post .meta{
   margin-top:-6px;
+}
+
+/* Larger spacing between sections with a full-bleed divider */
+.post section + section{
+  margin-top: 64px;
+}
+
+.post section + section::before{
+  content: "";
+  display: block;
+  height: 1px;
+  background: var(--border);
+  /* Robust full-bleed line without horizontal scrollbars */
+  box-shadow: 0 0 0 100vmax var(--border);
+  clip-path: inset(0 -100vmax);
+  margin: 64px 0; /* equal space above and below */
 }
 
 

@@ -68,7 +68,7 @@
         gap: 12px;
       }
       .toc li a {
-        font-size: 13px;
+        font-size: 16px;
         line-height: 1.4;
         white-space: nowrap;
       }
@@ -113,7 +113,7 @@
       align-items: baseline;
       text-decoration: none;
       color: var(--text);
-      font-size: 18px;
+      font-size: 22px;
       line-height: 1.5;
     }
     .toc li a:hover{
@@ -124,7 +124,7 @@
       font-weight: 400;
       margin-right: 8px;
       min-width: 20px;
-      font-size: 18px;
+      font-size: 22px;
     }
     @media(min-width: 1800px){
       .toc-section-number{
@@ -138,7 +138,7 @@
     }
     
     .toc h2{
-      font-size: 24px;
+      font-size: 29px;
       margin: 0 0 16px 0;
       font-weight: 600;
     }
@@ -147,11 +147,11 @@
       border: none;
       border-radius: 0;
       padding: 0;
-      margin: 24px 0;
+      margin: 24px 0 0 0;
     }
     .series-nav h3 {
       margin: 0 0 12px 0;
-      font-size: 18px;
+      font-size: 22px;
     }
     .series-nav ul {
       margin: 0;
@@ -166,16 +166,28 @@
     }
     .algorithm-box h4 {
       margin: 0 0 12px 0;
-      font-size: 16px;
+      font-size: 19px;
       font-weight: 700;
     }
     .edit-green { background: #e6ffed; border-radius: 3px; padding: 0 2px; }
     
     .content-divider {
-      width: 100%;
       height: 1px;
       background-color: var(--border);
-      margin: 32px 0;
+      /* Robust full-bleed divider */
+      box-shadow: 0 0 0 100vmax var(--border);
+      clip-path: inset(0 -100vmax);
+      margin: 64px 0; /* equal spacing above and below */
+    }
+
+    /* Make the header's hr full-bleed as well */
+    .page-header hr{
+      border: 0;
+      border-top: 1px solid var(--border);
+      /* Full-bleed */
+      box-shadow: 0 0 0 100vmax var(--border);
+      clip-path: inset(0 -100vmax);
+      margin: 32px 0; /* keeps header spacing tidy */
     }
   </style>
 </head>
@@ -293,19 +305,32 @@
         <section id="warmup">
           <h2>Finite-Armed Stochastic Bandits: Warming Up</h2>
 
-          <p>Let's formalize the stochastic multi-armed bandit problem. We have $K$ arms, where pulling arm $i$ at time $t$ yields reward $X_{i,t}$ drawn from an unknown distribution $\nu_i$ with mean $\mu_i$. The learner's goal is to minimize <em>regret</em> - the difference between rewards achieved and those from always using the optimal arm.</p>
+          <p>Bandit theory can quickly become intimidating as you could dive arbitrarily deep into measure theory, σ-algebras, or martingales. But that isn't necessary to grasp the core ideas. Instead, let's build intuition with the simplest meaningful setting: finite-armed stochastic bandits. This framework captures the essence of exploration versus exploitation while remaining concrete enough to analyze common solution strategies.</p>
+
+          <p>The problem statement is as follows: we have $K$ arms, where pulling arm $i$ at time $t$ yields reward $X_{i,t}$ drawn from an unknown distribution $\nu_i$ with mean $\mu_i$. The learner's goal is to minimize <em>regret</em>, which is the difference between rewards achieved and those from always using the optimal arm.</p>
+
+          <p>Why not evaluate a learner by raw cumulative reward $\sum_{t=1}^n X_t$?</p>
+          <ul>
+            <li>It is random: comparing policies requires a utility for the distribution of $S_n = \sum_{t=1}^n X_t$.</li>
+            <li>The instance is unknown: a policy that maximizes $\mathbb{E}[S_n]$ for one set of rewards may perform poorly on another.</li>
+          </ul>
+          <p><em>Regret</em> avoids both by comparing the learner to an oracle that always pulls the best arm.</p>
 
           <p>Define the optimal arm as $i^* = \arg\max_{i \in [K]} \mu_i$ with optimal mean $\mu^* = \mu_{i^*}$. The gap for arm $i$ is $\Delta_i = \mu^* - \mu_i$. After $n$ rounds, the cumulative regret is:</p>
 
-          <p>$$R_n = n\mu^* - \sum_{t=1}^n X_{I_t, t}$$</p>
+          <p>$$R_n = n\mu^* - \mathbb{E}\!\left[\sum_{t=1}^n X_{I_t, t}\right]$$</p>
 
-          <p>where $I_t$ is the arm selected at time $t$. Equivalently, we can express regret in terms of the expected number of times each arm is selected:</p>
+          <p>where $I_t$ is the arm selected at time $t$. Minimizing regret is equivalent to maximizing expected reward, but regret normalizes performance relative to the (unknown) optimum. If rewards were known, always pulling $i^*$ would give $R_n=0$.</p>
+          <div class="algorithm-box">
+            <h4>Regret decomposition</h4>
+            <p>Let $\Delta_i = \mu^* - \mu_i$ and let $N_i(n) = \sum_{t=1}^n \mathbb{1}_{\{I_t = i\}}$ be the (random) number of pulls of arm $i$ by round $n$. Then</p>
+            <p>$$R_n = \sum_{i=1}^K \Delta_i\, \mathbb{E}[N_i(n)].$$</p>
+            <p>By linearity, $\mathbb{E}[\sum_{t=1}^n X_{I_t,t}] = \sum_i \mu_i\, \mathbb{E}[N_i(n)]$.</p>
+            <p>Since $R_n = n\mu^* - \mathbb{E}[\sum_{t=1}^n X_{I_t,t}]$, we get $R_n = \sum_i (\mu^* - \mu_i)\, \mathbb{E}[N_i(n)] = \sum_i \Delta_i\, \mathbb{E}[N_i(n)]$.</p>
+          </div>
+          <p>This identity exposes the exploration–exploitation trade-off: each pull of a suboptimal arm incurs $\Delta_i$ expected loss. Good algorithms keep $\mathbb{E}[N_i(n)]$ small for large gaps while still exploring when gaps are small, targeting sublinear regret $R_n = o(n)$. The decomposition also provides a powerful framework for algorithm analysis. Instead of directly bounding the complex random quantity $R_n$, we can analyze each $\mathbb{E}[N_i(n)]$ separately.</p>
 
-          <p>$$\mathbb{E}[R_n] = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$$</p>
-
-          <p>where $N_i(n) = \sum_{t=1}^n \mathbb{1}_{I_t = i}$ counts selections of arm $i$.</p>
-
-          <p>This decomposition reveals the fundamental tension: regret accumulates from selecting suboptimal arms, weighted by gap differences. Effective algorithms must quickly identify and avoid clearly inferior arms while carefully gathering evidence about arms with similar performance.</p>
+          <p>Now let's formalize the problem setup.</p>
 
           <div class="algorithm-box">
             <h4>Problem Setup</h4>

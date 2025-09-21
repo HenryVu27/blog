@@ -199,8 +199,8 @@
       </nav>
 
       <header>
-        <h1 class="title">Multi-Armed Bandits Part 1: Foundations</h1>
-        <div class="meta">2025-09-17 · 18 min read</div>
+        <h1 class="title">Multi-Armed Bandits: Foundations</h1>
+        <div class="meta">2025-09-17</div>
         <hr>
       </header>
 
@@ -336,10 +336,11 @@
             <h4>Problem Setup</h4>
             <ul>
               <li>$K$ arms with unknown reward distributions $\nu_1, \ldots, \nu_K$</li>
+              <li>At round $t$, learner selects arm $I_t$ and receives reward $X_{I_t,t} \sim \nu_{I_t}$</li>
               <li>Arm $i$ has mean reward $\mu_i = \mathbb{E}[\nu_i]$</li>
               <li>Assumption: rewards are 1-sub-Gaussian (e.g., bounded in [0,1])</li>
               <li>Optimal arm: $i^* = \arg\max_i \mu_i$, gap: $\Delta_i = \mu^* - \mu_i$</li>
-              <li>Goal: Minimize cumulative regret $R_n$</li>
+              <li>Goal: Minimize regret $R_n = n\mu^* - \mathbb{E}[\sum_{t=1}^n X_{I_t,t}]$</li>
             </ul>
           </div>
         </section>

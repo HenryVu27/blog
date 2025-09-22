@@ -10,6 +10,26 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
   <style>
+    /* Safari-specific KaTeX fixes */
+    .katex {
+      line-height: 1 !important;
+    }
+    
+    .katex-display {
+      line-height: 1 !important;
+      margin: 1em 0 !important;
+    }
+    
+    /* Fix for sigma and other large operators in Safari */
+    .katex .mop {
+      vertical-align: baseline !important;
+    }
+    
+    /* Ensure proper alignment of subscripts and superscripts */
+    .katex .msubsup {
+      vertical-align: baseline !important;
+    }
+    
     /* Override global page styles for mixed layout */
     .page{
       max-width: none;
@@ -20,7 +40,7 @@
     .page-header {
       max-width: 800px;
       margin: 0 auto;
-      padding: 0 32px;
+      padding: 0 16px;
     }
     
     @media (max-width: 768px) {
@@ -30,41 +50,55 @@
       .page-header {
         padding: 0 16px;
       }
+      .layout {
+        display: block;
+        max-width: 800px;
+        padding: 0 16px;
+      }
+      .toc {
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 0 0 16px 0;
+        margin-bottom: 16px;
+      }
+      .toc ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .toc li a {
+        font-size: 16px;
+        line-height: 1.4;
+        white-space: nowrap;
+      }
     }
     
     .layout{
       display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 24px;
-      max-width: 1400px;
+      grid-template-columns: 300px minmax(720px, 1000px) 1fr;
+      gap: 32px;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 0 32px;
+      padding: 0 16px;
+      align-items: start;
     }
-    @media(min-width: 1800px){
+    
+    @media(min-width: 1200px){
       .layout{
-        max-width: 2200px;
-        grid-template-columns: 600px minmax(760px, 900px) 600px;
-        justify-content: center;
-        padding: 0;
+        grid-template-columns: 320px minmax(800px, 1200px) 1fr;
+        max-width: 1800px;
       }
-      .toc{grid-column: 1}
-      .post{grid-column: 2; max-width: 900px; margin: 0 auto}
     }
     .toc{
-      position:sticky; 
-      top:24px; 
+      position: static; 
       height:fit-content;
       border: none;
       border-right: 1px solid var(--border);
       border-radius: 0;
       padding: 0 16px 0 0;
-      margin-right: 0;
+      margin: 0;
       background: transparent;
-    }
-    .toc h2{
-      font-size: 29px;
-      margin: 0 0 16px 0;
-      font-weight: 600;
     }
     @media(min-width: 1800px){
       .toc{
@@ -102,12 +136,18 @@
       color: var(--text);
       font-weight: 400;
     }
+    
+    .toc h2{
+      font-size: 29px;
+      margin: 0 0 16px 0;
+      font-weight: 600;
+    }
     .series-nav {
       background: transparent;
       border: none;
       border-radius: 0;
       padding: 0;
-      margin: 24px 0;
+      margin: 24px 0 0 0;
     }
     .series-nav h3 {
       margin: 0 0 12px 0;
@@ -143,6 +183,26 @@
       margin: 16px 0;
       background: rgba(0,0,0,0.02);
     }
+    .edit-green { background: #e6ffed; border-radius: 3px; padding: 0 2px; }
+    
+    .content-divider {
+      height: 1px;
+      background-color: var(--border);
+      /* Robust full-bleed divider */
+      box-shadow: 0 0 0 100vmax var(--border);
+      clip-path: inset(0 -100vmax);
+      margin: 64px 0; /* equal spacing above and below */
+    }
+
+    /* Make the header's hr full-bleed as well */
+    .page-header hr{
+      border: 0;
+      border-top: 1px solid var(--border);
+      /* Full-bleed */
+      box-shadow: 0 0 0 100vmax var(--border);
+      clip-path: inset(0 -100vmax);
+      margin: 32px 0; /* keeps header spacing tidy */
+    }
   </style>
 </head>
 <body>
@@ -167,6 +227,8 @@
         </ul>
       </div>
     </div>
+
+    <div class="content-divider"></div>
 
     <div class="layout">
       <aside class="toc">
@@ -864,10 +926,7 @@ def generate_sparse_vector(d, s, noise_level=1.0):
       </article>
     </div>
 
-    <footer class="footer">
-      <a href="bandits-part2.html">← Previous: Advanced Algorithms</a> ·
-      <a href="bandits-part1.html">Back to Part 1</a>
-    </footer>
+    <footer class="footer">Technical Blog · <a href="bandits-part1.html">Back to Part 1</a></footer>
   </main>
 
   <script>

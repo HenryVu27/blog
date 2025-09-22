@@ -189,6 +189,42 @@
       clip-path: inset(0 -100vmax);
       margin: 32px 0; /* keeps header spacing tidy */
     }
+
+    /* Proof popover system */
+    .proof-popover-trigger{
+      display: inline-block;
+      background: #efeee6;
+      border: 1px solid #6b6a61;
+      border-radius: 8px;
+      padding: 2px 8px;
+      cursor: pointer;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.4);
+      transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+    .proof-popover-trigger:hover{
+      background: #e8e6d9;
+      border-color: #56554d;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
+    }
+    .proof-popover{
+      position: fixed;
+      z-index: 2000;
+      display: none;
+      width: 720px;
+      max-width: min(98vw, 900px);
+      max-height: 480px;
+      overflow: auto;
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      padding: 12px 14px;
+    }
+    .proof-popover.visible{ display: block; }
+    .proof-popover h4{ margin: 4px 0 8px 0; font-size: 18px; }
+    .proof-popover .meta{ font-size: 13px; color: var(--muted, #666); margin-bottom: 8px; }
+    .proof-center{ text-align: center; margin: 12px 0; }
   </style>
 </head>
 <body>
@@ -249,6 +285,8 @@
           <p>The name “multi-armed bandit” came later. In the 1950s, Mosteller and Bush studied learning in animals and humans. Mice faced left/right choices in a T-shaped maze with uncertain rewards. For humans, they built a two-armed machine: each lever paid out randomly with unknown probabilities. The setup echoed the “one-armed bandit” slot machine, and the term “two-armed,” then “multi-armed,” bandit stuck.</p>
         </section>
 
+        
+
         <section id="classic">
           <h2>A Classic Dilemma</h2>
 
@@ -307,7 +345,7 @@
 
           <p>Bandit theory can quickly become intimidating as you could dive arbitrarily deep into measure theory, σ-algebras, or martingales. But that isn't necessary to grasp the core ideas. Instead, let's build intuition with the simplest meaningful setting: finite-armed stochastic bandits. This framework captures the essence of exploration versus exploitation while remaining concrete enough to analyze common solution strategies.</p>
 
-          <p>The problem statement is as follows: we have $K$ arms, where pulling arm $i$ at time $t$ yields reward $X_{i,t}$ drawn from an unknown distribution $\nu_i$ with mean $\mu_i$. The learner's goal is to minimize <em>regret</em>, which is the difference between rewards achieved and those from always using the optimal arm.</p>
+          <p>The problem statement is as follows: we have $K$ arms, where pulling arm $i$ at time $t$ yields reward $X_{i,t}$ drawn from an unknown distribution $\nu_i$ with mean $\mu_i$. The learner's goal is to minimize <em>regret</em> after $n$ rounds, which is the difference between the cumulative reward achieved by the learner, and that of an oracle that always pulls the optimal arm.</p>
 
           <p>Why not evaluate a learner by raw cumulative reward $\sum_{t=1}^n X_t$?</p>
           <ul>
@@ -322,7 +360,7 @@
 
           <p>where $I_t$ is the arm selected at time $t$. Minimizing regret is equivalent to maximizing expected reward, but regret normalizes performance relative to the (unknown) optimum. If rewards were known, always pulling $i^*$ would give $R_n=0$.</p>
           <div class="algorithm-box">
-            <h4>Regret decomposition</h4>
+            <h4>Regret Decomposition</h4>
             <p>Let $\Delta_i = \mu^* - \mu_i$ and let $N_i(n) = \sum_{t=1}^n \mathbb{1}_{\{I_t = i\}}$ be the (random) number of pulls of arm $i$ by round $n$. Then</p>
             <p>$$R_n = \sum_{i=1}^K \Delta_i\, \mathbb{E}[N_i(n)].$$</p>
             <p>By linearity, $\mathbb{E}[\sum_{t=1}^n X_{I_t,t}] = \sum_i \mu_i\, \mathbb{E}[N_i(n)]$.</p>
@@ -338,8 +376,8 @@
               <li>$K$ arms with unknown reward distributions $\nu_1, \ldots, \nu_K$</li>
               <li>At round $t$, learner selects arm $I_t$ and receives reward $X_{I_t,t} \sim \nu_{I_t}$</li>
               <li>Arm $i$ has mean reward $\mu_i = \mathbb{E}[\nu_i]$</li>
-              <li>Assumption: rewards are 1-sub-Gaussian (e.g., bounded in [0,1])</li>
               <li>Optimal arm: $i^* = \arg\max_i \mu_i$, gap: $\Delta_i = \mu^* - \mu_i$</li>
+              <li>Assumption: rewards are 1-sub-Gaussian (e.g., bounded in [0,1])</li>
               <li>Goal: Minimize regret $R_n = n\mu^* - \mathbb{E}[\sum_{t=1}^n X_{I_t,t}]$</li>
             </ul>
           </div>
@@ -348,91 +386,152 @@
         <section id="etc">
           <h2>First Steps: Explore-then-Commit</h2>
 
-          <p>The simplest principled approach is Explore-then-Commit (ETC): pull each arm $m$ times, then select the empirically best arm for all remaining rounds. This two-phase strategy cleanly separates exploration (gathering information) from exploitation (maximizing reward).</p>
+          <p>Before diving into principled algorithms, consider these simple heuristics:</p>
+
+          <ul>
+            <li><strong>Greedy:</strong> Always play the arm with the highest empirical mean. This can get stuck on a suboptimal arm due to lack of exploration, leading to linear regret.</li>
+            <li><strong>Uniform exploration:</strong> Play all arms an equal number of times. This is pure exploration with no exploitation, also yielding linear regret.</li>
+            <li><strong>ε-greedy:</strong> With probability $1-\epsilon$, exploit by playing the empirically best arm; with probability $\epsilon$, explore by playing a random arm. This achieves $O(\log n)$ regret with proper tuning.</li>
+          </ul>
+
+          <p>While ε-greedy can work reasonably well, it explores uniformly without considering confidence in the estimates. This motivates more sophisticated approaches.</p>
+
+          <p>The first principled method we explore is called Explore-then-Commit. The approach is, explore each action/arm a fixed number of times ($m$), then exploit the knowledge by choosing the arm with the largest empirical payoff.</p>
 
           <div class="algorithm-box">
             <h4>Explore-then-Commit Algorithm</h4>
-            <p><strong>Parameters:</strong> Exploration budget $m$</p>
             <ol>
-              <li><strong>Exploration:</strong> Pull each arm $m$ times</li>
-              <li><strong>Estimation:</strong> Compute empirical means $\hat{\mu}_i = \frac{1}{m}\sum_{j=1}^m X_{i,j}$</li>
-              <li><strong>Commitment:</strong> Select best arm $\hat{i} = \arg\max_i \hat{\mu}_i$ and pull it for remaining $n - K m$ rounds</li>
+              <li><strong>Explore phase:</strong> Pull each arm exactly $m$ times</li>
+              <li><strong>Compute empirical means:</strong> $\hat{\mu}_i = \frac{1}{m}\sum_{j=1}^m X_{i,j}$ for each arm $i$</li>
+              <li><strong>Commit phase:</strong> Select $\hat{i} = \arg\max_i \hat{\mu}_i$ and pull it for all remaining $n - mK$ rounds</li>
             </ol>
           </div>
 
-          <p>To analyze ETC, we bound the probability of selecting a suboptimal arm. Using Hoeffding's inequality, for any $\delta > 0$:</p>
+          <figure>
+            <img src="ETC.png" alt="Explore-then-Commit strategy visualization" style="max-width:100%; height:auto;" />
+          </figure>
 
-          <p>$$\mathbb{P}[|\hat{\mu}_i - \mu_i| \geq \delta] \leq 2\exp(-2m\delta^2)$$</p>
+          <p>To analyze the regret of ETC, recall that $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$ from the regret decomposition above. Let's denote $i^* = \arg\max_i \mu_i$ as the optimal arm.</p>
 
-          <p>The algorithm fails when the empirically best arm differs from the truly best. This occurs when either:</p>
-          <ol>
-            <li>The optimal arm's empirical mean is underestimated: $\hat{\mu}_{i^*} < \mu^* - \epsilon$</li>
-            <li>Some suboptimal arm's empirical mean is overestimated: $\hat{\mu}_i > \mu_i + \epsilon$</li>
-          </ol>
+          <div class="algorithm-box">
+            <h4>Theorem (ETC Regret Bound)</h4>
+            <p>For the Explore-then-Commit algorithm with exploration budget $m$ per arm:</p>
+            <p>$$R_n \leq m \sum_{i=1}^K \Delta_i + (n - mK) \sum_{i=1}^K \Delta_i \exp\left(-\frac{m\Delta_i^2}{4}\right)$$</p>
+          </div>
 
-          <p>Setting $\epsilon = \Delta_i/2$ and applying union bound gives the regret bound:</p>
+          <p>Intuitively, this bound captures the exploration–exploitation balance. Choosing a large $m$ means more time sampling every arm, so the first term (proportional to $m$) grows. Picking $m$ too small raises the chance of committing to a suboptimal arm, inflating the second term, which decreases only when $m$ is large enough to make the misidentification probability tiny.</p>
 
-          <p>$$R_n \leq m \sum_{i=1}^k \Delta_i + (n - mk) \sum_{i=1}^k \Delta_i \exp\left(-\frac{m\Delta_i^2}{4}\right)$$</p>
+          <p>To obtain a clean one-dimensional objective in $m$, specialize to the worst-case two-armed instance: set $K=2$ with $\Delta_1=0$ and denote $\Delta=\Delta_2$. Then only one suboptimal arm contributes and
+          $$R_n \;\le\; m\,\Delta + (n-2m)\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right) \;\le\; m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right),$$
+          since $n-2m \le n$. This is the scalar function we minimize to pick $m$.</p>
 
-          <p>The optimal choice is $m = \max\left\{1, \left\lceil \frac{4}{\Delta^2} \log\left(\frac{n\Delta^2}{4}\right) \right\rceil \right\}$ for gap $\Delta$. For the worst-case over gaps, this gives:</p>
+          <p><strong>Proof:</strong> In the first $mK$ rounds, the policy is deterministic, choosing each action exactly $m$ times. Subsequently it chooses a single action maximizing the average reward during exploration. Thus,</p>
 
-          <p>$$R_n \leq \Delta + C\sqrt{n}$$</p>
+          <p>$$\mathbb{E}[N_i(n)] = m + (n - mK)\mathbb{P}(I_{mK+1} = i)$$</p>
+          <p>$$\leq m + (n - mK)\mathbb{P}\left(\hat{\mu}_i(mK) \geq \max_{j \neq i} \hat{\mu}_j(mK)\right)$$</p>
 
-          <p>where $C > 0$ is a universal constant. When $\Delta \leq 1$, we get $R_n \leq 1 + C\sqrt{n}$.</p>
-          <p>This bound is called <em>worst-case</em>, <em>problem-free</em>, or <em>problem-independent</em> because it only depends on the horizon $n$ and number of arms $k$, not the specific instance. The reason is that the bound only depends on the worst possible gap configuration. In contrast, bounds that depend on specific gaps like $\Delta_i$ are called <em>gap/problem/distribution/instance dependent</em>.</p>
+          <p>The probability on the right-hand side is bounded by:</p>
 
-          <pre><code>import numpy as np
-import matplotlib.pyplot as plt
+          <p>$$\mathbb{P}\left(\hat{\mu}_i(mK) \geq \max_{j \neq i} \hat{\mu}_j(mK)\right) \leq \mathbb{P}(\hat{\mu}_i(mK) \geq \hat{\mu}_{i^*}(mK))$$</p>
 
-def explore_then_commit(rewards, m, T):
-    """
-    Explore-then-Commit algorithm
+          <p>This holds since beating all other arms implies beating the optimal arm $i^*$. Rewriting:</p>
+          <p>$$= \mathbb{P}(\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*}) \geq \Delta_i)$$</p>
 
-    Args:
-        rewards: K x T matrix of rewards
-        m: exploration budget per arm
-        T: time horizon
+          <p>Then, we need to show that <span class="proof-popover-trigger" data-proof-id="etc-subg">$\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*})$ is $\sqrt{2/m}$-subgaussian</span>, which follows from standard subgaussian closure properties. Hence by Hoeffding's inequality:</p>
+          <div id="etc-subg" style="display:none">
+            <div><b>Lemma:</b> Suppose that $X$ is $\sigma$-subgaussian and $X_1$ and $X_2$ are independent and $\sigma_1$ and $\sigma_2$-subgaussian, respectively. Then:</div>
+            <ol type="a" style="margin: 6px 0 10px 24px; padding-left: 0;">
+              <li>$\mathbb{E}[X] = 0$ and $\mathrm{Var}[X] \le \sigma^2$.</li>
+              <li>$cX$ is $|c|\sigma$-subgaussian for all $c \in \mathbb{R}$.</li>
+              <li>$X_1 + X_2$ is $\sqrt{\sigma_1^2 + \sigma_2^2}$-subgaussian.</li>
+            </ol>
+            <p>During exploration, each arm is pulled $m$ times and rewards are independent and 1-subgaussian. The empirical mean deviation for any arm satisfies
+            $$\hat\mu_i - \mu_i = \frac{1}{m} \sum_{s=1}^m (X_{i,s}-\mu_i)\quad \Rightarrow\quad \hat\mu_i - \mu_i\;\text{is}\;\frac{1}{\sqrt{m}}\text{-subgaussian}$$
+            (average of $m$ independent 1-subgaussians). The same holds for the optimal arm: $\hat\mu_{i^*}-\mu_{i^*}$ is $1/\sqrt{m}$-subgaussian. These two terms are independent, so their difference has parameter
+            $$\sqrt{\Big(\tfrac{1}{\sqrt{m}}\Big)^2 + \Big(\tfrac{1}{\sqrt{m}}\Big)^2}\;=\;\sqrt{\tfrac{2}{m}},$$
+            i.e., $\hat\mu_i-\mu_i-(\hat\mu_{i^*}-\mu_{i^*})$ is $\sqrt{2/m}$-subgaussian. Applying the standard subgaussian tail bound (Hoeffding) gives
+            $$\mathbb{P}\!\left(\hat\mu_i-\mu_i-\hat\mu_{i^*}+\mu_{i^*} \ge \Delta_i\right) \le \exp\!\left(-\frac{m\,\Delta_i^2}{4}\right),$$
+            which is the term used in the ETC regret analysis.</p>
+          </div>
 
-    Returns:
-        cumulative_regret: array of regret at each time step
-    """
-    K = rewards.shape[0]
+          <p>$$\mathbb{P}(\hat{\mu}_i(mK) - \mu_i - \hat{\mu}_{i^*}(mK) + \mu_{i^*} \geq \Delta_i) \leq \exp\left(-\frac{m\Delta_i^2}{4}\right)$$</p>
 
-    # Exploration phase
-    empirical_means = np.mean(rewards[:, :m], axis=1)
-    best_arm = np.argmax(empirical_means)
+          <p>Substituting this into the expression for $\mathbb{E}[N_i(n)]$ and the regret decomposition gives the regret bound.</p>
 
-    # Track regret
-    optimal_rewards = np.max(np.mean(rewards, axis=1))
-    cumulative_regret = np.zeros(T)
+          <p>To choose the right $m$, we simplify to the basic two-arm instance: arm 1 is optimal ($\Delta_1=0$) and arm 2 is suboptimal with gap $\Delta_2=\Delta$. Then $K=2$ and the bound becomes
+          $$R_n \;\le\; m\,\Delta + (n-2m)\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right) \;\le\; m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right),$$
+          which is a one-dimensional function of $m$ that we can minimize explicitly.</p>
 
-    # Exploration regret
-    for t in range(K * m):
-        arm = t % K
-        reward = rewards[arm, t // K]
-        regret = optimal_rewards - reward
-        cumulative_regret[t] = cumulative_regret[t-1] + regret if t > 0 else regret
+          <p>The optimal choice is <span class="proof-popover-trigger" data-proof-id="etc-m-choice">$m = \max\left\{1, \left\lceil \frac{4}{\Delta^2} \log\!\left(\frac{n\Delta^2}{4}\right) \right\rceil \right\}$</span> for gap $\Delta$. For the worst-case over gaps, this gives:</p>
+          <div id="etc-m-choice" style="display:none">
+            <p>To select $m$, minimize a smooth upper bound on $R_n$. Using the standard two-arm simplification (or bounding $(n-mK)\le n$), write
+            $$f(m) = m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right).$$
+            Treating $m$ as real and differentiating,
+            $$f'(m) = \Delta\Big[\,1 - \tfrac{n\Delta^2}{4}\,e^{-m\Delta^2/4}\Big].$$
+            Setting $f'(m)=0$ gives $e^{-m\Delta^2/4}=\tfrac{4}{n\Delta^2}$ and hence
+            $$m^* = \frac{4}{\Delta^2}\,\log\!\left(\frac{n\Delta^2}{4}\right).$$
+            Because $m$ must be an integer and at least one pull per arm is required, we take
+            $$m = \max\Big\{1,\;\big\lceil m^*\big\rceil\Big\} = \max\left\{1, \left\lceil \tfrac{4}{\Delta^2}\log\!\left(\tfrac{n\Delta^2}{4}\right) \right\rceil \right\}$$.</p>
+          </div>
 
-    # Exploitation regret
-    for t in range(K * m, T):
-        reward = rewards[best_arm, t - K * m]
-        regret = optimal_rewards - reward
-        cumulative_regret[t] = cumulative_regret[t-1] + regret
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="etc-worstcase">$$R_n \leq \Delta + C\sqrt{n}$$</span></p>
+          <div id="etc-worstcase" style="display:none">
+            <p>From
+            $$R_n \;\le\; \min\!\left\{\;n\Delta,\; \Delta + \tfrac{4}{\Delta}\Big(1+\max\{0,\log(\tfrac{n\Delta^2}{4})\}\Big)\;\right\},$$
+            argue by cases:</p>
+            <p><strong>1) Small gap.</strong> If $\Delta \le 2/\sqrt{n}$, then $n\Delta \le 2\sqrt{n}$, so $R_n \le n\Delta \le \Delta + 2\sqrt{n}$.</p>
+            <p><strong>2) Larger gap.</strong> If $\Delta > 2/\sqrt{n}$, set $c=\Delta\sqrt{n}>2$. The second term applies since $\log(n\Delta^2/4)=\log(c^2/4)\ge0$ and becomes
+            $$R_n \;\le\; \Delta + 4\sqrt{n}\,\frac{1+\log(c^2/4)}{c}.$$
+            Let $g(c)=\frac{1+\log(c^2/4)}{c}$. Taking the derivative gives
+            $$g'(c)=\frac{2-\big(1-\log 4\big)-2\log c}{c^2}=0\quad\Longrightarrow\quad c=2\sqrt{e},$$
+            at which $g(c)=1/\!\sqrt{e}$. For all $c\ge2$, $g(c)\le 1/\!\sqrt{e}$. Hence
+            $$R_n \;\le\; \Delta + \frac{4}{\sqrt{e}}\,\sqrt{n} \;\le\; \Delta + C\sqrt{n}$$
+            for some constant $C$ (e.g., $C=3$).</p>
+            <p>Together, both cases yield $R_n \le \Delta + C\sqrt{n}$.</p>
+          </div>
 
-    return cumulative_regret</code></pre>
+          <p>where $C > 0$ is a universal constant. When $\Delta \leq 1$, we get $R_n \leq 1 + C\sqrt{n}$, or simply $R_n = O(\sqrt{n})$.</p>
+
+          <p>The previous choice of $m$ is close to the optimal choice, but it depends on both the unknown gap $\Delta$ and the horizon $n$. A standard alternative is to pick
+          $m$ as a function of horizon $n$ only. For two 1-subgaussian arms, this yields a <em>gap-free</em>
+          bound $R_n = O(n^{2/3})$.</p>
+
+          <p>Start from the two-arm bound derived above:
+          $$R_n \;\le\; m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right).$$
+          For fixed $m$, upper bound the second term uniformly over $\Delta>0$. Let $g(\Delta)=\Delta\,\exp(-\tfrac{m\Delta^2}{4})$. Then
+          $$g'(\Delta) = \exp(-m\Delta^2/4)\Big(1 - \tfrac{m\Delta^2}{2}\Big)=0\;\Rightarrow\; \Delta_* = \sqrt{\tfrac{2}{m}},$$
+          and
+          $$\sup_{\Delta>0} g(\Delta) = g(\Delta_*) = \sqrt{\tfrac{2}{m}}\,\exp(-1/2) \;\le\; \frac{1}{\sqrt{m}}.$$
+          Hence, for all $\Delta>0$,
+          $$R_n \;\le\; m\,\Delta + \sqrt{2}\,\exp(-1/2)\,\frac{n}{\sqrt{m}}.$$
+          Choosing $m = \lceil n^{2/3} \rceil$ gives
+          $$R_n \;\le\; \Delta\,n^{2/3} + \sqrt{2}\,\exp(-1/2)\,n^{2/3} + O(\Delta),$$
+          which is at most $(\Delta + C)\,n^{2/3}$ for some constant $C$. In other words, $R_n = O(n^{2/3})$.</p>
         </section>
 
         <section id="ucb">
           <h2>The Upper Confidence Bound (UCB) Algorithm</h2>
 
-          <p>UCB elegantly addresses ETC's limitations by adaptively balancing exploration and exploitation. Instead of rigid phases, UCB constructs confidence intervals around arm means and selects the arm with highest upper confidence bound - embodying the principle of optimism under uncertainty.</p>
+          <p>UCB elegantly addresses ETC's limitations by adaptively balancing exploration and exploitation. Instead of rigid phases, UCB constructs confidence intervals around arm means and selects the arm with highest upper confidence bound, a principle which we call <em>optimism under uncertainty</em>.</p>
 
           <p>At time $t$, having selected arm $i$ a total of $N_i(t-1)$ times and observed empirical mean $\hat{\mu}_i(t-1)$, UCB selects:</p>
 
-          <p>$$I_t = \arg\max_{i \in [K]} \left( \hat{\mu}_i(t-1) + \sqrt{\frac{2\log t}{N_i(t-1)}} \right)$$</p>
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="ucb-derivation">$$I_t = \arg\max_{i \in [K]} \left( \hat{\mu}_i(t-1) + \sqrt{\frac{2\log t}{N_i(t-1)}} \right)$$</span></p>
+          <div id="ucb-derivation" style="display:none">
+            <div><b>Where does this index come from?</b> Fix an arm $i$ and suppose the rewards $\{X_{i,s}\}_{s\ge1}$ are independent and 1-sub-Gaussian with mean $\mu_i$. If $\hat\mu_i(n)=\tfrac{1}{n}\sum_{s=1}^n X_{i,s}$ denotes the empirical mean after $n$ samples, the standard sub-Gaussian tail bound implies that for any $\delta\in(0,1)$,</div>
+            <p>$$\mathbb{P}\!\left(\mu_i \ge \hat\mu_i(n) + \sqrt{\frac{2\log(1/\delta)}{n}}\right) \le \delta.$$</p>
+            <p>At round $t$, the number of observations for arm $i$ is $n=N_i(t-1)$. Therefore, with probability at least $1-\delta$ we have</p>
+            <p>$$\mu_i \le \hat\mu_i(t-1) + \sqrt{\frac{2\log(1/\delta)}{N_i(t-1)}}.$$
+            This upper endpoint of a $(1-\delta)$-confidence interval is an optimistic estimate of $\mu_i$. To make the guarantee hold uniformly over time and arms, we use a time-dependent level $\delta_t$ (e.g., $\delta_t=1/t$ or $\delta_t=1/t^2$) and define the index</p>
+            <p>$$\mathrm{UCB}_i(t) \;=\; \hat\mu_i(t-1) + \sqrt{\frac{2\log(1/\delta_t)}{N_i(t-1)}},$$</p>
+            <p>with the convention $\mathrm{UCB}_i(t)=+\infty$ when $N_i(t-1)=0$ so each arm is sampled at least once. Choosing $\delta_t=1/t$ yields the expression used above.</p>
+          </div>
 
-          <p>The confidence radius $\sqrt{\frac{2\log t}{N_i(t-1)}}$ decreases as more data is collected for arm $i$, but increases with time to ensure sufficient exploration of all arms when evidence is limited.</p>
+          <p><strong>Exploitation vs. exploration:</strong> The term $\hat{\mu}_i(t-1)$ is the <em>exploitation</em> component, favoring arms that have produced large average rewards so far. The square-root term is the <em>exploration bonus</em> (confidence width): it is larger for arms with few samples ($N_i(t-1)$ small) and grows slowly with time through $\log(t)$, encouraging additional pulls until the estimate is accurate.</p>
 
+          <p>The expression inside the argmax is called the <em>index</em> of arm $i$. Index algorithms form a broad class of bandit strategies where each arm is assigned a numerical score (the index) based on its historical performance and uncertainty. The algorithm then simply selects the arm with the highest index at each round. Intuitively, this leads to sublinear regret because when the optimal arm's index overestimates its true mean, any suboptimal arm must achieve an index value exceeding the optimal arm's index to be selected. However, this can't happen too often as the learner continues to explore the environment and update its estimates.</p>
+
+          <p> The UCB algorithm is defined as follows:</p>
           <div class="algorithm-box">
             <h4>UCB Algorithm</h4>
             <p><strong>Initialization:</strong> Pull each arm once</p>
@@ -457,54 +556,6 @@ def explore_then_commit(rewards, m, T):
           <p>$$\mathbb{E}[R_n] \leq \sum_{i: \Delta_i > 0} \Delta_i \left( \frac{8\log n}{\Delta_i^2} + 1 + \frac{\pi^2}{3} \right) = \sum_{i: \Delta_i > 0} \left( \frac{8\log n}{\Delta_i} + O(1) \right)$$</p>
 
           <p>Crucially, this scales as $O(\log n / \Delta_i)$ for each suboptimal arm, automatically adapting to problem difficulty. Arms with large gaps are quickly identified and avoided, while arms with small gaps are selected more often - exactly the desired behavior when arms have similar performance.</p>
-
-          <pre><code>def ucb(rewards, T):
-    """
-    Upper Confidence Bound algorithm
-
-    Args:
-        rewards: K x T matrix of rewards
-        T: time horizon
-
-    Returns:
-        cumulative_regret: array of regret at each time step
-    """
-    K = rewards.shape[0]
-
-    # Initialize
-    empirical_means = np.zeros(K)
-    num_pulls = np.zeros(K)
-    cumulative_regret = np.zeros(T)
-    optimal_reward = np.max(np.mean(rewards, axis=1))
-
-    # Pull each arm once
-    for k in range(K):
-        reward = rewards[k, k]
-        empirical_means[k] = reward
-        num_pulls[k] = 1
-        regret = optimal_reward - reward
-        cumulative_regret[k] = cumulative_regret[k-1] + regret if k > 0 else regret
-
-    # UCB selection
-    for t in range(K, T):
-        # Compute UCB for each arm
-        ucb_values = empirical_means + np.sqrt(2 * np.log(t) / num_pulls)
-
-        # Select arm with highest UCB
-        arm = np.argmax(ucb_values)
-
-        # Observe reward
-        reward = rewards[arm, int(num_pulls[arm])]
-
-        # Update statistics
-        num_pulls[arm] += 1
-        empirical_means[arm] += (reward - empirical_means[arm]) / num_pulls[arm]
-
-        # Track regret
-        regret = optimal_reward - reward
-        cumulative_regret[t] = cumulative_regret[t-1] + regret
-
-    return cumulative_regret</code></pre>
         </section>
 
         <section id="optimality">
@@ -641,6 +692,11 @@ def explore_then_commit(rewards, m, T):
     <footer class="footer">Technical Blog · <a href="bandits-part2.html">Next: Advanced Algorithms →</a></footer>
   </main>
 
+  <!-- Proof Popover Container -->
+  <div class="proof-popover" id="proof-popover" role="dialog" aria-hidden="true">
+    <div id="proof-popover-content"></div>
+  </div>
+
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       renderMathInElement(document.body, {
@@ -649,6 +705,110 @@ def explore_then_commit(rewards, m, T):
           {left: "$", right: "$", display: false}
         ],
         ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+      });
+
+      // Proof popover controller
+      const popover = document.getElementById('proof-popover');
+      const contentEl = document.getElementById('proof-popover-content');
+      let activeTrigger = null;
+      let hideTimer = null;
+
+      function clearHideTimer(){ if(hideTimer){ clearTimeout(hideTimer); hideTimer = null; } }
+
+      function startHideTimer(){
+        clearHideTimer();
+        hideTimer = setTimeout(() => {
+          hidePopover();
+        }, 2000);
+      }
+
+      function showPopoverFor(trigger){
+        clearHideTimer();
+        activeTrigger = trigger;
+        const proofId = trigger.getAttribute('data-proof-id');
+        const hidden = document.getElementById(proofId);
+        if(!hidden){ return; }
+        contentEl.innerHTML = hidden.innerHTML;
+
+        // Render KaTeX inside the popover content
+        try {
+          renderMathInElement(contentEl, {
+            delimiters: [
+              {left: "$$", right: "$$", display: true},
+              {left: "$", right: "$", display: false}
+            ],
+            ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+          });
+        } catch(e) { /* no-op */ }
+
+        // Make visible to measure and position
+        popover.classList.add('visible');
+        popover.style.visibility = 'hidden';
+
+        positionPopover(trigger);
+
+        popover.style.visibility = '';
+        popover.setAttribute('aria-hidden', 'false');
+      }
+
+      function positionPopover(trigger){
+        const rect = trigger.getBoundingClientRect();
+        const spacing = 8;
+        const maxLeft = window.innerWidth - popover.offsetWidth - 12;
+        let left = Math.min(rect.left, maxLeft);
+        left = Math.max(12, left);
+
+        let top = rect.bottom + spacing;
+        if (top + popover.offsetHeight > window.innerHeight - 12) {
+          top = rect.top - popover.offsetHeight - spacing;
+        }
+        if (top < 12) { top = 12; }
+
+        popover.style.left = left + 'px';
+        popover.style.top = top + 'px';
+      }
+
+      function hidePopover(){
+        popover.classList.remove('visible');
+        popover.setAttribute('aria-hidden', 'true');
+        activeTrigger = null;
+      }
+
+      // Wire up triggers
+      const triggers = Array.from(document.querySelectorAll('.proof-popover-trigger'));
+      triggers.forEach(tr => {
+        tr.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (popover.classList.contains('visible') && activeTrigger === tr) {
+            hidePopover();
+          } else {
+            showPopoverFor(tr);
+          }
+        });
+        tr.addEventListener('mouseenter', clearHideTimer);
+        tr.addEventListener('mouseleave', startHideTimer);
+      });
+
+      // Hover persistence on popover
+      popover.addEventListener('mouseenter', clearHideTimer);
+      popover.addEventListener('mouseleave', startHideTimer);
+
+      // Close on outside click or Escape (immediate close)
+      document.addEventListener('click', (e) => {
+        if (!popover.contains(e.target) && !e.target.closest('.proof-popover-trigger')) {
+          hidePopover();
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape') hidePopover();
+      });
+
+      // Reposition on resize
+      window.addEventListener('resize', () => {
+        if (activeTrigger && popover.classList.contains('visible')) {
+          positionPopover(activeTrigger);
+        }
       });
     });
   </script>

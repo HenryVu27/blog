@@ -14,17 +14,17 @@
     .katex {
       line-height: 1 !important;
     }
-    
+
     .katex-display {
       line-height: 1 !important;
       margin: 1em 0 !important;
     }
-    
+
     /* Fix for sigma and other large operators in Safari */
     .katex .mop {
       vertical-align: baseline !important;
     }
-    
+
     /* Ensure proper alignment of subscripts and superscripts */
     .katex .msubsup {
       vertical-align: baseline !important;
@@ -162,7 +162,7 @@
       border-radius: 8px;
       padding: 16px;
       margin: 16px 0;
-      background: var(--code-bg);
+      background: #f5f4f0;
     }
     .algorithm-box h4 {
       margin: 0 0 12px 0;
@@ -193,7 +193,7 @@
     /* Proof popover system */
     .proof-popover-trigger{
       display: inline-block;
-      background: #efeee6;
+      background: #d4d1c4;
       border: 1px solid #6b6a61;
       border-radius: 8px;
       padding: 2px 8px;
@@ -202,12 +202,12 @@
       transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
     }
     .proof-popover-trigger:hover{
-      background: #e8e6d9;
+      background: #c7c3b5;
       border-color: #56554d;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
     }
     .proof-popover{
-      position: fixed;
+      position: absolute;
       z-index: 2000;
       display: none;
       width: 720px;
@@ -220,6 +220,9 @@
       border-radius: 8px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.18);
       padding: 12px 14px;
+      /* Safari compatibility */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
     }
     .proof-popover.visible{ display: block; }
     .proof-popover h4{ margin: 4px 0 8px 0; font-size: 18px; }
@@ -341,7 +344,7 @@
         </section>
 
         <section id="warmup">
-          <h2>Finite-Armed Stochastic Bandits: Warming Up</h2>
+          <h2>The Regret and Finite-Armed Stochastic Bandits</h2>
 
           <p>Bandit theory can quickly become intimidating as you could dive arbitrarily deep into measure theory, σ-algebras, or martingales. But that isn't necessary to grasp the core ideas. Instead, let's build intuition with the simplest meaningful setting: finite-armed stochastic bandits. This framework captures the essence of exploration versus exploitation while remaining concrete enough to analyze common solution strategies.</p>
 
@@ -359,13 +362,19 @@
           <p>$$R_n = n\mu^* - \mathbb{E}\!\left[\sum_{t=1}^n X_{I_t, t}\right]$$</p>
 
           <p>where $I_t$ is the arm selected at time $t$. Minimizing regret is equivalent to maximizing expected reward, but regret normalizes performance relative to the (unknown) optimum. If rewards were known, always pulling $i^*$ would give $R_n=0$.</p>
-          <div class="algorithm-box">
-            <h4>Regret Decomposition</h4>
-            <p>Let $\Delta_i = \mu^* - \mu_i$ and let $N_i(n) = \sum_{t=1}^n \mathbb{1}_{\{I_t = i\}}$ be the (random) number of pulls of arm $i$ by round $n$. Then</p>
-            <p>$$R_n = \sum_{i=1}^K \Delta_i\, \mathbb{E}[N_i(n)].$$</p>
+
+          <p>Let $\Delta_i = \mu^* - \mu_i$ and let $N_i(n) = \sum_{t=1}^n \mathbb{1}_{\{I_t = i\}}$ be the (random) number of pulls of arm $i$ by round $n$. Then we have the regret decomposition:</p>
+          
+          <div id="regret-decomp" style="display:none">
+            <p><strong>Regret Decomposition:</strong></p>
+            <p>$$R_n = \sum_{i=1}^K \Delta_i\, \mathbb{E}[N_i(n)]$$</p>
+            <p><strong>Proof:</strong></p>
             <p>By linearity, $\mathbb{E}[\sum_{t=1}^n X_{I_t,t}] = \sum_i \mu_i\, \mathbb{E}[N_i(n)]$.</p>
             <p>Since $R_n = n\mu^* - \mathbb{E}[\sum_{t=1}^n X_{I_t,t}]$, we get $R_n = \sum_i (\mu^* - \mu_i)\, \mathbb{E}[N_i(n)] = \sum_i \Delta_i\, \mathbb{E}[N_i(n)]$.</p>
           </div>
+
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="regret-decomp">$$R_n = \sum_{i=1}^K \Delta_i\, \mathbb{E}[N_i(n)]$$</span></p>
+
           <p>This identity exposes the exploration–exploitation trade-off: each pull of a suboptimal arm incurs $\Delta_i$ expected loss. Good algorithms keep $\mathbb{E}[N_i(n)]$ small for large gaps while still exploring when gaps are small, targeting sublinear regret $R_n = o(n)$. The decomposition also provides a powerful framework for algorithm analysis. Instead of directly bounding the complex random quantity $R_n$, we can analyze each $\mathbb{E}[N_i(n)]$ separately.</p>
 
           <p>Now let's formalize the problem setup.</p>
@@ -421,10 +430,6 @@
 
           <p>Intuitively, this bound captures the exploration–exploitation balance. Choosing a large $m$ means more time sampling every arm, so the first term (proportional to $m$) grows. Picking $m$ too small raises the chance of committing to a suboptimal arm, inflating the second term, which decreases only when $m$ is large enough to make the misidentification probability tiny.</p>
 
-          <p>To obtain a clean one-dimensional objective in $m$, specialize to the worst-case two-armed instance: set $K=2$ with $\Delta_1=0$ and denote $\Delta=\Delta_2$. Then only one suboptimal arm contributes and
-          $$R_n \;\le\; m\,\Delta + (n-2m)\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right) \;\le\; m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right),$$
-          since $n-2m \le n$. This is the scalar function we minimize to pick $m$.</p>
-
           <p><strong>Proof:</strong> In the first $mK$ rounds, the policy is deterministic, choosing each action exactly $m$ times. Subsequently it chooses a single action maximizing the average reward during exploration. Thus,</p>
 
           <p>$$\mathbb{E}[N_i(n)] = m + (n - mK)\mathbb{P}(I_{mK+1} = i)$$</p>
@@ -437,7 +442,7 @@
           <p>This holds since beating all other arms implies beating the optimal arm $i^*$. Rewriting:</p>
           <p>$$= \mathbb{P}(\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*}) \geq \Delta_i)$$</p>
 
-          <p>Then, we need to show that <span class="proof-popover-trigger" data-proof-id="etc-subg">$\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*})$ is $\sqrt{2/m}$-subgaussian</span>, which follows from standard subgaussian closure properties. Hence by Hoeffding's inequality:</p>
+          <p>Then, we can show that <span class="proof-popover-trigger" data-proof-id="etc-subg">$\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*})$ is $\sqrt{2/m}$-subgaussian</span>, which follows from standard subgaussian properties. Hence by Hoeffding's inequality:</p>
           <div id="etc-subg" style="display:none">
             <div><b>Lemma:</b> Suppose that $X$ is $\sigma$-subgaussian and $X_1$ and $X_2$ are independent and $\sigma_1$ and $\sigma_2$-subgaussian, respectively. Then:</div>
             <ol type="a" style="margin: 6px 0 10px 24px; padding-left: 0;">
@@ -492,21 +497,24 @@
 
           <p>where $C > 0$ is a universal constant. When $\Delta \leq 1$, we get $R_n \leq 1 + C\sqrt{n}$, or simply $R_n = O(\sqrt{n})$.</p>
 
-          <p>The previous choice of $m$ is close to the optimal choice, but it depends on both the unknown gap $\Delta$ and the horizon $n$. A standard alternative is to pick
-          $m$ as a function of horizon $n$ only. For two 1-subgaussian arms, this yields a <em>gap-free</em>
-          bound $R_n = O(n^{2/3})$.</p>
-
-          <p>Start from the two-arm bound derived above:
-          $$R_n \;\le\; m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right).$$
-          For fixed $m$, upper bound the second term uniformly over $\Delta>0$. Let $g(\Delta)=\Delta\,\exp(-\tfrac{m\Delta^2}{4})$. Then
-          $$g'(\Delta) = \exp(-m\Delta^2/4)\Big(1 - \tfrac{m\Delta^2}{2}\Big)=0\;\Rightarrow\; \Delta_* = \sqrt{\tfrac{2}{m}},$$
-          and
-          $$\sup_{\Delta>0} g(\Delta) = g(\Delta_*) = \sqrt{\tfrac{2}{m}}\,\exp(-1/2) \;\le\; \frac{1}{\sqrt{m}}.$$
-          Hence, for all $\Delta>0$,
-          $$R_n \;\le\; m\,\Delta + \sqrt{2}\,\exp(-1/2)\,\frac{n}{\sqrt{m}}.$$
-          Choosing $m = \lceil n^{2/3} \rceil$ gives
-          $$R_n \;\le\; \Delta\,n^{2/3} + \sqrt{2}\,\exp(-1/2)\,n^{2/3} + O(\Delta),$$
-          which is at most $(\Delta + C)\,n^{2/3}$ for some constant $C$. In other words, $R_n = O(n^{2/3})$.</p>
+           <p>The previous choice of $m$ is close to the optimal choice, but it depends on both the unknown gap $\Delta$ and time horizon $n$. A standard alternative is to pick
+           $m$ as a function of horizon $n$ only. For two 1-subgaussian arms, this yields a <em>gap-free</em>
+           bound:</p>
+           
+           <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="etc-gap-free">$R_n = O(n^{2/3})$</span></p>
+           <div id="etc-gap-free" style="display:none">
+             <p>Start from the two-arm bound derived above:
+             $$R_n \;\le\; m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right).$$
+             For fixed $m$, upper bound the second term uniformly over $\Delta>0$. Let $g(\Delta)=\Delta\,\exp(-\tfrac{m\Delta^2}{4})$. Then
+             $$g'(\Delta) = \exp(-m\Delta^2/4)\Big(1 - \tfrac{m\Delta^2}{2}\Big)=0\;\Rightarrow\; \Delta_* = \sqrt{\tfrac{2}{m}},$$
+             and
+             $$\sup_{\Delta>0} g(\Delta) = g(\Delta_*) = \sqrt{\tfrac{2}{m}}\,\exp(-1/2) \;\le\; \frac{1}{\sqrt{m}}.$$
+             Hence, for all $\Delta>0$,
+             $$R_n \;\le\; m\,\Delta + \sqrt{2}\,\exp(-1/2)\,\frac{n}{\sqrt{m}}.$$
+             Choosing minimizing $m = \lceil n^{2/3} \rceil$ gives
+             $$R_n \;\le\; \Delta\,n^{2/3} + \sqrt{2}\,\exp(-1/2)\,n^{2/3} + O(\Delta),$$
+             which is at most $(\Delta + C)\,n^{2/3}$ for some constant $C$. In other words, $R_n = O(n^{2/3})$.</p>
+           </div>
         </section>
 
         <section id="ucb">
@@ -516,7 +524,7 @@
 
           <p>At time $t$, having selected arm $i$ a total of $N_i(t-1)$ times and observed empirical mean $\hat{\mu}_i(t-1)$, UCB selects:</p>
 
-          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="ucb-derivation">$$I_t = \arg\max_{i \in [K]} \left( \hat{\mu}_i(t-1) + \sqrt{\frac{2\log t}{N_i(t-1)}} \right)$$</span></p>
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="ucb-derivation">$$I_t = \arg\max_{i \in [K]} \left( \hat{\mu}_i(t-1) + \sqrt{\frac{2\log (t)}{N_i(t-1)}} \right)$$</span></p>
           <div id="ucb-derivation" style="display:none">
             <div><b>Where does this index come from?</b> Fix an arm $i$ and suppose the rewards $\{X_{i,s}\}_{s\ge1}$ are independent and 1-sub-Gaussian with mean $\mu_i$. If $\hat\mu_i(n)=\tfrac{1}{n}\sum_{s=1}^n X_{i,s}$ denotes the empirical mean after $n$ samples, the standard sub-Gaussian tail bound implies that for any $\delta\in(0,1)$,</div>
             <p>$$\mathbb{P}\!\left(\mu_i \ge \hat\mu_i(n) + \sqrt{\frac{2\log(1/\delta)}{n}}\right) \le \delta.$$</p>
@@ -527,7 +535,7 @@
             <p>with the convention $\mathrm{UCB}_i(t)=+\infty$ when $N_i(t-1)=0$ so each arm is sampled at least once. Choosing $\delta_t=1/t$ yields the expression used above.</p>
           </div>
 
-          <p><strong>Exploitation vs. exploration:</strong> The term $\hat{\mu}_i(t-1)$ is the <em>exploitation</em> component, favoring arms that have produced large average rewards so far. The square-root term is the <em>exploration bonus</em> (confidence width): it is larger for arms with few samples ($N_i(t-1)$ small) and grows slowly with time through $\log(t)$, encouraging additional pulls until the estimate is accurate.</p>
+          <p>The term $\hat{\mu}_i(t-1)$ is the <em>exploitation</em> component, favoring arms that have produced large average rewards so far. The square-root term is the <em>exploration bonus</em> (confidence width): it is larger for arms with few samples ($N_i(t-1)$ small) and grows slowly with time through $\log(t)$, encouraging additional pulls until the estimate is accurate.</p>
 
           <p>The expression inside the argmax is called the <em>index</em> of arm $i$. Index algorithms form a broad class of bandit strategies where each arm is assigned a numerical score (the index) based on its historical performance and uncertainty. The algorithm then simply selects the arm with the highest index at each round. Intuitively, this leads to sublinear regret because when the optimal arm's index overestimates its true mean, any suboptimal arm must achieve an index value exceeding the optimal arm's index to be selected. However, this can't happen too often as the learner continues to explore the environment and update its estimates.</p>
 
@@ -537,25 +545,54 @@
             <p><strong>Initialization:</strong> Pull each arm once</p>
             <p><strong>For rounds $t = K+1, K+2, \ldots, n$:</strong></p>
             <ol>
-              <li>Compute UCB for each arm: $UCB_i(t) = \hat{\mu}_i(t-1) + \sqrt{\frac{2\log t}{N_i(t-1)}}$</li>
+              <li>Compute UCB for each arm: $UCB_i(t) = \hat{\mu}_i(t-1) + \sqrt{\frac{2\log (t)}{N_i(t-1)}}$</li>
               <li>Select arm: $I_t = \arg\max_i UCB_i(t)$</li>
               <li>Observe reward and update estimates</li>
             </ol>
           </div>
 
-          <p>UCB's regret analysis relies on optimism under uncertainty. The algorithm maintains confidence intervals such that with high probability, the true arm means lie within these intervals. When sufficient evidence accumulates (tight confidence intervals), the optimal arm will have the highest UCB and be selected most often.</p>
+          <p>Without loss of generality, let arm <em>1</em> be optimal with mean $\mu_1=\mu^*$, analysis for the regret after $n$ rounds can start by writing regret decomposition:</p>
+          <p>$$R_n \,=\, \sum_{i=1}^K \Delta_i\,\mathbb{E}[N_i(n)],\qquad \Delta_i = \mu_1 - \mu_i.$$</p>
 
-          <p>The key lemma bounds how often UCB can select suboptimal arms:</p>
+          <p>Then, we can bound $\mathbb{E}[N_i(n)]$ for every suboptimal arm $i\neq 1$. We observe afer the initial period where UCB pulls each arm once, suboptimal arm $i$ can only be selected at time $t$ only if its index exceeds that of the optimal arm. </p>
+           <p>For this to happen, at least one of the following two events occur:</p>
+           <p>(a) The index of action $i$ is larger than the true mean of a specific optimal arm.</p>
+           <p>(b) The index of a specific optimal arm is smaller than its true mean.</p>
 
-          <p><strong>Lemma:</strong> For any suboptimal arm $i$ with gap $\Delta_i > 0$, the number of times arm $i$ is selected satisfies:</p>
+          <p>To formalize this, we introduce the <b>good event</b> for each suboptimal arm $i \neq 1$, which captures the scenario where all confidence intervals behave as intended. Specifically, define the good event $G_i$ as follows:</p>
+          <p class="proof-center">$$G_i = \left\{ \forall t \in [n],\ \mathrm{UCB}_1(t, \delta) > \mu_1 \right\} \cap \left\{ \hat{\mu}_{i, u_i} + \sqrt{\frac{2}{u_i} \log(1/\delta)} < \mu_1 \right\}$$</p>
+          <p>Here, $u_i$ is a threshold number of pulls for arm $i$ (to be chosen later), and $\delta$ is a small probability parameter. The first condition ensures that the optimal arm's index never dips below its true mean during the entire horizon, while the second guarantees that after $u_i$ samples, the index for arm $i$ falls below $\mu_1$ forever after. The crux of the regret bound is to show two things:</p>
+          <ul>
+            <li>If $G_i$ holds, arm $i$ is played at most $u_i$ times.</li>
+            <li>The probability $\mathbb{P}(G_i^c)$ is small.</li>
+          </ul>
+          <p><b>Step 1: If $G_i$ occurs, then $T_i(n) \leq u_i$.</b></p>
+          <p>Suppose, for contradiction, that $T_i(n) > u_i$ even though $G_i$ holds. Then at some round $t$, we must have selected $A_t = i$ after already pulling arm $i$ exactly $u_i$ times, i.e., $T_i(t-1) = u_i$. The UCB index for arm $i$ is therefore</p>
+          <p class="proof-center">$$ \mathrm{UCB}_i(t-1, \delta) = \hat\mu_{i, u_i} + \sqrt{\frac{2\log(1/\delta)}{u_i}}. $$</p>
+          <p>But, by the definition of $G_i$, this is strictly less than $\mu_1$, and since $G_i$ also ensures $\mathrm{UCB}_1(t-1, \delta) > \mu_1$, it follows that</p>
+          <p class="proof-center">$$ \mathrm{UCB}_i(t-1, \delta) < \mu_1 < \mathrm{UCB}_1(t-1, \delta), $$</p>
+          <p>which means arm $i$ could not have been selected at time $t$. This is a contradiction. Therefore, if $G_i$ occurs, $T_i(n) \leq u_i$.</p>
+          <p><b>Step 2: Probability of $G_i^c$ is small.</b></p>
+          <p>The complement $G_i^c$ happens if either the optimal arm is ever underestimated by its UCB, or if arm $i$ is ever overestimated after $u_i$ pulls:</p>
+          <p class="proof-center">$$G_i^c = \left\{ \mu_1 \ge \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) \right\} \cup \left\{ \hat\mu_{i, u_i} + \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq \mu_1 \right\}.$$</p>
+          <p>The first set, using the definition of $\mathrm{UCB}_1(t, \delta)$, can be further expanded as</p>
+          <p class="proof-center">$$ \left\{ \mu_1 \geq \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) \right\} \subseteq \bigcup_{s=1}^n \left\{ \mu_1 \geq \hat\mu_{1,s} + \sqrt{\frac{2\log(1/\delta)}{s}} \right\}. $$</p>
+          <p>Applying the union bound and the standard sub-Gaussian tail inequality, the probability of any optimal arm confidence interval failure is at most $n\delta$.</p>
+          <p>The second event is controlled by choosing $u_i$ so that the padding is much smaller than the gap $\Delta_i$ between the optimal and arm $i$. Specifically, select $u_i$ so that</p>
+          <p class="proof-center">$$ \Delta_i - \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq c\Delta_i $$</p>
+          <p>for some constant $c \in (0,1)$. Therefore,</p>
+          <p class="proof-center">$$ \mathbb{P}\left( \hat\mu_{i, u_i} + \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq \mu_1 \right) \leq \exp\left( -\frac{u_ic^2\Delta_i^2}{2} \right), $$</p>
+          <p>by the sub-Gaussian tail bound. Combining both failure probabilities, we get</p>
+          <p class="proof-center">$$ \mathbb{P}(G_i^c) \leq n\delta + \exp\left( -\frac{u_ic^2\Delta_i^2}{2} \right). $$</p>
+          <p>Thus, the expected number of times a suboptimal arm $i \neq 1$ is played is bounded by</p>
+          <p class="proof-center">$$ \mathbb{E}[T_i(n)] \leq u_i + n\left[ n\delta + \exp\left( -\frac{u_ic^2\Delta_i^2}{2} \right) \right]. $$</p>
+          <p>Finally, set $u_i$ to be the smallest integer satisfying</p>
+          <p class="proof-center">$$ \Delta_i - \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq c\Delta_i, $$</p>
+          <p>which yields</p>
+          <p class="proof-center">$$ u_i = \left\lceil \frac{2\log(1/\delta)}{(1-c)^2\Delta_i^2} \right\rceil. $$</p>
+          <p>In summary, by carefully defining the good event to capture all uniform confidence requirements, and by bounding the failure probability and the maximum possible number of pulls on the good set, we get a regret bound that scales logarithmically in $n$ and $1/\Delta_i$ for each suboptimal arm.</p>
 
-          <p>$$\mathbb{E}[N_i(n)] \leq \frac{8\log n}{\Delta_i^2} + 1 + \frac{\pi^2}{3}$$</p>
-
-          <p>This leads to UCB's regret bound:</p>
-
-          <p>$$\mathbb{E}[R_n] \leq \sum_{i: \Delta_i > 0} \Delta_i \left( \frac{8\log n}{\Delta_i^2} + 1 + \frac{\pi^2}{3} \right) = \sum_{i: \Delta_i > 0} \left( \frac{8\log n}{\Delta_i} + O(1) \right)$$</p>
-
-          <p>Crucially, this scales as $O(\log n / \Delta_i)$ for each suboptimal arm, automatically adapting to problem difficulty. Arms with large gaps are quickly identified and avoided, while arms with small gaps are selected more often - exactly the desired behavior when arms have similar performance.</p>
+        
         </section>
 
         <section id="optimality">
@@ -707,19 +744,27 @@
         ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
       });
 
-      // Proof popover controller
+      // Hover-based proof popover controller
       const popover = document.getElementById('proof-popover');
       const contentEl = document.getElementById('proof-popover-content');
       let activeTrigger = null;
       let hideTimer = null;
+      let isPopoverHovered = false;
 
-      function clearHideTimer(){ if(hideTimer){ clearTimeout(hideTimer); hideTimer = null; } }
+      function clearHideTimer(){
+        if(hideTimer){
+          clearTimeout(hideTimer);
+          hideTimer = null;
+        }
+      }
 
-      function startHideTimer(){
+      function scheduleHide(delay = 300){
         clearHideTimer();
         hideTimer = setTimeout(() => {
-          hidePopover();
-        }, 2000);
+          if (!isPopoverHovered) {
+            hidePopover();
+          }
+        }, delay);
       }
 
       function showPopoverFor(trigger){
@@ -728,6 +773,7 @@
         const proofId = trigger.getAttribute('data-proof-id');
         const hidden = document.getElementById(proofId);
         if(!hidden){ return; }
+
         contentEl.innerHTML = hidden.innerHTML;
 
         // Render KaTeX inside the popover content
@@ -739,11 +785,16 @@
             ],
             ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
           });
-        } catch(e) { /* no-op */ }
+        } catch(e) {
+          console.warn('KaTeX render failed in popup:', e);
+        }
 
-        // Make visible to measure and position
+        // Show and position with Safari-compatible method
         popover.classList.add('visible');
         popover.style.visibility = 'hidden';
+
+        // Force layout reflow for Safari
+        popover.offsetHeight;
 
         positionPopover(trigger);
 
@@ -752,20 +803,89 @@
       }
 
       function positionPopover(trigger){
-        const rect = trigger.getBoundingClientRect();
+        // Get fresh coordinates after KaTeX rendering
+        const triggerRect = trigger.getBoundingClientRect();
+        const popoverRect = popover.getBoundingClientRect();
         const spacing = 8;
-        const maxLeft = window.innerWidth - popover.offsetWidth - 12;
-        let left = Math.min(rect.left, maxLeft);
-        left = Math.max(12, left);
 
-        let top = rect.bottom + spacing;
-        if (top + popover.offsetHeight > window.innerHeight - 12) {
-          top = rect.top - popover.offsetHeight - spacing;
+        // Detect Safari vs Chrome/Chromium
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+        console.log('Browser detection - isSafari:', isSafari);
+        console.log('Positioning popup - Trigger rect:', triggerRect);
+        console.log('Positioning popup - Popover rect:', popoverRect);
+
+        let left, top;
+
+        if (isSafari) {
+          // Safari: Use absolute positioning with scroll offset
+          const scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
+          const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+
+          console.log('Safari positioning - Scroll offset:', { scrollX, scrollY });
+
+          // Set to absolute positioning for Safari
+          popover.style.position = 'absolute';
+
+          // Calculate absolute position (viewport coordinates + scroll offset)
+          left = triggerRect.left + scrollX;
+          top = triggerRect.bottom + scrollY + spacing;
+
+          // Adjust for right edge overflow
+          if (left + popoverRect.width > window.innerWidth + scrollX - 12) {
+            left = window.innerWidth + scrollX - popoverRect.width - 12;
+          }
+          left = Math.max(12 + scrollX, left);
+
+          // Adjust for bottom edge overflow (position above if needed)
+          if (top + popoverRect.height > window.innerHeight + scrollY - 12) {
+            top = triggerRect.top + scrollY - popoverRect.height - spacing;
+          }
+          top = Math.max(12 + scrollY, top);
+
+        } else {
+          // Chrome/Chromium: Use fixed positioning (original method)
+          console.log('Chrome positioning - Viewport:', {
+            width: window.innerWidth,
+            height: window.innerHeight
+          });
+
+          // Set to fixed positioning for Chrome
+          popover.style.position = 'fixed';
+
+          // Calculate fixed position (viewport coordinates only)
+          left = triggerRect.left;
+          top = triggerRect.bottom + spacing;
+
+          // Adjust for right edge overflow
+          if (left + popoverRect.width > window.innerWidth - 12) {
+            left = window.innerWidth - popoverRect.width - 12;
+          }
+          left = Math.max(12, left);
+
+          // Adjust for bottom edge overflow (position above if needed)
+          if (top + popoverRect.height > window.innerHeight - 12) {
+            top = triggerRect.top - popoverRect.height - spacing;
+          }
+          top = Math.max(12, top);
         }
-        if (top < 12) { top = 12; }
 
+        console.log('Final position:', { left, top });
+
+        // Apply positioning
         popover.style.left = left + 'px';
         popover.style.top = top + 'px';
+        popover.style.transform = 'none';
+
+        // Verify position was applied
+        setTimeout(() => {
+          const finalRect = popover.getBoundingClientRect();
+          console.log('Actual final position:', {
+            left: finalRect.left,
+            top: finalRect.top
+          });
+          console.log('Style applied - left:', popover.style.left, 'top:', popover.style.top);
+        }, 0);
       }
 
       function hidePopover(){
@@ -774,40 +894,58 @@
         activeTrigger = null;
       }
 
-      // Wire up triggers
-      const triggers = Array.from(document.querySelectorAll('.proof-popover-trigger'));
-      triggers.forEach(tr => {
-        tr.addEventListener('click', (e) => {
+      // Setup hover-based triggers
+      const triggers = document.querySelectorAll('.proof-popover-trigger');
+
+      triggers.forEach(trigger => {
+        // Show on hover
+        trigger.addEventListener('mouseenter', () => {
+          showPopoverFor(trigger);
+        });
+
+        // Schedule hide on mouse leave
+        trigger.addEventListener('mouseleave', () => {
+          scheduleHide(300);
+        });
+
+        // Optional: still allow click for touch devices
+        trigger.addEventListener('click', (e) => {
           e.preventDefault();
-          e.stopPropagation();
-          if (popover.classList.contains('visible') && activeTrigger === tr) {
+          if (popover.classList.contains('visible') && activeTrigger === trigger) {
             hidePopover();
           } else {
-            showPopoverFor(tr);
+            showPopoverFor(trigger);
           }
         });
-        tr.addEventListener('mouseenter', clearHideTimer);
-        tr.addEventListener('mouseleave', startHideTimer);
       });
 
-      // Hover persistence on popover
-      popover.addEventListener('mouseenter', clearHideTimer);
-      popover.addEventListener('mouseleave', startHideTimer);
-
-      // Close on outside click or Escape (immediate close)
-      document.addEventListener('click', (e) => {
-        if (!popover.contains(e.target) && !e.target.closest('.proof-popover-trigger')) {
-          hidePopover();
-        }
+      // Popup hover persistence
+      popover.addEventListener('mouseenter', () => {
+        isPopoverHovered = true;
+        clearHideTimer();
       });
+
+      popover.addEventListener('mouseleave', () => {
+        isPopoverHovered = false;
+        scheduleHide(100);
+      });
+
+      // Close on Escape key
       document.addEventListener('keydown', (e) => {
         if(e.key === 'Escape') hidePopover();
       });
 
-      // Reposition on resize
+      // Handle window resize
       window.addEventListener('resize', () => {
         if (activeTrigger && popover.classList.contains('visible')) {
           positionPopover(activeTrigger);
+        }
+      });
+
+      // Safari-specific: handle page visibility changes
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          hidePopover();
         }
       });
     });

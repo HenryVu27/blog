@@ -142,6 +142,12 @@
       margin: 0 0 16px 0;
       font-weight: 600;
     }
+    .post {
+      margin-top: 0;
+    }
+    .post section:first-child h2:first-child {
+      margin-top: 0;
+    }
     .series-nav {
       background: transparent;
       border: none;
@@ -228,6 +234,251 @@
     .proof-popover h4{ margin: 4px 0 8px 0; font-size: 18px; }
     .proof-popover .meta{ font-size: 13px; color: var(--muted, #666); margin-bottom: 8px; }
     .proof-center{ text-align: center; margin: 12px 0; }
+
+    /* Visualization styles */
+    .viz-container {
+      background: #f5f4f0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+    .viz-controls {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .viz-controls-left {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .viz-controls-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .control-group label {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .control-group input[type="range"] {
+      width: 160px;
+      accent-color: #6b6a61;
+    }
+    .control-btn {
+      background: #d4d1c4;
+      border: 1px solid #6b6a61;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 120ms ease;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.4);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 44px;
+    }
+    .control-btn:hover {
+      background: #c7c3b5;
+      border-color: #56554d;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
+    }
+    .control-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 0 0 rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.3);
+    }
+    .control-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    /* Settings Modal */
+    .settings-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 3000;
+      align-items: center;
+      justify-content: center;
+    }
+    .settings-modal.visible {
+      display: flex;
+    }
+    .settings-content {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    }
+    .settings-content h3 {
+      margin: 0 0 16px 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .settings-arms {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .settings-arm-control {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .settings-arm-control label {
+      min-width: 70px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .settings-arm-control input[type="range"] {
+      flex: 1;
+      accent-color: #6b6a61;
+    }
+    .settings-arm-control .value {
+      min-width: 40px;
+      text-align: right;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .settings-presets {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-presets button {
+      background: #d4d1c4;
+      border: 1px solid #6b6a61;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
+    .settings-presets button:hover {
+      background: #c7c3b5;
+    }
+    .settings-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .settings-actions button {
+      background: #d4d1c4;
+      border: 1px solid #6b6a61;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
+    .settings-actions button:hover {
+      background: #c7c3b5;
+    }
+    .settings-actions button.primary {
+      background: #6b6a61;
+      color: white;
+    }
+    .settings-actions button.primary:hover {
+      background: #56554d;
+    }
+    .viz-main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) {
+      .viz-main {
+        grid-template-columns: 1fr;
+      }
+    }
+    .viz-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .viz-panel h3 {
+      margin: 0 0 12px 0;
+      font-size: 22px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .viz-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 15px;
+    }
+    .viz-regret {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .viz-regret h3 {
+      margin: 0 0 12px 0;
+      font-size: 22px;
+      font-weight: 600;
+      text-align: center;
+    }
+    #regret-chart {
+      display: block;
+      max-width: 100%;
+    }
+    .arm-bar {
+      transition: all 0.3s ease;
+    }
+    .arm-label {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      fill: var(--text);
+    }
+    .confidence-interval {
+      stroke: #6b6a61;
+      stroke-width: 2;
+      fill: none;
+      opacity: 0.5;
+    }
+    .true-mean-line {
+      stroke: #e74c3c;
+      stroke-width: 2;
+      stroke-dasharray: 4,4;
+    }
   </style>
 </head>
 <body>
@@ -247,8 +498,8 @@
         <h3>Multi-Armed Bandit Series</h3>
         <ul>
           <li><strong>Part 1: Foundations</strong> (current)</li>
-          <li><a href="bandits-part2.html">Part 2: Advanced Algorithms</a></li>
-          <li><a href="bandits-part3.html">Part 3: Modern Theory</a></li>
+          <li>Part 2: Advanced Algorithms (coming soon)</li>
+          <li>Part 3: Modern Theory (coming soon)</li>
         </ul>
       </div>
     </div>
@@ -261,13 +512,11 @@
         <ul>
           <li><a href="#intro"><span class="toc-section-number">1</span><span class="toc-section-title">Introduction</span></a></li>
           <li><a href="#classic"><span class="toc-section-number">2</span><span class="toc-section-title">A Classic Dilemma</span></a></li>
-          <li><a href="#warmup"><span class="toc-section-number">3</span><span class="toc-section-title">Finite-Armed Stochastic Bandits</span></a></li>
-          <li><a href="#etc"><span class="toc-section-number">4</span><span class="toc-section-title">Explore-then-Commit</span></a></li>
-          <li><a href="#ucb"><span class="toc-section-number">5</span><span class="toc-section-title">Upper Confidence Bound</span></a></li>
-          <li><a href="#optimality"><span class="toc-section-number">6</span><span class="toc-section-title">Optimality and Information Theory</span></a></li>
-          <li><a href="#minimax"><span class="toc-section-number">7</span><span class="toc-section-title">Minimax Lower Bounds</span></a></li>
-          <li><a href="#instance"><span class="toc-section-number">8</span><span class="toc-section-title">Instance-Dependent Bounds</span></a></li>
-          <li><a href="#conclusion"><span class="toc-section-number">9</span><span class="toc-section-title">Looking Ahead</span></a></li>
+          <li><a href="#warmup"><span class="toc-section-number">3</span><span class="toc-section-title">The Regret and Finite-Armed Stochastic Bandits</span></a></li>
+          <li><a href="#concentration"><span class="toc-section-number">4</span><span class="toc-section-title">Concentration Inequalities</span></a></li>
+          <li><a href="#etc"><span class="toc-section-number">5</span><span class="toc-section-title">Explore-then-Commit</span></a></li>
+          <li><a href="#ucb"><span class="toc-section-number">6</span><span class="toc-section-title">Upper Confidence Bound</span></a></li>
+          <li><a href="#visualization"><span class="toc-section-number">7</span><span class="toc-section-title">Interactive Comparison: ETC vs UCB</span></a></li>
         </ul>
       </aside>
 
@@ -386,14 +635,113 @@
               <li>At round $t$, learner selects arm $I_t$ and receives reward $X_{I_t,t} \sim \nu_{I_t}$</li>
               <li>Arm $i$ has mean reward $\mu_i = \mathbb{E}[\nu_i]$</li>
               <li>Optimal arm: $i^* = \arg\max_i \mu_i$, gap: $\Delta_i = \mu^* - \mu_i$</li>
-              <li>Assumption: rewards are 1-sub-Gaussian (e.g., bounded in [0,1])</li>
+              <li>Assumption: rewards are $\sigma$-subgaussian</li>
               <li>Goal: Minimize regret $R_n = n\mu^* - \mathbb{E}[\sum_{t=1}^n X_{I_t,t}]$</li>
             </ul>
           </div>
         </section>
 
+        <section id="concentration">
+          <h2>Concentration Inequalities</h2>
+
+          <p>Before analyzing bandit algorithms, we need one more tool from probability theory: concentration of measure. The core challenge of the bandit problem is that the optimal action has the largest mean reward, but these means are initially unknown and must be learned from observations. This raises a fundamental question: how confidently can we estimate the mean of an action from a finite number of samples?</p>
+
+          <p>To answer this, we study tail probabilities: the probability that our empirical estimate deviates significantly from the true mean. Tight bounds on these probabilities let us construct confidence intervals, ranges within which the true mean lies with high probability. The tighter these intervals, the more efficiently we can balance exploration and exploitation.</p>
+
+
+          <p>We begin with two classical inequalities that provide our first handle on tail probabilities.</p>
+
+          <p><strong>Markov's Inequality:</strong> For any non-negative random variable $X$ and $\varepsilon > 0$,</p>
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="markov-inequality">
+            $$\mathbb{P}(X \geq \varepsilon) \leq \frac{\mathbb{E}[X]}{\varepsilon}.$$
+          </span></p>
+
+          <div id="markov-inequality" style="display:none">
+            <p><strong>Proof:</strong> Since $X \geq 0$ and $\varepsilon > 0$, we have the inequality $\mathbb{1}\{X \geq \varepsilon\} \leq X/\varepsilon$. To see this, observe that:</p>
+            <ul>
+              <li>When $X \geq \varepsilon$: the indicator is 1, and $X/\varepsilon \geq 1$, so $1 \leq X/\varepsilon$.</li>
+              <li>When $X < \varepsilon$: the indicator is 0, and $X/\varepsilon \geq 0$, so $0 \leq X/\varepsilon$.</li>
+            </ul>
+            <p>Taking expectations of both sides:</p>
+            <p class="proof-center">$$\mathbb{P}(X \geq \varepsilon) = \mathbb{E}[\mathbb{1}\{X \geq \varepsilon\}] \leq \mathbb{E}\left[\frac{X}{\varepsilon}\right] = \frac{\mathbb{E}[X]}{\varepsilon}.$$</p>
+          </div>
+
+          <p><strong>Chebyshev's Inequality:</strong> For any random variable $X$ with finite variance,</p>
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="chebyshev-inequality">
+            $$\mathbb{P}\left(|X - \mathbb{E}[X]| \geq \varepsilon\right) \leq \frac{\mathbb{V}[X]}{\varepsilon^2}.$$
+          </span></p>
+
+          <div id="chebyshev-inequality" style="display:none">
+            <p><strong>Proof:</strong> Let $\mu = \mathbb{E}[X]$ and $\sigma^2 = \mathbb{V}[X]$. Define $Y = (X - \mu)^2$, which is non-negative. Then</p>
+            <p class="proof-center">$$\mathbb{P}(|X - \mu| \geq \varepsilon) = \mathbb{P}((X-\mu)^2 \geq \varepsilon^2) = \mathbb{P}(Y \geq \varepsilon^2).$$</p>
+            <p>Applying Markov's inequality to $Y$:</p>
+            <p class="proof-center">$$\mathbb{P}(Y \geq \varepsilon^2) \leq \frac{\mathbb{E}[Y]}{\varepsilon^2} = \frac{\mathbb{E}[(X-\mu)^2]}{\varepsilon^2} = \frac{\sigma^2}{\varepsilon^2}.$$</p>
+          </div>
+
+          <p>To see Chebyshev's limitations, apply it to a sample mean $\hat{\mu}_n = \frac{1}{n}\sum_{i=1}^n X_i$ where each $X_i$ has variance $\sigma^2$. Since $\mathbb{V}[\hat{\mu}_n] = \sigma^2/n$,</p>
+          <p class="proof-center">$$\mathbb{P}(|\hat{\mu}_n - \mu| \geq \varepsilon) \leq \frac{\sigma^2}{n\varepsilon^2}.$$</p>
+
+          <p>This bound exhibits polynomial decay in both parameters $\varepsilon$ and $n$. Chebyshev's and Markov's inequalities are nice because they make no assumptions about the distribution of $X$, and only rely on the existence of the mean and variance. However, when $X$ has well-behaved tails (like Gaussian or bounded random variables), they are a bit too loose. And to get failure probability $\delta$, we need $n = \Omega(\sigma^2/(\varepsilon^2\delta))$ samples, linearly in $1/\delta$.</p>
+
+          <p>To obtain exponentially decaying tail bounds, we introduce the notion of <strong>subgaussian random variables</strong>. A random variable $X$ with $\mathbb{E}[X] = 0$ is called $\sigma$-subgaussian if its moment generating function satisfies</p>
+          <p class="proof-center">$$\mathbb{E}[\exp(\lambda X)] \leq \exp\left(\frac{\lambda^2 \sigma^2}{2}\right) \quad \text{for all } \lambda \in \mathbb{R}.$$</p>
+
+          <p>Intuitively, this says that $X$ has tails no heavier than a Gaussian with variance $\sigma^2$. Bounded random variables, Gaussian random variables, and many other common distributions satisfy this property. The power of subgaussianity lies in the following fact:</p>
+          <p>If $X$ is $\sigma$-subgaussian with $\mathbb{E}[X] = 0$, then for any $\varepsilon \geq 0$,</p>
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="subgaussian-tail">
+            $$\mathbb{P}(X \geq \varepsilon) \leq \exp\left(-\frac{\varepsilon^2}{2\sigma^2}\right).$$
+          </span></p>
+
+          <div id="subgaussian-tail" style="display:none">
+            <p>Let $\lambda > 0$ be a parameter to be chosen later. For any $\varepsilon > 0$,</p>
+            <p class="proof-center">$$\mathbb{P}(X \geq \varepsilon) = \mathbb{P}(\exp(\lambda X) \geq \exp(\lambda\varepsilon)).$$</p>
+            <p>Since $\exp$ is monotone increasing, the event $\{X \geq \varepsilon\}$ is equivalent to $\{\exp(\lambda X) \geq \exp(\lambda\varepsilon)\}$. Now apply Markov's inequality to the non-negative random variable $\exp(\lambda X)$:</p>
+            <p class="proof-center">$$\mathbb{P}(\exp(\lambda X) \geq \exp(\lambda\varepsilon)) \leq \frac{\mathbb{E}[\exp(\lambda X)]}{\exp(\lambda\varepsilon)}.$$</p>
+            <p>By the subgaussian assumption, $\mathbb{E}[\exp(\lambda X)] \leq \exp(\lambda^2 \sigma^2/2)$, so</p>
+            <p class="proof-center">$$\mathbb{P}(X \geq \varepsilon) \leq \exp\left(\frac{\lambda^2 \sigma^2}{2} - \lambda\varepsilon\right).$$</p>
+            <p>This bound holds for any $\lambda > 0$. To get the tightest bound, we minimize the exponent over $\lambda$. Taking the derivative with respect to $\lambda$ and setting it to zero:</p>
+            <p class="proof-center">$$\frac{d}{d\lambda}\left(\frac{\lambda^2 \sigma^2}{2} - \lambda\varepsilon\right) = \lambda\sigma^2 - \varepsilon = 0 \quad \Rightarrow \quad \lambda = \frac{\varepsilon}{\sigma^2}.$$</p>
+            <p>Substituting this optimal choice back into the bound:</p>
+            <p class="proof-center">$$\mathbb{P}(X \geq \varepsilon) \leq \exp\left(\frac{\varepsilon^2}{2\sigma^4} \cdot \sigma^2 - \frac{\varepsilon^2}{\sigma^2}\right) = \exp\left(-\frac{\varepsilon^2}{2\sigma^2}\right).$$</p>
+          </div>
+
+          <p>The real power appears when we apply this to sample means. For $\hat{\mu}_n = \frac{1}{n}\sum_{i=1}^n X_i$ with each $X_i$ being $\sigma$-subgaussian with mean $\mu$, we get a much tighter bound:</p>
+          <p class="proof-center">$$\mathbb{P}(|\hat{\mu}_n - \mu| \geq \varepsilon) \leq 2\exp\left(-\frac{n\varepsilon^2}{2\sigma^2}\right).$$</p>
+
+          <p>Subgaussian random variables have convenient closure properties that make them easy to work with in practice.</p>
+
+          <div class="algorithm-box">
+            <h4>Properties of Subgaussian Random Variables</h4>
+            <p>Suppose $X$ is $\sigma$-subgaussian with $\mathbb{E}[X] = 0$, and $X_1, X_2$ are independent and $\sigma_1$- and $\sigma_2$-subgaussian, respectively. Then:</p>
+            <ol style="margin-top: 8px;">
+              <li>$\mathbb{E}[X] = 0$ and $\mathbb{V}[X] \leq \sigma^2$</li>
+              <li>For any constant $c \in \mathbb{R}$, $cX$ is $|c|\sigma$-subgaussian</li>
+              <li>$X_1 + X_2$ is $\sqrt{\sigma_1^2 + \sigma_2^2}$-subgaussian</li>
+            </ol>
+          </div>
+
+          <p>These properties immediately give us concentration bounds for sample means, which are the building blocks of bandit algorithms.</p>
+
+          <p>Let $X_1, \ldots, X_n$ be independent, $\sigma$-subgaussian random variables with mean $\mu$. Let $\hat{\mu} = \frac{1}{n}\sum_{i=1}^n X_i$. Then for any $\varepsilon \geq 0$,</p>
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="sample-mean-concentration">
+            $$\mathbb{P}(\hat{\mu} \geq \mu + \varepsilon) \leq \exp\left(-\frac{n\varepsilon^2}{2\sigma^2}\right) \quad \text{and} \quad \mathbb{P}(\hat{\mu} \leq \mu - \varepsilon) \leq \exp\left(-\frac{n\varepsilon^2}{2\sigma^2}\right).$$
+          </span></p>
+
+          <div id="sample-mean-concentration" style="display:none">
+            <p><strong>Proof:</strong> Define centered random variables $Y_i = X_i - \mu$, so $\mathbb{E}[Y_i] = 0$ and each $Y_i$ is $\sigma$-subgaussian. Then</p>
+            <p class="proof-center">$$\hat{\mu} - \mu = \frac{1}{n}\sum_{i=1}^n Y_i.$$</p>
+            <p>By the lemma above (property 3), since $Y_1, \ldots, Y_n$ are independent $\sigma$-subgaussian variables, their sum $\sum_{i=1}^n Y_i$ is $\sqrt{n\sigma^2} = \sigma\sqrt{n}$-subgaussian. Scaling by $1/n$ (property 2), we see that $\hat{\mu} - \mu$ is $\sigma/\sqrt{n}$-subgaussian. Applying the subgaussian tail bound with $\sigma$ replaced by $\sigma/\sqrt{n}$ gives the result.</p>
+          </div>
+
+          <p>Inverting the bound: setting $2\exp(-n\varepsilon^2/(2\sigma^2)) = \delta$ and solving for $\varepsilon$, we get that after $n$ samples, with probability at least $1 - \delta$,</p>
+          <p class="proof-center">$$\mu \in \left[\hat{\mu}_n - \sqrt{\frac{2\sigma^2\log(2/\delta)}{n}}, \; \hat{\mu}_n + \sqrt{\frac{2\sigma^2\log(2/\delta)}{n}}\right].$$</p>
+
+          <p>This confidence interval is the foundation of the UCB algorithm. The width shrinks as $1/\sqrt{n}$. We will see the powerful implications of this bound in the next section.</p>
+
+        </section>
+
         <section id="etc">
-          <h2>First Steps: Explore-then-Commit</h2>
+          <h2>Explore-then-Commit</h2>
 
           <p>Before diving into principled algorithms, consider these simple heuristics:</p>
 
@@ -424,7 +772,6 @@
 
           <div class="algorithm-box">
             <h4>Theorem (ETC Regret Bound)</h4>
-            <p>For the Explore-then-Commit algorithm with exploration budget $m$ per arm:</p>
             <p>$$R_n \leq m \sum_{i=1}^K \Delta_i + (n - mK) \sum_{i=1}^K \Delta_i \exp\left(-\frac{m\Delta_i^2}{4}\right)$$</p>
           </div>
 
@@ -432,15 +779,15 @@
 
           <p><strong>Proof:</strong> In the first $mK$ rounds, the policy is deterministic, choosing each action exactly $m$ times. Subsequently it chooses a single action maximizing the average reward during exploration. Thus,</p>
 
-          <p>$$\mathbb{E}[N_i(n)] = m + (n - mK)\mathbb{P}(I_{mK+1} = i)$$</p>
+          <p>$$\mathbb{E}[N_i(n)] = m + (n - mK)\mathbb{P}(I_{mK+1} = i) \tag{1}$$</p>
           <p>$$\leq m + (n - mK)\mathbb{P}\left(\hat{\mu}_i(mK) \geq \max_{j \neq i} \hat{\mu}_j(mK)\right)$$</p>
 
           <p>The probability on the right-hand side is bounded by:</p>
 
-          <p>$$\mathbb{P}\left(\hat{\mu}_i(mK) \geq \max_{j \neq i} \hat{\mu}_j(mK)\right) \leq \mathbb{P}(\hat{\mu}_i(mK) \geq \hat{\mu}_{i^*}(mK))$$</p>
-
-          <p>This holds since beating all other arms implies beating the optimal arm $i^*$. Rewriting:</p>
-          <p>$$= \mathbb{P}(\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*}) \geq \Delta_i)$$</p>
+          <p>$$\begin{aligned}
+          \mathbb{P}\left(\hat{\mu}_i(mK) \geq \max_{j \neq i} \hat{\mu}_j(mK)\right) &\leq \mathbb{P}(\hat{\mu}_i(mK) \geq \hat{\mu}_{i^*}(mK)) \\
+          &= \mathbb{P}(\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*}) \geq \Delta_i)
+          \end{aligned}$$</p>
 
           <p>Then, we can show that <span class="proof-popover-trigger" data-proof-id="etc-subg">$\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*})$ is $\sqrt{2/m}$-subgaussian</span>, which follows from standard subgaussian properties. Hence by Hoeffding's inequality:</p>
           <div id="etc-subg" style="display:none">
@@ -454,18 +801,19 @@
             $$\hat\mu_i - \mu_i = \frac{1}{m} \sum_{s=1}^m (X_{i,s}-\mu_i)\quad \Rightarrow\quad \hat\mu_i - \mu_i\;\text{is}\;\frac{1}{\sqrt{m}}\text{-subgaussian}$$
             (average of $m$ independent 1-subgaussians). The same holds for the optimal arm: $\hat\mu_{i^*}-\mu_{i^*}$ is $1/\sqrt{m}$-subgaussian. These two terms are independent, so their difference has parameter
             $$\sqrt{\Big(\tfrac{1}{\sqrt{m}}\Big)^2 + \Big(\tfrac{1}{\sqrt{m}}\Big)^2}\;=\;\sqrt{\tfrac{2}{m}},$$
-            i.e., $\hat\mu_i-\mu_i-(\hat\mu_{i^*}-\mu_{i^*})$ is $\sqrt{2/m}$-subgaussian. Applying the standard subgaussian tail bound (Hoeffding) gives
-            $$\mathbb{P}\!\left(\hat\mu_i-\mu_i-\hat\mu_{i^*}+\mu_{i^*} \ge \Delta_i\right) \le \exp\!\left(-\frac{m\,\Delta_i^2}{4}\right),$$
-            which is the term used in the ETC regret analysis.</p>
+            i.e., $\hat\mu_i-\mu_i-(\hat\mu_{i^*}-\mu_{i^*})$ is $\sqrt{2/m}$-subgaussian.</p>
           </div>
 
           <p>$$\mathbb{P}(\hat{\mu}_i(mK) - \mu_i - \hat{\mu}_{i^*}(mK) + \mu_{i^*} \geq \Delta_i) \leq \exp\left(-\frac{m\Delta_i^2}{4}\right)$$</p>
 
-          <p>Substituting this into the expression for $\mathbb{E}[N_i(n)]$ and the regret decomposition gives the regret bound.</p>
+          <p>Substituting this into (1) gives:</p>
+
+          <p>$$\mathbb{E}[N_i(n)] \leq m + (n - mK)\exp\left(-\frac{m\Delta_i^2}{4}\right)$$</p>
+
+          <p>Using the regret decomposition $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$ yields the regret bound stated above.</p>
 
           <p>To choose the right $m$, we simplify to the basic two-arm instance: arm 1 is optimal ($\Delta_1=0$) and arm 2 is suboptimal with gap $\Delta_2=\Delta$. Then $K=2$ and the bound becomes
-          $$R_n \;\le\; m\,\Delta + (n-2m)\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right) \;\le\; m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right),$$
-          which is a one-dimensional function of $m$ that we can minimize explicitly.</p>
+          $$R_n \;\le\; m\,\Delta + (n-2m)\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right) \;\le\; m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right)$$</p>
 
           <p>The optimal choice is <span class="proof-popover-trigger" data-proof-id="etc-m-choice">$m = \max\left\{1, \left\lceil \frac{4}{\Delta^2} \log\!\left(\frac{n\Delta^2}{4}\right) \right\rceil \right\}$</span> for gap $\Delta$. For the worst-case over gaps, this gives:</p>
           <div id="etc-m-choice" style="display:none">
@@ -518,40 +866,41 @@
         </section>
 
         <section id="ucb">
-          <h2>The Upper Confidence Bound (UCB) Algorithm</h2>
+          <h2>Upper Confidence Bound (UCB)</h2>
 
           <p>UCB elegantly addresses ETC's limitations by adaptively balancing exploration and exploitation. Instead of rigid phases, UCB constructs confidence intervals around arm means and selects the arm with highest upper confidence bound, a principle which we call <em>optimism under uncertainty</em>.</p>
 
           <p>At time $t$, having selected arm $i$ a total of $N_i(t-1)$ times and observed empirical mean $\hat{\mu}_i(t-1)$, UCB selects:</p>
 
-          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="ucb-derivation">$$I_t = \arg\max_{i \in [K]} \left( \hat{\mu}_i(t-1) + \sqrt{\frac{2\log (t)}{N_i(t-1)}} \right)$$</span></p>
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="ucb-derivation">$$I_t = \arg\max_{i \in [K]} \left( \hat{\mu}_i(t-1) + \sqrt{\frac{2\log (1/\delta)}{N_i(t-1)}} \right)$$</span></p>
           <div id="ucb-derivation" style="display:none">
             <div><b>Where does this index come from?</b> Fix an arm $i$ and suppose the rewards $\{X_{i,s}\}_{s\ge1}$ are independent and 1-sub-Gaussian with mean $\mu_i$. If $\hat\mu_i(n)=\tfrac{1}{n}\sum_{s=1}^n X_{i,s}$ denotes the empirical mean after $n$ samples, the standard sub-Gaussian tail bound implies that for any $\delta\in(0,1)$,</div>
             <p>$$\mathbb{P}\!\left(\mu_i \ge \hat\mu_i(n) + \sqrt{\frac{2\log(1/\delta)}{n}}\right) \le \delta.$$</p>
             <p>At round $t$, the number of observations for arm $i$ is $n=N_i(t-1)$. Therefore, with probability at least $1-\delta$ we have</p>
             <p>$$\mu_i \le \hat\mu_i(t-1) + \sqrt{\frac{2\log(1/\delta)}{N_i(t-1)}}.$$
-            This upper endpoint of a $(1-\delta)$-confidence interval is an optimistic estimate of $\mu_i$. To make the guarantee hold uniformly over time and arms, we use a time-dependent level $\delta_t$ (e.g., $\delta_t=1/t$ or $\delta_t=1/t^2$) and define the index</p>
-            <p>$$\mathrm{UCB}_i(t) \;=\; \hat\mu_i(t-1) + \sqrt{\frac{2\log(1/\delta_t)}{N_i(t-1)}},$$</p>
-            <p>with the convention $\mathrm{UCB}_i(t)=+\infty$ when $N_i(t-1)=0$ so each arm is sampled at least once. Choosing $\delta_t=1/t$ yields the expression used above.</p>
+            This upper endpoint of a $(1-\delta)$-confidence interval is an optimistic estimate of $\mu_i$. To make the guarantee hold uniformly over time and arms, we use a time-dependent confidence level $\delta$ (e.g., $\delta=1/n^2$) and define the index</p>
+            <p>$$\mathrm{UCB}_i(t, \delta) \;=\; \hat\mu_i(t-1) + \sqrt{\frac{2\log(1/\delta)}{N_i(t-1)}},$$</p>
+            <p>with the convention $\mathrm{UCB}_i(t, \delta)=+\infty$ when $N_i(t-1)=0$ so each arm is sampled at least once.</p>
           </div>
 
-          <p>The term $\hat{\mu}_i(t-1)$ is the <em>exploitation</em> component, favoring arms that have produced large average rewards so far. The square-root term is the <em>exploration bonus</em> (confidence width): it is larger for arms with few samples ($N_i(t-1)$ small) and grows slowly with time through $\log(t)$, encouraging additional pulls until the estimate is accurate.</p>
+          <p>The term $\hat{\mu}_i(t-1)$ is the <em>exploitation</em> component, favoring arms that have produced large average rewards so far. The square-root term is the <em>exploration bonus</em> (confidence width): it is larger for arms with few samples ($N_i(t-1)$ small) and decreases as $1/\sqrt{N_i(t-1)}$, encouraging additional pulls until the estimate is accurate.</p>
 
           <p>The expression inside the argmax is called the <em>index</em> of arm $i$. Index algorithms form a broad class of bandit strategies where each arm is assigned a numerical score (the index) based on its historical performance and uncertainty. The algorithm then simply selects the arm with the highest index at each round. Intuitively, this leads to sublinear regret because when the optimal arm's index overestimates its true mean, any suboptimal arm must achieve an index value exceeding the optimal arm's index to be selected. However, this can't happen too often as the learner continues to explore the environment and update its estimates.</p>
 
           <p> The UCB algorithm is defined as follows:</p>
           <div class="algorithm-box">
             <h4>UCB Algorithm</h4>
+            <p><strong>Input:</strong> Confidence parameter $\delta \in (0,1)$</p>
             <p><strong>Initialization:</strong> Pull each arm once</p>
             <p><strong>For rounds $t = K+1, K+2, \ldots, n$:</strong></p>
             <ol>
-              <li>Compute UCB for each arm: $UCB_i(t) = \hat{\mu}_i(t-1) + \sqrt{\frac{2\log (t)}{N_i(t-1)}}$</li>
-              <li>Select arm: $I_t = \arg\max_i UCB_i(t)$</li>
+              <li>Compute UCB for each arm: $\mathrm{UCB}_i(t, \delta) = \hat{\mu}_i(t-1) + \sqrt{\frac{2\log (1/\delta)}{N_i(t-1)}}$</li>
+              <li>Select arm: $I_t = \arg\max_i \mathrm{UCB}_i(t, \delta)$</li>
               <li>Observe reward and update estimates</li>
             </ol>
           </div>
 
-          <p>Without loss of generality, let arm <em>1</em> be optimal with mean $\mu_1=\mu^*$, analysis for the regret after $n$ rounds can start by writing regret decomposition:</p>
+          <p>Without loss of generality, let arm 1 be optimal with mean $\mu_1=\mu^*$, analysis for the regret after $n$ rounds can start by writing regret decomposition:</p>
           <p>$$R_n \,=\, \sum_{i=1}^K \Delta_i\,\mathbb{E}[N_i(n)],\qquad \Delta_i = \mu_1 - \mu_i.$$</p>
 
           <p>Then, we can bound $\mathbb{E}[N_i(n)]$ for every suboptimal arm $i\neq 1$. We observe afer the initial period where UCB pulls each arm once, suboptimal arm $i$ can only be selected at time $t$ only if its index exceeds that of the optimal arm. </p>
@@ -559,153 +908,133 @@
            <p>(a) The index of action $i$ is larger than the true mean of a specific optimal arm.</p>
            <p>(b) The index of a specific optimal arm is smaller than its true mean.</p>
 
-          <p>To formalize this, we introduce the <b>good event</b> for each suboptimal arm $i \neq 1$, which captures the scenario where all confidence intervals behave as intended. Specifically, define the good event $G_i$ as follows:</p>
-          <p class="proof-center">$$G_i = \left\{ \forall t \in [n],\ \mathrm{UCB}_1(t, \delta) > \mu_1 \right\} \cap \left\{ \hat{\mu}_{i, u_i} + \sqrt{\frac{2}{u_i} \log(1/\delta)} < \mu_1 \right\}$$</p>
+          <p>To formalize this, we introduce the <b>good event $G_i$</b> for each suboptimal arm $i \neq 1$, which captures the scenario where all confidence intervals behave as intended.</p>
+          <p>$$G_i = \left\{ \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) > \mu_1 \right\} \cap \left\{ \hat{\mu}_{i, u_i} + \sqrt{\frac{2}{u_i} \log(1/\delta)} < \mu_1 \right\}$$</p>
           <p>Here, $u_i$ is a threshold number of pulls for arm $i$ (to be chosen later), and $\delta$ is a small probability parameter. The first condition ensures that the optimal arm's index never dips below its true mean during the entire horizon, while the second guarantees that after $u_i$ samples, the index for arm $i$ falls below $\mu_1$ forever after. The crux of the regret bound is to show two things:</p>
           <ul>
-            <li>If $G_i$ holds, arm $i$ is played at most $u_i$ times.</li>
-            <li>The probability $\mathbb{P}(G_i^c)$ is small.</li>
+            <li>If $G_i$ holds, arm $i$ is played at most $u_i$ times, in other words, <span class="proof-popover-trigger" data-proof-id="ucb-step1">$T_i(n) \leq u_i$</span>.</li>
+            <li>The probability <span class="proof-popover-trigger" data-proof-id="ucb-step2">$\mathbb{P}(G_i^c)$ is small</span>.</li>
           </ul>
-          <p><b>Step 1: If $G_i$ occurs, then $T_i(n) \leq u_i$.</b></p>
-          <p>Suppose, for contradiction, that $T_i(n) > u_i$ even though $G_i$ holds. Then at some round $t$, we must have selected $A_t = i$ after already pulling arm $i$ exactly $u_i$ times, i.e., $T_i(t-1) = u_i$. The UCB index for arm $i$ is therefore</p>
-          <p class="proof-center">$$ \mathrm{UCB}_i(t-1, \delta) = \hat\mu_{i, u_i} + \sqrt{\frac{2\log(1/\delta)}{u_i}}. $$</p>
-          <p>But, by the definition of $G_i$, this is strictly less than $\mu_1$, and since $G_i$ also ensures $\mathrm{UCB}_1(t-1, \delta) > \mu_1$, it follows that</p>
-          <p class="proof-center">$$ \mathrm{UCB}_i(t-1, \delta) < \mu_1 < \mathrm{UCB}_1(t-1, \delta), $$</p>
-          <p>which means arm $i$ could not have been selected at time $t$. This is a contradiction. Therefore, if $G_i$ occurs, $T_i(n) \leq u_i$.</p>
-          <p><b>Step 2: Probability of $G_i^c$ is small.</b></p>
-          <p>The complement $G_i^c$ happens if either the optimal arm is ever underestimated by its UCB, or if arm $i$ is ever overestimated after $u_i$ pulls:</p>
-          <p class="proof-center">$$G_i^c = \left\{ \mu_1 \ge \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) \right\} \cup \left\{ \hat\mu_{i, u_i} + \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq \mu_1 \right\}.$$</p>
-          <p>The first set, using the definition of $\mathrm{UCB}_1(t, \delta)$, can be further expanded as</p>
-          <p class="proof-center">$$ \left\{ \mu_1 \geq \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) \right\} \subseteq \bigcup_{s=1}^n \left\{ \mu_1 \geq \hat\mu_{1,s} + \sqrt{\frac{2\log(1/\delta)}{s}} \right\}. $$</p>
-          <p>Applying the union bound and the standard sub-Gaussian tail inequality, the probability of any optimal arm confidence interval failure is at most $n\delta$.</p>
-          <p>The second event is controlled by choosing $u_i$ so that the padding is much smaller than the gap $\Delta_i$ between the optimal and arm $i$. Specifically, select $u_i$ so that</p>
-          <p class="proof-center">$$ \Delta_i - \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq c\Delta_i $$</p>
-          <p>for some constant $c \in (0,1)$. Therefore,</p>
-          <p class="proof-center">$$ \mathbb{P}\left( \hat\mu_{i, u_i} + \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq \mu_1 \right) \leq \exp\left( -\frac{u_ic^2\Delta_i^2}{2} \right), $$</p>
-          <p>by the sub-Gaussian tail bound. Combining both failure probabilities, we get</p>
-          <p class="proof-center">$$ \mathbb{P}(G_i^c) \leq n\delta + \exp\left( -\frac{u_ic^2\Delta_i^2}{2} \right). $$</p>
-          <p>Thus, the expected number of times a suboptimal arm $i \neq 1$ is played is bounded by</p>
-          <p class="proof-center">$$ \mathbb{E}[T_i(n)] \leq u_i + n\left[ n\delta + \exp\left( -\frac{u_ic^2\Delta_i^2}{2} \right) \right]. $$</p>
-          <p>Finally, set $u_i$ to be the smallest integer satisfying</p>
-          <p class="proof-center">$$ \Delta_i - \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq c\Delta_i, $$</p>
-          <p>which yields</p>
-          <p class="proof-center">$$ u_i = \left\lceil \frac{2\log(1/\delta)}{(1-c)^2\Delta_i^2} \right\rceil. $$</p>
-          <p>In summary, by carefully defining the good event to capture all uniform confidence requirements, and by bounding the failure probability and the maximum possible number of pulls on the good set, we get a regret bound that scales logarithmically in $n$ and $1/\Delta_i$ for each suboptimal arm.</p>
 
-        
-        </section>
+          <p>Combining these two results, decompose the expected number of pulls by conditioning on whether $G_i$ occurs:</p>
+          <p class="proof-center">$$\mathbb{E}[T_i(n)] = \mathbb{E}[\mathbb{1}\{G_i\} T_i(n)] + \mathbb{E}[\mathbb{1}\{G_i^c\} T_i(n)] \leq u_i + \mathbb{P}(G_i^c) \cdot n,$$</p>
+          <p>where we used $T_i(n) \leq u_i$ on event $G_i$, and $T_i(n) \leq n$ always holds (since we cannot pull more than $n$ times total).</p>
 
-        <section id="optimality">
-          <h2>Optimality Concepts and Information Theory</h2>
-
-          <p>To understand whether UCB is optimal, we need information-theoretic lower bounds. The fundamental question: what is the minimum regret any algorithm must accept when balancing exploration with exploitation?</p>
-
-          <p>The key insight comes from statistical hypothesis testing. Consider two bandit instances that are statistically "close" but have different optimal arms. An algorithm must distinguish between these instances, requiring sufficient data from each arm. This fundamental statistical requirement leads to unavoidable limits on learning efficiency.</p>
-
-          <p>Let $\mathcal{E} = \{\nu_1, \ldots, \nu_K\}$ be a bandit instance. The Lai–Robbins instance-dependent lower bound states that for any consistent algorithm and each suboptimal arm $i$:</p>
-
-          <p>$$\liminf_{n \to \infty} \frac{\mathbb{E}[N_i(n)]}{\log n} \geq \frac{1}{\text{KL}(\nu_i, \nu_{i^*})}.$$</p>
-
-          <p>For Gaussian rewards with unit variance, $\text{KL}(\mathcal{N}(\mu_i,1),\mathcal{N}(\mu^*,1)) = \Delta_i^2/2$, so asymptotically $\mathbb{E}[N_i(n)] \gtrsim \frac{2\log n}{\Delta_i^2}$. This quantifies instance difficulty via KL; problems with many small gaps are inherently harder.</p>
-
-          <p>The information-theoretic approach uses the Kullback-Leibler (KL) divergence between reward distributions. For distributions $P$ and $Q$:</p>
-
-          <p>$$\text{KL}(P, Q) = \int p(x) \log \frac{p(x)}{q(x)} dx$$</p>
-
-          <p>KL divergence measures the difficulty of distinguishing between distributions. Smaller KL divergence means harder discrimination, requiring more samples.</p>
-
-          <p>The change-of-measure technique relates regret to KL divergence. Consider an algorithm $\pi$ and two bandit instances $\mathcal{E}$ and $\mathcal{E}'$ differing only in arms $i$ and $j$. If instance $\mathcal{E}$ has optimal arm $i$ and instance $\mathcal{E}'$ has optimal arm $j$, then:</p>
-
-          <p>$$\mathbb{E}_{\mathcal{E}}[N_j(n)] \cdot \text{KL}(\nu_j, \nu_j') + \mathbb{E}_{\mathcal{E}}[N_i(n)] \cdot \text{KL}(\nu_i, \nu_i') \geq \text{kl}(\epsilon, 1-\epsilon)$$</p>
-
-          <p>where $\epsilon$ is the probability of misidentifying the optimal arm, and $\text{kl}(p,q) = p\log(p/q) + (1-p)\log((1-p)/(1-q))$ is the binary KL divergence.</p>
-
-          <p>This inequality captures the fundamental statistical trade-off: to achieve low error probability $\epsilon$ in arm identification, we must pull arm $i$ many times (if $\text{KL}(\nu_i, \nu_i')$ is small) or pull arm $j$ many times (if $\text{KL}(\nu_j, \nu_j')$ is small). This mathematical constraint reflects the statistical requirements for reliable learning.</p>
-        </section>
-
-        <section id="minimax">
-          <h2>More Information Theory and Minimax Lower Bounds</h2>
-
-          <p>The minimax lower bound provides the worst-case regret any algorithm must suffer. It's derived by constructing a particularly challenging family of bandit instances.</p>
-
-          <p><strong>Theorem (Minimax Lower Bound):</strong> For any algorithm and horizon $n \geq K$:</p>
-
-          <p>$$\inf_{\pi} \sup_{\mathcal{E}} \mathbb{E}_{\mathcal{E}}^{\pi}[R_n] \geq c\,\sqrt{K n}$$</p>
-
-          <p>for a universal constant $c>0$. One standard construction takes $K-1$ arms with mean $1/2 - \Delta$ and one arm with mean $1/2 + \Delta$, with $\Delta$ on the order of $\sqrt{K/n}$.</p>
-
-          <p>The proof uses Fano's inequality, a fundamental result in information theory. For a parameter estimation problem with $M$ hypotheses:</p>
-
-          <p>$$\mathbb{P}[\hat{\theta} \neq \theta] \geq 1 - \frac{I(X; \theta) + \log 2}{\log M}$$</p>
-
-          <p>where $I(X; \theta)$ is the mutual information between observations $X$ and parameter $\theta$.</p>
-
-          <p>Applied to bandits, Fano's inequality lower bounds the probability of misidentifying the optimal arm, which directly translates to regret. The construction ensures that:</p>
-          <ol>
-            <li>The arms are sufficiently similar that many pulls are needed to distinguish them</li>
-            <li>The gaps are large enough that mistakes incur significant regret</li>
-            <li>The time horizon is short enough that perfect identification is impossible</li>
-          </ol>
-
-          <p>Comparing with UCB's minimax regret bound of $O(\sqrt{K n \log n})$, we see that UCB is near-minimax optimal, suffering only an extra $\sqrt{\log n}$ factor. Algorithms like MOSS achieve minimax-optimal $O(\sqrt{K n})$ rates (up to constants), and KL-UCB attains optimal instance-dependent constants.</p>
-
-          <div class="algorithm-box">
-            <h4>Key Results Summary</h4>
-            <ul>
-              <li><strong>ETC:</strong> $O\!\left(\frac{K\log n}{\Delta_{\min}}\right)$ regret (requires gap knowledge)</li>
-              <li><strong>UCB1 (Hoeffding):</strong> $O\!\left(\sum_{i:\Delta_i>0} \frac{\log n}{\Delta_i}\right)$ regret</li>
-              <li><strong>Minimax lower bound:</strong> $\Omega(\sqrt{K n})$</li>
-              <li><strong>UCB1 minimax regret:</strong> $O(\sqrt{K n \log n})$; MOSS achieves $O(\sqrt{K n})$</li>
-            </ul>
+          <div id="ucb-step1" style="display:none">
+            <p>Suppose, for contradiction, that $T_i(n) > u_i$ even though $G_i$ holds. Then at some round $t$, we must have selected $A_t = i$ after already pulling arm $i$ exactly $u_i$ times, i.e., $T_i(t-1) = u_i$. The UCB index for arm $i$ is therefore</p>
+            <p class="proof-center">$$ \mathrm{UCB}_i(t-1, \delta) = \hat\mu_{i, u_i} + \sqrt{\frac{2\log(1/\delta)}{u_i}}. $$</p>
+            <p>But, by the definition of $G_i$, this is strictly less than $\mu_1$, and since $G_i$ also ensures $\mathrm{UCB}_1(t-1, \delta) > \mu_1$, it follows that</p>
+            <p class="proof-center">$$ \mathrm{UCB}_i(t-1, \delta) < \mu_1 < \mathrm{UCB}_1(t-1, \delta), $$</p>
+            <p>which means arm $i$ could not have been selected at time $t$. This is a contradiction. Therefore, if $G_i$ occurs, $T_i(n) \leq u_i$.</p>
           </div>
+          <div id="ucb-step2" style="display:none">
+            <p>The complement $G_i^c$ happens if either the optimal arm is ever underestimated by its UCB, or if arm $i$ is ever overestimated after $u_i$ pulls:</p>
+            <p class="proof-center">$$G_i^c = \left\{ \mu_1 \ge \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) \right\} \cup \left\{ \hat\mu_{i, u_i} + \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq \mu_1 \right\}.$$</p>
+            <p>The first set, using the definition of $\mathrm{UCB}_1(t, \delta)$, can be further expanded as</p>
+            <p class="proof-center">$$ \left\{ \mu_1 \geq \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) \right\} \subseteq \bigcup_{s=1}^n \left\{ \mu_1 \geq \hat\mu_{1,s} + \sqrt{\frac{2\log(1/\delta)}{s}} \right\}. $$</p>
+            <p>Applying the union bound and the standard sub-Gaussian tail inequality:</p>
+            <p class="proof-center">$$\mathbb{P}\left( \mu_1 \geq \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) \right) \leq \sum_{s=1}^n \mathbb{P}\left( \mu_1 \geq \hat\mu_{1,s} + \sqrt{\frac{2\log(1/\delta)}{s}} \right) \leq \sum_{s=1}^n \delta = n\delta.$$</p>
+            <p>The second event is controlled by choosing $u_i$ so that the padding is much smaller than the gap $\Delta_i$ between the optimal and arm $i$. Specifically, select $u_i$ so that</p>
+            <p class="proof-center">$$ \Delta_i - \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq c\Delta_i $$</p>
+            <p>for some constant $c \in (0,1)$. Therefore,</p>
+            <p class="proof-center">$$ \mathbb{P}\left( \hat\mu_{i, u_i} + \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq \mu_1 \right) \leq \exp\left( -\frac{u_ic^2\Delta_i^2}{2} \right), $$</p>
+            <p>by the sub-Gaussian tail bound. Combining both failure probabilities, we get</p>
+            <p class="proof-center">$$ \mathbb{P}(G_i^c) \leq n\delta + \exp\left( -\frac{u_ic^2\Delta_i^2}{2} \right). $$</p>
+            <p>Substituting this bound into $\mathbb{E}[T_i(n)] \leq u_i + \mathbb{P}(G_i^c) \cdot n$ gives</p>
+            <p class="proof-center">$$ \mathbb{E}[T_i(n)] \leq u_i + n\left[ n\delta + \exp\left( -\frac{u_ic^2\Delta_i^2}{2} \right) \right]. $$</p>
+            <p>Finally, set $u_i$ to be the smallest integer satisfying</p>
+            <p class="proof-center">$$ \Delta_i - \sqrt{\frac{2\log(1/\delta)}{u_i}} \geq c\Delta_i, $$</p>
+            <p>which yields</p>
+            <p class="proof-center">$$ u_i = \left\lceil \frac{2\log(1/\delta)}{(1-c)^2\Delta_i^2} \right\rceil. $$</p>
+          </div>
+
+          <p>With $\delta = 1/n^2$ and choosing $c = 1/2$, we obtain from the bound above</p>
+          <p class="proof-center">$$\mathbb{E}[T_i(n)] \leq u_i + 1 + n^{1-2c^2/(1-c)^2} = \left\lceil \frac{8\log(n^2)}{(1-1/2)^2\Delta_i^2} \right\rceil + 1 + n^{-1} \leq 3 + \frac{16\log(n)}{\Delta_i^2}.$$</p>
+          <p>Using the regret decomposition $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[T_i(n)]$, we get the instance-dependent bound:</p>
+          <p class="proof-center">$$R_n \leq \sum_{i:\Delta_i>0} \Delta_i \left( 3 + \frac{16\log(n)}{\Delta_i^2} \right) = 3\sum_{i:\Delta_i>0}\Delta_i + \sum_{i:\Delta_i>0} \frac{16\log(n)}{\Delta_i}.$$</p>
+
+          <p>For the gap-free bound, we partition arms into those with small gaps ($\Delta_i < \Delta$) and large gaps ($\Delta_i \geq \Delta$) for a threshold $\Delta$ to be chosen, and obtain:</p>
+          <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="ucb-gapfree">$$R_n \leq 8\sqrt{kn\log(n)} + O(1)$$</span></p>
+
+          <div id="ucb-gapfree" style="display:none">
+            <p>Starting from the regret decomposition, partition arms by gap size:</p>
+            <p class="proof-center">$$\begin{aligned}
+            R_n &= \sum_{i:\Delta_i<\Delta} \Delta_i \mathbb{E}[T_i(n)] + \sum_{i:\Delta_i\geq\Delta} \Delta_i \mathbb{E}[T_i(n)] \\
+            &\leq n\Delta + \sum_{i:\Delta_i\geq\Delta} \left( 3\Delta_i + \frac{16\log(n)}{\Delta_i} \right) \\
+            &\leq n\Delta + \frac{16k\log(n)}{\Delta} + 3\sum_{i=1}^K\Delta_i,
+            \end{aligned}$$</p>
+            <p>where $\sum_{i:\Delta_i<\Delta} T_i(n) \leq n$. Choosing $\Delta = \sqrt{16k\log(n)/n}$ balances the two terms and yields:</p>
+            <p class="proof-center">$$R_n \leq 2\sqrt{16kn\log(n)} + 3\sum_{i=1}^K\Delta_i = 8\sqrt{kn\log(n)} + O(1).$$</p>
+          </div>
+
+
         </section>
 
-        <section id="instance">
-          <h2>Instance Dependent Lower Bounds</h2>
+        <section id="visualization">
+          <h2>Interactive Comparison: ETC vs UCB</h2>
 
-          <p>While minimax bounds characterize worst-case performance, instance-dependent bounds reveal that UCB is actually optimal for specific problem instances.</p>
+          <div class="viz-container">
+            <div class="viz-controls">
+              <div class="viz-controls-left">
+                <div class="control-group">
+                  <label>Number of arms: <span id="k-value">3</span></label>
+                  <input type="range" id="k-slider" min="2" max="5" value="3" step="1">
+                </div>
+                <div class="control-group">
+                  <label>Exploration rounds (ETC): <span id="m-value">50</span></label>
+                  <input type="range" id="m-slider" min="10" max="200" value="50" step="5">
+                </div>
+              </div>
+              <div class="viz-controls-right">
+                <button id="settings-btn" class="control-btn" title="Settings">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                  </svg>
+                </button>
+                <button id="start-btn" class="control-btn" title="Start">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </button>
+                <button id="reset-btn" class="control-btn" title="Reset">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                  </svg>
+                </button>
+                <button id="speed-btn" class="control-btn" title="Speed">
+                  <span id="speed-text">1x</span>
+                </button>
+              </div>
+            </div>
 
-          <p><strong>Theorem (Lai-Robbins Lower Bound):</strong> For any consistent algorithm (one whose regret grows sublinearly), and any bandit instance with gaps $\Delta_i > 0$:</p>
+            <div class="viz-main">
+              <div class="viz-panel">
+                <h3>Explore-then-Commit</h3>
+                <svg id="etc-viz" width="100%" height="280"></svg>
+                <div class="viz-stats">
+                  <div>Round: <strong><span id="etc-round">0</span></strong></div>
+                  <div>Regret: <strong><span id="etc-regret">0.00</span></strong></div>
+                  <div>Phase: <strong><span id="etc-phase">Explore</span></strong></div>
+                  <div>Committed: <strong><span id="etc-committed">—</span></strong></div>
+                </div>
+              </div>
 
-          <p>$$\liminf_{n \to \infty} \frac{\mathbb{E}[N_i(n)]}{\log n} \geq \frac{1}{\text{KL}(\nu_i, \nu_{i^*})}$$</p>
+              <div class="viz-panel">
+                <h3>Upper Confidence Bound</h3>
+                <svg id="ucb-viz" width="100%" height="280"></svg>
+                <div class="viz-stats">
+                  <div>Round: <strong><span id="ucb-round">0</span></strong></div>
+                  <div>Regret: <strong><span id="ucb-regret">0.00</span></strong></div>
+                  <div>UCB Bonus: <strong><span id="ucb-bonus">—</span></strong></div>
+                </div>
+              </div>
+            </div>
 
-          <p>Here, consistency means $\mathbb{E}[R_n] = o(n^{\alpha})$ for all $\alpha > 0$. The bound states that any reasonable algorithm must pull suboptimal arm $i$ at least $\frac{\log n}{\text{KL}(\nu_i, \nu_{i^*})}$ times.</p>
-          <p><span class="edit-green">This lower bound holds under standard regularity conditions (e.g., one-parameter exponential families with mild smoothness).</span></p>
-
-          <p>For Gaussian rewards with variance 1, $\text{KL}(\mathcal{N}(\mu_i, 1), \mathcal{N}(\mu^*, 1)) = \frac{(\mu^* - \mu_i)^2}{2} = \frac{\Delta_i^2}{2}$. This gives:</p>
-
-          <p>$$\liminf_{n \to \infty} \frac{\mathbb{E}[N_i(n)]}{\log n} \geq \frac{2}{\Delta_i^2}$$</p>
-
-          <p>Comparing with UCB's bound $\mathbb{E}[N_i(n)] \leq \frac{8\log n}{\Delta_i^2} + O(1)$, we see UCB achieves the optimal rate up to constants!</p>
-
-          <p>The Lai-Robbins proof employs the method of mixtures and change of measure. The key insight is that to distinguish between the true instance and a "confusing" alternative where arm $i$ is optimal, the algorithm must observe enough samples to resolve the statistical uncertainty.</p>
-
-          <p>Specifically, consider two instances:</p>
-          <ul>
-            <li>$\mathcal{E}$: True instance with optimal arm $i^*$</li>
-            <li>$\mathcal{E}'$: Modified instance where arm $i$ is optimal (swapping means of arms $i$ and $i^*$)</li>
-          </ul>
-
-          <p>If the algorithm pulls arm $i$ too few times, it cannot distinguish these instances, leading to suboptimal performance on one of them. The number of required samples is determined by the KL divergence between the arm distributions.</p>
-
-          <p>This establishes UCB as an optimal algorithm for the stochastic bandit problem, achieving both minimax optimality (up to log factors) and instance-dependent optimality.</p>
-        </section>
-
-        <section id="conclusion">
-          <h2>Looking Ahead</h2>
-
-          <p>We've established the foundational elements of bandit theory: the exploration-exploitation trade-off, algorithms like ETC and UCB for optimal arm selection, and the information-theoretic limits that govern learning. Key takeaways include:</p>
-
-          <ul>
-            <li>Regret decomposes as $\sum_i \Delta_i \mathbb{E}[N_i(n)]$, quantifying loss from selecting suboptimal arms</li>
-            <li>UCB achieves optimal instance-dependent regret through adaptive confidence intervals, embodying optimism under uncertainty</li>
-            <li>Information theory provides fundamental limits on how quickly we can identify optimal arms</li>
-            <li>Instance-dependent regret can scale as $\sum_{i:\Delta_i>0} O(\log n/\Delta_i)$; worst-case minimax regret scales as $\Theta(\sqrt{K n})$.</li>
-          </ul>
-
-          <p>This foundation prepares us for advanced topics. In <a href="bandits-part2.html">Part 2</a>, we'll explore adversarial settings where rewards can adapt to our actions, contextual bandits that incorporate side information, and structured approaches where rewards have known relationships. In <a href="bandits-part3.html">Part 3</a>, we'll dive into modern theory including sparse linear bandits, refined statistical bounds, and the elegant duality between Bayesian and frequentist approaches.</p>
-
-          <p>The mathematical machinery we've developed - concentration inequalities, confidence sets, information-theoretic arguments - forms the backbone of modern bandit algorithms, extending from simple comparisons to complex structured problems.</p>
+            <div class="viz-regret">
+              <h3>Cumulative Regret Comparison</h3>
+              <canvas id="regret-chart"></canvas>
+            </div>
+          </div>
         </section>
 
         <hr>
@@ -713,21 +1042,34 @@
         <section>
           <h2>References</h2>
           <ul>
-            <li>Thompson, W. R. (1933). On the likelihood that one unknown probability exceeds another in view of the evidence of two samples. <em>Biometrika</em>, 25(3/4), 285-294.</li>
-            <li>Lai, T. L., & Robbins, H. (1985). Asymptotically efficient adaptive allocation rules. <em>Advances in Applied Mathematics</em>, 6(1), 4-22.</li>
-            <li>Auer, P., Cesa-Bianchi, N., & Fischer, P. (2002). Finite-time analysis of the multiarmed bandit problem. <em>Machine Learning</em>, 47(2-3), 235-256.</li>
-            <li>Bubeck, S., & Cesa-Bianchi, N. (2012). Regret analysis of stochastic and nonstochastic multi-armed bandit problems. <em>Foundations and Trends in Machine Learning</em>, 5(1), 1-122.</li>
             <li>Lattimore, T., & Szepesvári, C. (2020). <em>Bandit Algorithms</em>. Cambridge University Press.</li>
-            <li>Garivier, A., & Cappé, O. (2011). The KL-UCB algorithm for bounded stochastic bandits and beyond. <em>COLT</em>, 359-376.</li>
-            <li>Berry, D. A., & Fristedt, B. (1985). <em>Bandit Problems: Sequential Allocation of Experiments</em>. Chapman and Hall.</li>
-            <li>Thall, P. F., & Wathen, J. K. (2007). Practical Bayesian adaptive randomisation in clinical trials. <em>European Journal of Cancer</em>, 43(6), 859-866.</li>
           </ul>
         </section>
       </article>
     </div>
 
-    <footer class="footer">Technical Blog · <a href="bandits-part2.html">Next: Advanced Algorithms →</a></footer>
+    <footer class="footer">Technical Blog · Next: Advanced Algorithms (coming soon)</footer>
   </main>
+
+  <!-- Settings Modal -->
+  <div class="settings-modal" id="settings-modal">
+    <div class="settings-content">
+      <h3>Arm Configuration</h3>
+      <div class="settings-presets">
+        <button onclick="applyPreset('clear')">Clear Winner</button>
+        <button onclick="applyPreset('close')">Close Means</button>
+        <button onclick="applyPreset('equal')">Equal Arms</button>
+        <button onclick="applyPreset('default')">Default</button>
+      </div>
+      <div class="settings-arms" id="settings-arms">
+        <!-- Dynamically populated -->
+      </div>
+      <div class="settings-actions">
+        <button onclick="closeSettings()">Cancel</button>
+        <button class="primary" onclick="applySettings()">Apply</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Proof Popover Container -->
   <div class="proof-popover" id="proof-popover" role="dialog" aria-hidden="true">
@@ -948,6 +1290,618 @@
           hidePopover();
         }
       });
+
+      // ===== INTERACTIVE VISUALIZATION =====
+
+      // Configuration
+      let K = 3; // number of arms
+      let M = 50; // exploration rounds for ETC
+      let maxRounds = 5000;
+      let speed = 25; // 25x, 50x, 100x (displayed as 1x, 2x, 4x)
+      let running = false;
+      let animationFrame = null;
+
+      // State
+      let arms = [];
+      let etcState = null;
+      let ucbState = null;
+      let etcRegretHistory = [];
+      let ucbRegretHistory = [];
+
+      // Custom arm means (null = use defaults)
+      let customMeans = null;
+      let tempMeans = null; // Temporary means while editing in modal
+
+      // Get default means for K arms
+      function getDefaultMeans(k) {
+        const meansByK = {
+          2: [0.7, 0.4],
+          3: [0.7, 0.5, 0.3],
+          4: [0.7, 0.5, 0.4, 0.3],
+          5: [0.7, 0.6, 0.5, 0.4, 0.3]
+        };
+        return meansByK[k] || [0.7, 0.5, 0.3];
+      }
+
+      // Initialize bandit problem
+      function initializeBandit() {
+        arms = [];
+        const means = customMeans || getDefaultMeans(K);
+
+        for (let i = 0; i < K; i++) {
+          arms.push({
+            id: i,
+            trueMean: means[i],
+            color: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'][i]
+          });
+        }
+
+        etcState = {
+          round: 0,
+          phase: 'explore',
+          counts: Array(K).fill(0),
+          rewards: Array(K).fill(0).map(() => []),
+          means: Array(K).fill(0),
+          committed: null,
+          regret: 0
+        };
+
+        ucbState = {
+          round: 0,
+          counts: Array(K).fill(0),
+          rewards: Array(K).fill(0).map(() => []),
+          means: Array(K).fill(0),
+          ucbs: Array(K).fill(Infinity),
+          regret: 0
+        };
+
+        etcRegretHistory = [0];
+        ucbRegretHistory = [0];
+      }
+
+      // Pull arm and get reward (Bernoulli)
+      function pullArm(arm) {
+        return Math.random() < arm.trueMean ? 1 : 0;
+      }
+
+      // Update algorithm state after pulling an arm
+      function updateState(state, armIdx, reward) {
+        state.counts[armIdx]++;
+        state.rewards[armIdx].push(reward);
+        state.means[armIdx] = state.rewards[armIdx].reduce((a, b) => a + b, 0) / state.counts[armIdx];
+      }
+
+      // ETC step
+      function etcStep() {
+        if (etcState.round >= maxRounds) return false;
+
+        etcState.round++;
+        const optimalMean = Math.max(...arms.map(a => a.trueMean));
+
+        let selectedArm;
+
+        if (etcState.phase === 'explore') {
+          // Pull each arm exactly m times (round-robin)
+          // During rounds 1 to mK: arm floor((round-1)/m) mod K gets pulled
+          const roundInExplore = etcState.round;
+          selectedArm = Math.floor((roundInExplore - 1) / M) % K;
+
+          // After mK rounds, switch to commit phase
+          if (etcState.round >= M * K) {
+            etcState.phase = 'commit';
+            etcState.committed = etcState.means.indexOf(Math.max(...etcState.means));
+          }
+        } else {
+          selectedArm = etcState.committed;
+        }
+
+        const reward = pullArm(arms[selectedArm]);
+        updateState(etcState, selectedArm, reward);
+
+        const instantRegret = optimalMean - arms[selectedArm].trueMean;
+        etcState.regret += instantRegret;
+        etcRegretHistory.push(etcState.regret);
+
+        return true;
+      }
+
+      // UCB step
+      function ucbStep() {
+        if (ucbState.round >= maxRounds) return false;
+
+        ucbState.round++;
+        const optimalMean = Math.max(...arms.map(a => a.trueMean));
+
+        let selectedArm;
+
+        // Initial pulls
+        if (ucbState.round <= K) {
+          selectedArm = (ucbState.round - 1) % K;
+        } else {
+          // Compute UCB indices
+          ucbState.ucbs = ucbState.means.map((mean, i) => {
+            if (ucbState.counts[i] === 0) return Infinity;
+            const bonus = Math.sqrt(2 * Math.log(ucbState.round) / ucbState.counts[i]);
+            return mean + bonus;
+          });
+
+          selectedArm = ucbState.ucbs.indexOf(Math.max(...ucbState.ucbs));
+        }
+
+        const reward = pullArm(arms[selectedArm]);
+        updateState(ucbState, selectedArm, reward);
+
+        const instantRegret = optimalMean - arms[selectedArm].trueMean;
+        ucbState.regret += instantRegret;
+        ucbRegretHistory.push(ucbState.regret);
+
+        return true;
+      }
+
+      // Render SVG visualization
+      function renderViz(svgId, state, isETC = false) {
+        const svg = document.getElementById(svgId);
+        const width = svg.clientWidth;
+        const height = 280;
+        const margin = { top: 40, right: 20, bottom: 40, left: 60 };
+        const plotWidth = width - margin.left - margin.right;
+        const plotHeight = height - margin.top - margin.bottom;
+
+        svg.innerHTML = '';
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('transform', `translate(${margin.left}, ${margin.top})`);
+        svg.appendChild(g);
+
+        // Y-axis
+        const yScale = (val) => plotHeight - (val * plotHeight);
+
+        for (let i = 0; i <= 10; i++) {
+          const y = yScale(i / 10);
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', 0);
+          line.setAttribute('y1', y);
+          line.setAttribute('x2', plotWidth);
+          line.setAttribute('y2', y);
+          line.setAttribute('stroke', '#e5e5e5');
+          line.setAttribute('stroke-width', '1');
+          g.appendChild(line);
+
+          if (i % 2 === 0) {
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', -10);
+            text.setAttribute('y', y + 4);
+            text.setAttribute('text-anchor', 'end');
+            text.setAttribute('class', 'arm-label');
+            text.textContent = (i / 10).toFixed(1);
+            g.appendChild(text);
+          }
+        }
+
+        // Render arms
+        const armWidth = plotWidth / K - 10;
+        arms.forEach((arm, i) => {
+          const x = i * (plotWidth / K) + 5;
+
+          // Determine if this arm was selected in the most recent round
+          let selectedThisRound = false;
+          if (isETC && etcState.round > 0) {
+            if (etcState.phase === 'commit') {
+              selectedThisRound = (etcState.committed === i);
+            } else {
+              // In explore phase: check if this arm was just pulled
+              const lastSelected = Math.floor((etcState.round - 1) / M) % K;
+              selectedThisRound = (lastSelected === i);
+            }
+          } else if (!isETC && ucbState.round > 0) {
+            if (ucbState.round <= K) {
+              selectedThisRound = ((ucbState.round - 1) % K === i);
+            } else {
+              selectedThisRound = (ucbState.ucbs[i] === Math.max(...ucbState.ucbs));
+            }
+          }
+
+          // True mean line
+          const trueLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          trueLine.setAttribute('x1', x);
+          trueLine.setAttribute('y1', yScale(arm.trueMean));
+          trueLine.setAttribute('x2', x + armWidth);
+          trueLine.setAttribute('y2', yScale(arm.trueMean));
+          trueLine.setAttribute('class', 'true-mean-line');
+          g.appendChild(trueLine);
+
+          // Empirical mean bar
+          if (state.counts[i] > 0) {
+            const meanHeight = state.means[i] * plotHeight;
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', x);
+            rect.setAttribute('y', yScale(state.means[i]));
+            rect.setAttribute('width', armWidth);
+            rect.setAttribute('height', meanHeight);
+            rect.setAttribute('fill', arm.color);
+            rect.setAttribute('opacity', selectedThisRound ? '0.9' : '0.6');
+            rect.setAttribute('class', 'arm-bar');
+            if (selectedThisRound) {
+              rect.setAttribute('stroke', '#2c3e50');
+              rect.setAttribute('stroke-width', '3');
+            }
+            g.appendChild(rect);
+
+            // Confidence interval for UCB
+            if (!isETC && state.counts[i] > 0) {
+              const bonus = Math.sqrt(2 * Math.log(Math.max(state.round, 1)) / state.counts[i]);
+              const ucb = Math.min(state.means[i] + bonus, 1);
+
+              const ci = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+              ci.setAttribute('x1', x + armWidth / 2);
+              ci.setAttribute('y1', yScale(state.means[i]));
+              ci.setAttribute('x2', x + armWidth / 2);
+              ci.setAttribute('y2', yScale(ucb));
+              ci.setAttribute('class', 'confidence-interval');
+              g.appendChild(ci);
+
+              // UCB cap
+              const cap = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+              cap.setAttribute('x1', x + armWidth / 4);
+              cap.setAttribute('y1', yScale(ucb));
+              cap.setAttribute('x2', x + 3 * armWidth / 4);
+              cap.setAttribute('y2', yScale(ucb));
+              cap.setAttribute('class', 'confidence-interval');
+              g.appendChild(cap);
+            }
+          }
+
+          // Arm label
+          const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          label.setAttribute('x', x + armWidth / 2);
+          label.setAttribute('y', plotHeight + 25);
+          label.setAttribute('text-anchor', 'middle');
+          label.setAttribute('class', 'arm-label');
+          label.textContent = `Arm ${i + 1}`;
+          g.appendChild(label);
+
+          // Pull count
+          const count = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          count.setAttribute('x', x + armWidth / 2);
+          count.setAttribute('y', -10);
+          count.setAttribute('text-anchor', 'middle');
+          count.setAttribute('class', 'arm-label');
+          count.setAttribute('font-size', '11');
+          count.textContent = `n=${state.counts[i]}`;
+          g.appendChild(count);
+        });
+      }
+
+      // Render regret chart
+      function renderRegretChart() {
+        const canvas = document.getElementById('regret-chart');
+        const ctx = canvas.getContext('2d');
+
+        // Handle high-DPI displays
+        const dpr = window.devicePixelRatio || 1;
+
+        // Get container width for responsive sizing
+        const container = canvas.parentElement;
+        const displayWidth = container.clientWidth;
+        const displayHeight = 200;
+
+        // Set canvas internal resolution
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
+
+        // Set CSS display size
+        canvas.style.width = displayWidth + 'px';
+        canvas.style.height = displayHeight + 'px';
+
+        // Scale context to match DPI
+        ctx.scale(dpr, dpr);
+
+        const width = displayWidth;
+        const height = displayHeight;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const margin = { top: 20, right: 100, bottom: 40, left: 60 };
+        const plotWidth = width - margin.left - margin.right;
+        const plotHeight = height - margin.top - margin.bottom;
+
+        const maxRegret = Math.max(
+          Math.max(...etcRegretHistory),
+          Math.max(...ucbRegretHistory),
+          1
+        );
+
+        const xScale = (t) => margin.left + (t / maxRounds) * plotWidth;
+        const yScale = (r) => margin.top + plotHeight - (r / maxRegret) * plotHeight;
+
+        // Grid
+        ctx.strokeStyle = '#e5e5e5';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 5; i++) {
+          const y = margin.top + (i / 5) * plotHeight;
+          ctx.beginPath();
+          ctx.moveTo(margin.left, y);
+          ctx.lineTo(margin.left + plotWidth, y);
+          ctx.stroke();
+        }
+
+        // Axes
+        ctx.strokeStyle = '#2c3e50';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(margin.left, margin.top);
+        ctx.lineTo(margin.left, margin.top + plotHeight);
+        ctx.lineTo(margin.left + plotWidth, margin.top + plotHeight);
+        ctx.stroke();
+
+        // Y-axis labels
+        ctx.fillStyle = '#2c3e50';
+        ctx.font = '14px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= 5; i++) {
+          const val = (maxRegret * i / 5).toFixed(1);
+          const y = margin.top + plotHeight - (i / 5) * plotHeight;
+          ctx.fillText(val, margin.left - 10, y + 4);
+        }
+
+        // X-axis labels
+        ctx.textAlign = 'center';
+        for (let i = 0; i <= 5; i++) {
+          const val = Math.round(maxRounds * i / 5);
+          const x = margin.left + (i / 5) * plotWidth;
+          ctx.fillText(val, x, margin.top + plotHeight + 25);
+        }
+
+        // ETC line
+        ctx.strokeStyle = '#e74c3c';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        etcRegretHistory.forEach((r, t) => {
+          const x = xScale(t);
+          const y = yScale(r);
+          if (t === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // UCB line
+        ctx.strokeStyle = '#3498db';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ucbRegretHistory.forEach((r, t) => {
+          const x = xScale(t);
+          const y = yScale(r);
+          if (t === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // Legend
+        ctx.font = '16px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'left';
+
+        ctx.fillStyle = '#e74c3c';
+        ctx.fillRect(margin.left + plotWidth + 10, margin.top + 20, 30, 3);
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillText('ETC', margin.left + plotWidth + 45, margin.top + 25);
+
+        ctx.fillStyle = '#3498db';
+        ctx.fillRect(margin.left + plotWidth + 10, margin.top + 40, 30, 3);
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillText('UCB', margin.left + plotWidth + 45, margin.top + 45);
+      }
+
+      // Update UI
+      function updateUI() {
+        document.getElementById('etc-round').textContent = etcState.round;
+        document.getElementById('etc-regret').textContent = etcState.regret.toFixed(2);
+        document.getElementById('etc-phase').textContent = etcState.phase === 'explore' ? 'Explore' : 'Commit';
+
+        if (etcState.committed !== null) {
+          const isOptimal = arms[etcState.committed].trueMean === Math.max(...arms.map(a => a.trueMean));
+          document.getElementById('etc-committed').textContent = `Arm ${etcState.committed + 1}${isOptimal ? ' ✓' : ' ✗'}`;
+        } else {
+          document.getElementById('etc-committed').textContent = '—';
+        }
+
+        document.getElementById('ucb-round').textContent = ucbState.round;
+        document.getElementById('ucb-regret').textContent = ucbState.regret.toFixed(2);
+
+        if (ucbState.round > K && ucbState.counts.some(c => c > 0)) {
+          const maxUcb = Math.max(...ucbState.ucbs.filter(u => u !== Infinity));
+          const bonus = ucbState.ucbs.map((u, i) => u - ucbState.means[i]);
+          const avgBonus = bonus.filter(b => b < 10).reduce((a, b) => a + b, 0) / bonus.filter(b => b < 10).length;
+          document.getElementById('ucb-bonus').textContent = avgBonus.toFixed(3);
+        } else {
+          document.getElementById('ucb-bonus').textContent = '—';
+        }
+
+        renderViz('etc-viz', etcState, true);
+        renderViz('ucb-viz', ucbState, false);
+        renderRegretChart();
+      }
+
+      // Animation loop
+      function animate() {
+        if (!running) return;
+
+        const etcContinue = etcStep();
+        const ucbContinue = ucbStep();
+
+        updateUI();
+
+        if (etcContinue || ucbContinue) {
+          const delay = 300 / speed;
+          animationFrame = setTimeout(animate, delay);
+        } else {
+          running = false;
+          updateStartButton('restart');
+        }
+      }
+
+      // Update start button icon
+      function updateStartButton(state) {
+        const btn = document.getElementById('start-btn');
+        if (state === 'play') {
+          btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+          btn.setAttribute('title', 'Start');
+        } else if (state === 'pause') {
+          btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>';
+          btn.setAttribute('title', 'Pause');
+        } else if (state === 'restart') {
+          btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>';
+          btn.setAttribute('title', 'Restart');
+        }
+      }
+
+      // Event listeners
+      document.getElementById('k-slider').addEventListener('input', (e) => {
+        K = parseInt(e.target.value);
+        document.getElementById('k-value').textContent = K;
+        // Reset custom means when K changes
+        customMeans = null;
+        if (!running) {
+          initializeBandit();
+          updateUI();
+        }
+      });
+
+      document.getElementById('m-slider').addEventListener('input', (e) => {
+        M = parseInt(e.target.value);
+        document.getElementById('m-value').textContent = M;
+      });
+
+      document.getElementById('start-btn').addEventListener('click', () => {
+        if (running) {
+          running = false;
+          if (animationFrame) clearTimeout(animationFrame);
+          updateStartButton('play');
+        } else {
+          if (etcState.round >= maxRounds) {
+            initializeBandit();
+          }
+          running = true;
+          updateStartButton('pause');
+          animate();
+        }
+      });
+
+      document.getElementById('reset-btn').addEventListener('click', () => {
+        running = false;
+        if (animationFrame) clearTimeout(animationFrame);
+        initializeBandit();
+        updateUI();
+        updateStartButton('play');
+      });
+
+      document.getElementById('speed-btn').addEventListener('click', () => {
+        const speeds = [25, 50, 100];
+        const speedLabels = ['1x', '2x', '4x'];
+        const currentIdx = speeds.indexOf(speed);
+        const nextIdx = (currentIdx + 1) % speeds.length;
+        speed = speeds[nextIdx];
+        document.getElementById('speed-text').textContent = speedLabels[nextIdx];
+      });
+
+      // Settings modal functions
+      window.openSettings = function() {
+        const modal = document.getElementById('settings-modal');
+        const container = document.getElementById('settings-arms');
+
+        // Initialize temp means
+        tempMeans = (customMeans || getDefaultMeans(K)).slice();
+
+        // Populate sliders
+        container.innerHTML = '';
+        for (let i = 0; i < K; i++) {
+          const div = document.createElement('div');
+          div.className = 'settings-arm-control';
+          div.innerHTML = `
+            <label>Arm ${i + 1}:</label>
+            <input type="range" min="0" max="100" value="${Math.round(tempMeans[i] * 100)}"
+                   step="1" id="mean-slider-${i}"
+                   oninput="updateMeanValue(${i}, this.value)">
+            <span class="value" id="mean-value-${i}">${tempMeans[i].toFixed(2)}</span>
+          `;
+          container.appendChild(div);
+        }
+
+        modal.classList.add('visible');
+      };
+
+      window.closeSettings = function() {
+        document.getElementById('settings-modal').classList.remove('visible');
+      };
+
+      window.updateMeanValue = function(idx, value) {
+        tempMeans[idx] = value / 100;
+        document.getElementById(`mean-value-${idx}`).textContent = tempMeans[idx].toFixed(2);
+      };
+
+      window.applyPreset = function(preset) {
+        let means;
+        switch(preset) {
+          case 'clear':
+            // One arm clearly better
+            means = K === 2 ? [0.8, 0.3] :
+                    K === 3 ? [0.8, 0.4, 0.2] :
+                    K === 4 ? [0.8, 0.5, 0.3, 0.2] :
+                    [0.8, 0.6, 0.4, 0.3, 0.2];
+            break;
+          case 'close':
+            // All arms close together
+            means = K === 2 ? [0.55, 0.5] :
+                    K === 3 ? [0.6, 0.55, 0.5] :
+                    K === 4 ? [0.6, 0.57, 0.53, 0.5] :
+                    [0.6, 0.58, 0.55, 0.53, 0.5];
+            break;
+          case 'equal':
+            // All equal
+            means = Array(K).fill(0.5);
+            break;
+          case 'default':
+            means = getDefaultMeans(K);
+            break;
+        }
+        tempMeans = means;
+        // Update sliders
+        for (let i = 0; i < K; i++) {
+          document.getElementById(`mean-slider-${i}`).value = Math.round(tempMeans[i] * 100);
+          document.getElementById(`mean-value-${i}`).textContent = tempMeans[i].toFixed(2);
+        }
+      };
+
+      window.applySettings = function() {
+        customMeans = tempMeans.slice();
+        closeSettings();
+        // Reset and reinitialize
+        running = false;
+        if (animationFrame) clearTimeout(animationFrame);
+        initializeBandit();
+        updateUI();
+        updateStartButton('play');
+      };
+
+      document.getElementById('settings-btn').addEventListener('click', openSettings);
+
+      // Close modal on background click
+      document.getElementById('settings-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'settings-modal') {
+          closeSettings();
+        }
+      });
+
+      // Close on Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('settings-modal').classList.contains('visible')) {
+          closeSettings();
+        }
+      });
+
+      // Initialize on load
+      initializeBandit();
+      updateUI();
     });
   </script>
 </body>

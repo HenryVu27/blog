@@ -67,8 +67,7 @@
   padding: 0 16px 0 0;
   margin: 0;
   background: transparent;
-}
-.toc-sticky{
+  align-self: start;
   position: sticky;
   top: 32px;
   max-height: calc(100vh - 64px);

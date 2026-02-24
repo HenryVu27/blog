@@ -53,10 +53,25 @@
   padding: 0 16px;
 }
 
+/* TLDR mode: TOC is hidden, center the article */
+@media(min-width: 769px){
+  body:not(.deep-dive-mode) .layout,
+  html:not(.deep-dive-mode) .layout {
+    grid-template-columns: minmax(0, 900px);
+    justify-content: center;
+    max-width: 900px;
+  }
+}
+
 @media(min-width: 1200px){
   .layout{
     grid-template-columns: 320px minmax(800px, 1200px) 1fr;
     max-width: 1800px;
+  }
+  body:not(.deep-dive-mode) .layout,
+  html:not(.deep-dive-mode) .layout {
+    grid-template-columns: minmax(0, 900px);
+    max-width: 900px;
   }
 }
 

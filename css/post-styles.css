@@ -28,11 +28,11 @@
 }
 
 .post strong, .post b{
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .post th{
-  font-weight: 400;
+  font-weight: 600;
 }
 
 /* List items with bold labels: slightly smaller so they don't compete with h3 */

@@ -1,8 +1,9 @@
-/* Safari-specific KaTeX rendering fixes */
+/* KaTeX rendering fixes */
 /* Include this on any page that uses KaTeX math rendering */
 
 .katex {
   line-height: 1 !important;
+  font-size: 1em !important;
 }
 
 .katex-display {

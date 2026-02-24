@@ -53,13 +53,13 @@
         <div class="toc-sticky">
           <h2>Contents</h2>
           <ul>
-            <li><a href="#from-prompts-to-context"><span class="toc-section-number">1</span><span class="toc-section-title">From Prompts to Context</span></a></li>
+            <li class="deep-dive-only"><a href="#from-prompts-to-context"><span class="toc-section-number">1</span><span class="toc-section-title">From Prompts to Context</span></a></li>
             <li><a href="#seven-components"><span class="toc-section-number">2</span><span class="toc-section-title">The Seven Components</span></a></li>
             <li><a href="#four-strategies"><span class="toc-section-number">3</span><span class="toc-section-title">Write / Select / Compress / Isolate</span></a></li>
             <li><a href="#failure-modes"><span class="toc-section-number">4</span><span class="toc-section-title">How Context Fails</span></a></li>
             <li><a href="#token-budget"><span class="toc-section-number">5</span><span class="toc-section-title">A Real Token Budget</span></a></li>
             <li><a href="#what-i-learned"><span class="toc-section-number">6</span><span class="toc-section-title">What I Learned</span></a></li>
-            <li><a href="#references"><span class="toc-section-number">7</span><span class="toc-section-title">References</span></a></li>
+            <li class="deep-dive-only"><a href="#references"><span class="toc-section-number">7</span><span class="toc-section-title">References</span></a></li>
           </ul>
         </div>
       </aside>
@@ -69,14 +69,9 @@
         <!-- ============================================================ -->
         <!-- SECTION 1: From Prompts to Context                           -->
         <!-- ============================================================ -->
-        <section id="from-prompts-to-context">
+        <section id="from-prompts-to-context" class="deep-dive-only">
           <h2>From Prompts to Context</h2>
 
-          <div class="tldr-only">
-            <p>Context engineering replaced "prompt engineering" because the bottleneck shifted. Models are smart enough now; most agent failures are context failures where the model lacks the right information at the right time. This post covers the seven components that fill a context window, four strategies for managing them, common failure modes, and a real token budget from a diabetes coaching agent I built with LangGraph.</p>
-          </div>
-
-          <div class="deep-dive-only">
           <p>Sometime around mid-2025, the AI engineering community started calling what we do "context engineering" instead of "prompt engineering," and the rename stuck because it described what I was actually spending my time on. Not crafting the perfect instruction phrasing. Figuring out what information the model should see at each step, and building the infrastructure to assemble it reliably.</p>
 
           <p><a href="#ref-karpathy">Andrej Karpathy</a> called it "the delicate art and science of filling the context window with just the right information for the next step." I like that framing because it puts the emphasis on information selection, not wordsmithing.</p>
@@ -86,7 +81,6 @@
           <p>The system prompt is one of seven things that fill the context window, and for a simple classification task, careful prompt engineering is all you need. But the moment you add retrieval, tools, multi-step reasoning, or agent workflows, you're doing context engineering whether you call it that or not. Context engineering is the bigger tent that prompt engineering lives inside.</p>
 
           <p>This post walks through those seven components, the strategies for managing them, how they fail, and what a real token budget looks like in a diabetes management coaching agent I built with LangGraph (with code). I'll go deeper on RAG in Part 2, memory in Part 3, agents in Part 4, and multi-agent coordination in Part 5.</p>
-          </div>
 
           <div class="theory-only">
             <div class="callout">
@@ -107,7 +101,7 @@
           <h2>The Seven Components</h2>
 
           <div class="tldr-only">
-            <p>Seven components fill every context window: system prompt, user prompt, state/conversation history, long-term memory, retrieved information (RAG), tool definitions, and structured output. System prompts grow fast and should be versioned like code (XML-tagged sections work well). State and history are the biggest waste, with full conversation dumps hurting performance. RAG should be pull-based (let the model request what it needs via tools) rather than front-loaded. Tool definitions are a sneaky budget item that consume tokens whether used or not.</p>
+            <p>Seven components fill every context window: system prompt, user prompt, state/conversation history, long-term memory, retrieved information (RAG), tool definitions, and structured output. Version system prompts like code. Use pull-based RAG (model requests via tools) over front-loading. Full conversation dumps hurt performance; trim aggressively. Tool definitions consume tokens whether used or not.</p>
           </div>
 
           <div class="deep-dive-only">
@@ -241,7 +235,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <p><strong>Structured output</strong> specifications (JSON schemas, type definitions, output constraints) are easy to overlook in a token budget because they feel like "free" structure. They're not. At scale they add up, and I've seen schemas that consume 300+ tokens before the model even starts generating.</p>
           </div>
 
-          <div class="algorithm-box">
+          <div class="algorithm-box deep-dive-only">
             <h4>Typical Token Allocation (Agentic System)</h4>
             <table>
               <thead>
@@ -277,7 +271,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <h2>Write / Select / Compress / Isolate</h2>
 
           <div class="tldr-only">
-            <p>Four strategies manage context in production systems. <strong>Write:</strong> move information out of the window into external storage (scratchpads, summaries, memories). <strong>Select:</strong> retrieve relevant information back via RAG, memory queries, or tool-description search. <strong>Compress:</strong> reduce tokens while preserving task performance through summarization and trimming (but never compress instructions and data together). <strong>Isolate:</strong> split work across separate LLM calls so each gets a focused context. Most teams over-invest in writing and selecting; the real gains are usually in compression and isolation.</p>
+            <p><strong>Write:</strong> move information out of the window into external storage. <strong>Select:</strong> retrieve relevant information back via RAG or memory queries. <strong>Compress:</strong> summarize and trim, but never compress instructions and data together. <strong>Isolate:</strong> split work across separate LLM calls so each gets focused context. Most teams over-invest in writing and selecting; the real gains are in compression and isolation.</p>
           </div>
 
           <div class="deep-dive-only">
@@ -387,7 +381,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <h2>How Context Fails</h2>
 
           <div class="tldr-only">
-            <p>Four failure modes cover most agent misbehavior. <strong>Poisoning:</strong> a hallucination enters context and compounds (fix: validate before memory writes). <strong>Distraction:</strong> context grows so long the model neglects its training (fix: aggressive trimming). <strong>Confusion:</strong> noise treated as signal (fix: curate ruthlessly). <strong>Clash:</strong> contradictory instructions (fix: clear precedence hierarchy). When debugging agents, classify the failure first, because the mitigations are completely different.</p>
+            <p><strong>Poisoning:</strong> hallucination enters context, compounds downstream. <strong>Distraction:</strong> context too long, model neglects training. <strong>Confusion:</strong> noise treated as signal. <strong>Clash:</strong> contradictory instructions. Classify the failure first; mitigations are completely different.</p>
           </div>
 
           <div class="deep-dive-only">
@@ -435,7 +429,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <h2>A Real Token Budget</h2>
 
           <div class="tldr-only">
-            <p>A diabetes coaching agent I built with LangGraph uses ~2,000-4,050 tokens for the system prompt (assembled dynamically), a 6-turn conversation window with 120K character budget, and on-demand RAG results up to 10,000 tokens. The architecture isolates safety gates into separate LLM calls. Auditing this agent against best practices revealed five mistakes I'd made despite knowing better: KV-cache invalidation from volatile data at the prompt prefix (10x cost hit), no memory validation, a redundant tool that confused the model, content-blind FIFO trimming, and recency-only episodic memory retrieval.</p>
+            <p>Concrete token budget from a LangGraph diabetes coaching agent: ~2,000-4,050 token system prompt, 6-turn conversation window (120K char budget), on-demand RAG up to 10,000 tokens, safety gates isolated into separate LLM calls.</p>
           </div>
 
           <div class="deep-dive-only">
@@ -548,7 +542,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <p>This function is where all the context engineering actually happens. Load state, build the prompt from components, prepend the conversation state block, cache the result, and trim the conversation window. Every technique I described in the earlier sections (XML structure, rolling summaries, trimming, isolation) converges in this one function. And if you noticed the <code># &lt;-- problematic ordering</code> comment, good. I'll come back to it.</p>
           </div>
 
-          <div class="algorithm-box">
+          <div class="algorithm-box deep-dive-only">
             <h4>Context Engineering Techniques Used</h4>
             <table>
               <thead><tr><th>Category</th><th>Technique</th><th>Implementation</th></tr></thead>
@@ -569,13 +563,12 @@ graph.add_edge("output_gate", END)</code></pre>
           <h3>What I Got Wrong</h3>
 
           <div class="tldr-only">
-            <p>Five mistakes found during a self-audit:</p>
             <ul class="list-tight">
-              <li><strong>KV-cache violation:</strong> Volatile state block prepended to prompt prefix, invalidating cache every turn (10x cost difference). Fix: move volatile data to the end.</li>
-              <li><strong>No memory validation:</strong> LLM-extracted facts written directly to patient profile with no conflict detection or rollback.</li>
-              <li><strong>Redundant tool:</strong> <code>get_patient_profile</code> exists as a tool even though the profile is already in the system prompt, confusing the model.</li>
-              <li><strong>Content-blind trimming:</strong> FIFO drops high-signal old messages before low-signal recent filler.</li>
-              <li><strong>No importance scoring:</strong> Episodic memory retrieved by recency alone, missing breakthrough moments from weeks ago.</li>
+              <li><strong>KV-cache violation:</strong> Volatile state prepended to prompt prefix, invalidating cache every turn (10x cost). Fix: move to end.</li>
+              <li><strong>No memory validation:</strong> LLM-extracted facts written directly with no conflict detection or rollback.</li>
+              <li><strong>Redundant tool:</strong> <code>get_patient_profile</code> duplicates data already in system prompt, confusing the model.</li>
+              <li><strong>Content-blind trimming:</strong> FIFO drops high-signal old messages before low-signal filler.</li>
+              <li><strong>No importance scoring:</strong> Episodic memory retrieved by recency alone.</li>
             </ul>
           </div>
 
@@ -666,7 +659,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <h2>What I Learned</h2>
 
           <div class="tldr-only">
-            <p>Context engineering is mostly about removal, not addition. Every improvement I've made to my agent involved taking something out or moving it around. The gap between knowing best practices and following them in your own code is real: I found every anti-pattern I'd warned against in my own system. Context strategy also isn't portable across providers, so test on every model you plan to support.</p>
+            <p>Context engineering is mostly about removal, not addition. Every improvement involved taking something out or moving it around. Context strategy isn't portable across providers; test on every model you support.</p>
           </div>
 
           <div class="deep-dive-only">
@@ -685,7 +678,7 @@ graph.add_edge("output_gate", END)</code></pre>
         <!-- ============================================================ -->
         <!-- SECTION 7: References                                        -->
         <!-- ============================================================ -->
-        <section id="references">
+        <section id="references" class="deep-dive-only">
           <h2>References</h2>
 
           <ol>

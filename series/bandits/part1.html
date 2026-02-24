@@ -15,11 +15,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
   <style>
     /* Part 1 specific: algorithm-box background override */
-    .algorithm-box { background: #f5f4f0; }
+    .algorithm-box { background: var(--code-bg); }
 
     /* Visualization styles (specific to this post) */
     .viz-container {
-      background: #f5f4f0;
+      background: var(--code-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 24px;
@@ -58,11 +58,11 @@
     }
     .control-group input[type="range"] {
       width: 160px;
-      accent-color: #6b6a61;
+      accent-color: #9a7e3a;
     }
     .control-btn {
-      background: #d4d1c4;
-      border: 1px solid #6b6a61;
+      background: var(--gold);
+      border: 1px solid #9a7e3a;
       border-radius: 6px;
       padding: 10px 14px;
       font-size: 16px;
@@ -139,7 +139,7 @@
     }
     .settings-arm-control input[type="range"] {
       flex: 1;
-      accent-color: #6b6a61;
+      accent-color: #9a7e3a;
     }
     .settings-arm-control .value {
       min-width: 40px;
@@ -156,8 +156,8 @@
       border-bottom: 1px solid var(--border);
     }
     .settings-presets button {
-      background: #d4d1c4;
-      border: 1px solid #6b6a61;
+      background: var(--gold);
+      border: 1px solid #9a7e3a;
       border-radius: 6px;
       padding: 6px 12px;
       font-size: 14px;
@@ -173,8 +173,8 @@
       justify-content: flex-end;
     }
     .settings-actions button {
-      background: #d4d1c4;
-      border: 1px solid #6b6a61;
+      background: var(--gold);
+      border: 1px solid #9a7e3a;
       border-radius: 6px;
       padding: 8px 16px;
       font-size: 15px;
@@ -186,7 +186,7 @@
       background: #c7c3b5;
     }
     .settings-actions button.primary {
-      background: #6b6a61;
+      background: #9a7e3a;
       color: white;
     }
     .settings-actions button.primary:hover {
@@ -249,7 +249,7 @@
       fill: var(--text);
     }
     .confidence-interval {
-      stroke: #6b6a61;
+      stroke: #9a7e3a;
       stroke-width: 2;
       fill: none;
       opacity: 0.5;

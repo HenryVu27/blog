@@ -70,6 +70,12 @@ a{
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
+  transition: color 150ms ease;
+}
+
+a:hover{
+  color: var(--muted);
+  text-decoration: none;
 }
 
 ul,ol{

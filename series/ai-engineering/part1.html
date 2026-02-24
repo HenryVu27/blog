@@ -105,7 +105,7 @@
           <h2>The Seven Components</h2>
 
           <div class="deep-dive-only">
-          <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-schmid">Philipp Schmid</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, Google), and seven components turns out to be the right granularity.</p>
+          <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-manus">Manus</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, Google), and seven components turns out to be the right granularity.</p>
           </div>
 
           <div style="border:1px solid var(--border); border-radius:8px; padding:20px 24px; margin:24px 0; background:#fafafa;">
@@ -249,7 +249,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
 
           <p><strong>Tool definitions</strong> are the sneaky budget item. Function signatures the system can invoke consume context tokens whether they're used or not, and there's a genuine tension in how to manage them. <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking, where tools stay in context but get suppressed at the decoding level through a state machine. I don't think there's a clean answer here yet. I'm currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you're at Manus's scale with dozens of tools, the cache math probably dominates.</p>
 
-          <p>The broader principle from <a href="#ref-schmid-manus">Schmid's analysis of Manus</a> is worth internalizing regardless of tool count: never reorder or mutate tokens already in the KV-cache prefix. Treat your prompt prefix as append-only. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Most major providers now offer explicit cache control headers that let you pin specific prefix segments.</p>
+          <p>The broader principle from <a href="#ref-manus">Manus's engineering blog</a> is worth internalizing regardless of tool count: never reorder or mutate tokens already in the KV-cache prefix. Treat your prompt prefix as append-only. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Most major providers now offer explicit cache control headers that let you pin specific prefix segments.</p>
 
           <p><strong>Structured output</strong> specifications (JSON schemas, type definitions, output constraints) are easy to overlook in a token budget because they feel like "free" structure. They're not. At scale they add up, and I've seen schemas that consume 300+ tokens before the model even starts generating.</p>
           </div>
@@ -715,11 +715,10 @@ graph.add_edge("output_gate", END)</code></pre>
           <ol>
             <li id="ref-karpathy">Karpathy, A. "Context Engineering." <a href="https://x.com/karpathy/status/1937902205765607626">X/Twitter</a>, June 2025.</li>
             <li id="ref-lutke">Lutke, T. "Context Engineering over Prompt Engineering." <a href="https://x.com/tobi/status/1935533422589399127">X/Twitter</a>, June 2025.</li>
-            <li id="ref-schmid">Schmid, P. "Context Engineering." <a href="https://www.philschmid.de/context-engineering">philschmid.de</a>, 2025.</li>
             <li id="ref-anthropic">Rajasekaran, P. et al. "Effective Context Engineering for AI Agents." <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic Engineering</a>, September 2025.</li>
             <li id="ref-langchain">Martin, L. "Context Engineering for Agents." <a href="https://blog.langchain.com/context-engineering-for-agents/">LangChain Blog</a>, July 2025.</li>
             <li id="ref-breunig">Breunig, D. "How Contexts Fail and How to Fix Them." <a href="https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html">dbreunig.com</a>, June 2025.</li>
-            <li id="ref-manus">Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">manus.im</a>, July 2025.</li>
+            <li id="ref-manus">Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">Manus Blog</a>, July 2025.</li>
             <li id="ref-spotify">Spotify Engineering. "Context Engineering: Background Coding Agents Part 2." <a href="https://engineering.atspotify.com/2025/11/context-engineering-background-coding-agents-part-2">engineering.atspotify.com</a>, November 2025.</li>
             <li id="ref-inngest">Inngest. "Five Critical Lessons for Context Engineering." <a href="https://www.inngest.com/blog/five-lessons-for-context-engineering">inngest.com</a>, 2025.</li>
             <li id="ref-mei">Mei, Z. et al. "A Survey of Context Engineering for Large Language Models." <a href="https://arxiv.org/abs/2507.13334">arXiv:2507.13334</a>, July 2025.</li>
@@ -730,7 +729,6 @@ graph.add_edge("output_gate", END)</code></pre>
             <li id="ref-longmemeval">Wu, D. et al. "LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory." <a href="https://arxiv.org/abs/2410.10813">arXiv:2410.10813</a>, 2024. Published at ICLR 2025.</li>
             <li id="ref-gaia">Mialon, G. et al. "GAIA: A Benchmark for General AI Assistants." <a href="https://arxiv.org/abs/2311.12983">arXiv:2311.12983</a>, 2023. Published at ICLR 2024.</li>
             <li id="ref-anthropic-harness">Anthropic. "How We Built Our Multi-Agent Research System." <a href="https://www.anthropic.com/engineering/built-multi-agent-research-system">Anthropic Engineering</a>, November 2025.</li>
-            <li id="ref-schmid-manus">Schmid, P. "Lessons from Manus: Context Engineering Deep Dive." <a href="https://www.philschmid.de/manus-context-engineering">philschmid.de</a>, December 2025.</li>
             <li id="ref-openai-agents">OpenAI. "Agents SDK." <a href="https://github.com/openai/openai-agents-python">GitHub</a>, 2025.</li>
             <li id="ref-rcc">Huang, Y. et al. "Recurrent Context Compression: Efficiently Expanding the Context Window of LLM." <a href="https://arxiv.org/abs/2406.06110">arXiv:2406.06110</a>, 2024.</li>
           </ol>

@@ -5,7 +5,7 @@
   border-radius: 8px;
   margin: 16px 0;
   overflow: hidden;
-  background: #f8f8f8;
+  background: var(--code-bg);
 }
 
 /* Title bar */
@@ -14,7 +14,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 14px;
-  background: #eceae6;
+  background: var(--border);
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   user-select: none;
@@ -22,7 +22,7 @@
 }
 
 .code-header:hover {
-  background: #e4e1dc;
+  background: #c5bcac;
 }
 
 .code-filename {
@@ -104,7 +104,7 @@
 }
 
 .code-body::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: var(--border);
   border-radius: 3px;
 }
 

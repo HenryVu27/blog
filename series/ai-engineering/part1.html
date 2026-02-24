@@ -79,7 +79,7 @@
 
           <p><a href="#ref-karpathy">Andrej Karpathy</a> called it "the delicate art and science of filling the context window with just the right information for the next step." I like that framing because it puts the emphasis on information selection, not wordsmithing.</p>
 
-          <p>You could dismiss the rename as a branding exercise, same job with a fancier title. But the dominant failure mode actually shifted. Context windows went from 4K to 200K tokens. Base models got dramatically smarter. Hallucination rates dropped. By 2025, the models are capable enough that the bottleneck moved upstream: most agent failures I encounter are context failures, where the model can do what I need but doesn't have the right information when it needs it.</p>
+          <p>You could dismiss the rename as a branding exercise, same job with a fancier title. But the dominant failure mode actually shifted. Context windows went from 4K to 200K tokens. Base models got dramatically smarter. Hallucination rates dropped. By 2025, the models are capable enough that the bottleneck moved upstream: most agent failures I encounter are context failures, where the model can do what I need but doesn't have the right information when it needs it. The <a href="#ref-gaia">GAIA benchmark</a> quantifies the gap: humans score 92% on tasks requiring multi-source integration and tool use, while GPT-4 hits 15%. A 77-point gap, and most of it is context assembly, not raw model capability.</p>
 
           <p>The system prompt is one of seven things that fill the context window, and for a simple classification task, careful prompt engineering is all you need. But the moment you add retrieval, tools, multi-step reasoning, or agent workflows, you're doing context engineering whether you call it that or not. Context engineering is the bigger tent that prompt engineering lives inside.</p>
 
@@ -284,7 +284,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <h2>Write / Select / Compress / Isolate</h2>
 
           <div class="tldr-only">
-            <p><strong>Write:</strong> move information out of the window into external storage. <strong>Select:</strong> retrieve relevant information back via RAG or memory queries. <strong>Compress:</strong> summarize and trim, but never compress instructions and data together. <strong>Isolate:</strong> split work across separate LLM calls so each gets focused context. Most teams over-invest in writing and selecting; the real gains are in compression and isolation.</p>
+            <p><strong>Write:</strong> move information out of the window into external storage. <strong>Select:</strong> retrieve relevant information back via RAG or memory queries. <strong>Compress:</strong> use a tiered approach (raw context → compact by stripping filler → summarize only when needed), compress proactively at ~75% capacity (the "pre-rot threshold"), and trim in atomic turn groups to avoid orphaning tool results. Never compress instructions and data together. <strong>Isolate:</strong> split work across separate LLM calls so each gets focused context. Most teams over-invest in writing and selecting; the real gains are in compression and isolation.</p>
           </div>
 
           <div class="deep-dive-only">
@@ -437,6 +437,8 @@ graph.add_edge("output_gate", END)</code></pre>
 
           <p><strong>Context distraction</strong> is subtler. The context grows so long that the model over-focuses on accumulated history and neglects what it learned during training. Beyond ~100k tokens, I've noticed agents tend toward repeating actions from history rather than synthesizing novel plans. Aggressive trimming and summarization help, along with actively removing completed or irrelevant sections. I suspect most people's context windows are 2-3x larger than they need to be.</p>
 
+          <p>This is why proactive compression matters, and why the tiered approach from Section 3 uses a 75% threshold rather than waiting until the window is nearly full. If you compress at 95% capacity, attention has already degraded across the last 20% of growth. The pre-rot threshold (compressing at ~75%) keeps the model operating in its high-performance zone before distraction sets in, rather than scrambling to recover after it already has.</p>
+
           <p><strong>Context confusion</strong> is what happens when superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. <a href="#ref-anthropic">Anthropic's</a> guiding principle is the right one here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome." Every token should earn its place, and most don't.</p>
 
           <p><strong>Context clash</strong> is the one I find most often in my own code, probably because it's the easiest to create accidentally. It happens when new information conflicts with existing information already in the prompt, and contradictory instructions produce unpredictable behavior. My own agent has one I caught during an audit for this post. The system prompt says "When READING information you already have in the patient context above, use it directly, do not re-fetch with <code>get_patient_profile</code>." But <code>get_patient_profile</code> is still available as a callable tool. The instruction and the tool list contradict each other. The agent sometimes calls the tool anyway, wasting a round-trip to fetch data that's already in the prompt. The fix is straightforward (remove the tool), but the clash was easy to miss because the instruction is in the <code>&lt;tools&gt;</code> section of the prompt and the tool definition is in Python code, and I never reviewed them side by side until I went looking for exactly this kind of problem.</p>
@@ -530,7 +532,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <div class="deep-dive-only">
           <p>The conversation window holds 6 turns max, char-budgeted at 120,000 characters. Messages from turns already covered by the rolling summary are excluded.</p>
 
-          <p>Everything gets assembled in a single <code>prepare_context</code> hook that runs before every LLM call in the ReAct loop:</p>
+          <p>Everything gets assembled in a single <code>prepare_context</code> hook that runs before every LLM call in the ReAct loop. The static sections form a stable prefix for KV-cache hits, and the volatile conversation state goes at the end:</p>
           </div>
 
 <div class="code-block" data-filename="context.py" data-lang="python">
@@ -556,21 +558,20 @@ graph.add_edge("output_gate", END)</code></pre>
             session_summary=summary_text,
         )
 
+        # Static prefix first (cacheable), volatile state appended last
         state_block = build_conversation_state(turn_count, phase, recent_tool_names, ...)
-        system_prompt = state_block + "\n\n" + system_prompt  # &lt;-- problematic ordering
+        system_prompt = system_prompt + "\n\n" + state_block
 
-    # Trim conversation to fit budget
-    max_messages = CONTEXT_WINDOW_TURNS * 2
+    # Trim conversation: drop oldest complete turn groups atomically
     conversation = [m for m in messages if not isinstance(m, SystemMessage)]
-    conversation = conversation[-max_messages:]
     while estimate_chars(conversation) &gt; remaining_budget and len(conversation) &gt; 2:
-        conversation = conversation[1:]
+        conversation = trim_oldest_turn(conversation)
 
     return {"llm_input_messages": [SystemMessage(system_prompt)] + conversation}</code></pre>
 </div>
 
           <div class="deep-dive-only">
-          <p>This function is where all the context engineering actually happens. Load state, build the prompt from components, prepend the conversation state block, cache the result, and trim the conversation window. Every technique I described in the earlier sections (XML structure, rolling summaries, trimming, isolation) converges in this one function. And if you noticed the <code># &lt;-- problematic ordering</code> comment, good. I'll come back to it.</p>
+          <p>This function is where all the context engineering actually happens. Load state, build the prompt from components, append the volatile state block at the end (so the static sections form a cacheable prefix), and trim the conversation using turn-group-aware removal. Every technique I described in the earlier sections (XML structure, tiered compression, atomic trimming, isolation) converges in this one function.</p>
           </div>
 
           <div class="algorithm-box deep-dive-only">
@@ -579,8 +580,8 @@ graph.add_edge("output_gate", END)</code></pre>
               <thead><tr><th>Category</th><th>Technique</th><th>Implementation</th></tr></thead>
               <tbody>
                 <tr><td>Structure</td><td>XML-tagged sections</td><td><code>&lt;identity&gt;</code>, <code>&lt;boundaries&gt;</code>, <code>&lt;patient-context&gt;</code>, etc.</td></tr>
-                <tr><td>Compression</td><td>Rolling summary</td><td>Every 5 turns via Gemini Flash</td></tr>
-                <tr><td>Compression</td><td>History trimming</td><td>6-turn window + 120K char budget</td></tr>
+                <tr><td>Compression</td><td>Tiered (raw → compact → summarize)</td><td>Pre-rot threshold at 75% capacity</td></tr>
+                <tr><td>Compression</td><td>Atomic turn-group trimming</td><td>Drop oldest complete turn, never orphan tool results</td></tr>
                 <tr><td>Memory</td><td>Semantic (patient profile)</td><td>Structured schema, tool-driven updates</td></tr>
                 <tr><td>Memory</td><td>Episodic (outcomes)</td><td>Created on <code>track_outcome</code>, stored with emotion</td></tr>
                 <tr><td>RAG</td><td>Hybrid search</td><td>Dense + sparse + RRF + cross-encoder reranking</td></tr>
@@ -591,22 +592,19 @@ graph.add_edge("output_gate", END)</code></pre>
             </table>
           </div>
 
-          <h3>What I Got Wrong</h3>
+          <h3>Two Catches from My Own Audit</h3>
 
           <div class="tldr-only">
             <ul class="list-tight">
               <li><strong>KV-cache violation:</strong> Volatile state prepended to prompt prefix, invalidating cache every turn (10x cost). Fix: move to end.</li>
-              <li><strong>No memory validation:</strong> LLM-extracted facts written directly with no conflict detection or rollback.</li>
-              <li><strong>Redundant tool:</strong> <code>get_patient_profile</code> duplicates data already in system prompt, confusing the model.</li>
-              <li><strong>Content-blind trimming:</strong> FIFO drops high-signal old messages before low-signal filler.</li>
-              <li><strong>No importance scoring:</strong> Episodic memory retrieved by recency alone.</li>
+              <li><strong>Profile-in-prompt-and-tool clash:</strong> <code>get_patient_profile</code> duplicates data already in system prompt; the tool's existence signals to the model that the profile might not be in context, making it less likely to trust data it already has.</li>
             </ul>
           </div>
 
           <div class="deep-dive-only">
-          <p>When I audited this agent against the best practices I'd just finished researching for this post, it was humbling. I found violations of principles I had literally just written about, in my own code, while the blog post draft was still open in the next tab. Five specific problems stood out.</p>
+          <p>When I audited this agent against the best practices I'd just finished researching, two problems jumped out that I wouldn't have caught without specifically looking.</p>
 
-          <p>The most expensive one is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix: if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (<span class="nokatex">$0.30/MTok cached vs $3/MTok uncached</span> on Claude Sonnet). The fix is one line, move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns.</p>
+          <p>The expensive one is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix: if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (<span class="nokatex">$0.30/MTok cached vs $3/MTok uncached</span> on Claude Sonnet). The fix is one line, move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns. The broader principle from Section 2 applies here too: treat the prompt prefix as append-only, and sort sections by volatility so the stable parts come first.</p>
           </div>
 
           <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#fafafa;">
@@ -665,13 +663,7 @@ graph.add_edge("output_gate", END)</code></pre>
           </div>
 
           <div class="deep-dive-only">
-          <p>I also have <strong>no memory validation</strong>. When the agent calls <code>update_patient_profile</code>, the LLM extracts facts from the conversation ("A1C is 7.2," "started metformin three months ago") and writes them directly to the profile. No conflict detection (what if the profile already says A1C is 6.8 from a more recent lab?), no enum validation (what if the LLM writes "pre-diabetic-ish" instead of one of the valid condition categories?), no versioning (if the extraction hallucinates, the bad data overwrites the good data with no rollback). This is exactly the context poisoning failure mode from Section 4, and I built it knowing better.</p>
-
-          <p>Then there's the <strong>redundant <code>get_patient_profile</code> tool</strong>. The patient profile is already injected into the <code>&lt;patient-context&gt;</code> section of the system prompt on every turn. The tool exists to let the agent "check what it knows," but the agent already knows; it's in the prompt. I mentioned this in Section 4 as a context clash, and it is, but it's also context confusion in a way I didn't appreciate until I watched the agent's behavior. The tool's existence signals to the model that the profile might not be in context, which makes it less likely to trust the data it already has. The tool is actively making the agent dumber.</p>
-
-          <p>My <strong>FIFO trimming is content-blind</strong>, which means the trimming code drops the oldest message first, regardless of what's in it. A message like "we tried the post-meal walking routine and blood sugar actually spiked" (high signal, contains an outcome) gets dropped before a filler "thanks!" or "ok sounds good" message, purely because the filler is newer. A smarter approach would score messages by information density and preserve high-signal messages even if they're older. The Provence model from the research does exactly this: it trains a pruner to identify which messages contribute least to task performance. I haven't implemented anything like that yet, but it's high on my list.</p>
-
-          <p>And finally, <strong>no importance scoring for episodic memory</strong>. Episodes (tracked outcomes, strategy results) are retrieved by recency alone. A breakthrough moment from 3 weeks ago where a patient discovered that 15-minute post-meal walks consistently dropped their blood sugar by 40 mg/dL gets ranked below a routine check-in from yesterday. The Stanford generative agents paper showed that combining recency, importance, and relevance produces much better retrieval than any single factor. My agent uses one of the three. That's going to be a significant Part 3 topic.</p>
+          <p>The subtler one is a <strong>profile-in-prompt-and-tool clash</strong>. The patient profile is already injected into the <code>&lt;patient-context&gt;</code> section of the system prompt on every turn. But <code>get_patient_profile</code> also exists as a callable tool. The tool exists to let the agent "check what it knows," but the agent already knows; it's right there in the prompt. I mentioned this in Section 4 as a context clash, and it is, but it's also context confusion in a way I didn't appreciate until I watched the agent's behavior. The tool's existence signals to the model that the profile might <em>not</em> be in context, which makes it less likely to trust the data it already has. The instruction says "use the profile in <code>&lt;patient-context&gt;</code> directly," but the tool's mere availability creates an implicit counter-signal. Removing the tool entirely fixed the redundant fetches and, more importantly, made the agent more confident in referencing profile data from the prompt.</p>
           </div>
 
           <div class="theory-only">
@@ -694,11 +686,11 @@ graph.add_edge("output_gate", END)</code></pre>
           </div>
 
           <div class="deep-dive-only">
-          <p>The thing that surprised me most writing this post wasn't any individual technique. It was the gap between knowing best practices and actually following them in my own code. I'd spent weeks reading the research, writing up the failure modes, explaining why you should validate memory writes and keep tool counts low, and then I audited my own agent and found every single anti-pattern I'd warned against. The KV-cache ordering was backwards. Memory writes had no validation. A redundant tool was actively making the agent dumber. It was a useful lesson in intellectual humility, and I suspect most engineers building agents right now would find the same thing if they looked.</p>
+          <p>The thing that surprised me most writing this post wasn't any individual technique. It was auditing my own agent against the best practices I'd just finished writing about, and finding violations in code I'd written that same week. The KV-cache ordering was backwards. A redundant tool was actively undermining the model's confidence in data it already had. Knowing and doing are different skills.</p>
 
-          <p>If I had to distill this post into one actionable idea, it's that context engineering is mostly about removal, not addition. The instinct is always to add more information, more tools, more history, more instructions. But every improvement I've made to my agent involved taking something out or moving it around, not putting more in. Remove the redundant tool. Move the volatile state block to the end of the prompt. Trim history more aggressively. Compress the conversation to its information-bearing skeleton. The constraint ($|C| \leq L_\text{max}$) is real, and the best systems I've seen treat it as a design principle rather than a limitation to work around.</p>
+          <p>If I had to distill this post into one actionable idea, it's that context engineering is mostly about removal, not addition. The instinct is always to add more information, more tools, more history, more instructions. But every improvement I've made to my agent involved taking something out or moving it around, not putting more in. Remove the redundant tool. Move the volatile state block to the end of the prompt. Compress proactively at 75% capacity instead of reactively at 95%. Trim in atomic turn groups instead of shaving individual messages. The best systems I've seen treat the token budget as a design principle rather than a limitation to work around.</p>
 
-          <p>What I deliberately didn't cover here is how to build good retrieval pipelines (Part 2) and how to design memory systems that actually improve over time rather than accumulating garbage (Part 3). Both of those are deep enough to deserve their own treatment. I'm also not confident I have the right answer on tool management yet; the tension between Inngest's "remove low-usage tools" and Manus's "keep tools for cache stability" feels unresolved to me, and my current approach (just keep tool counts low) is probably too simplistic for agents with 20+ tools.</p>
+          <p>This covers within-session context management for a single agent. Multi-session continuity and memory systems that improve over time rather than accumulating garbage are Part 3 territory. Production agent harnesses where the filesystem becomes the source of truth, and the context window is just a view into external state, are Part 4. If you're building a single-session agent today, the patterns here apply directly; the later parts extend them to longer time horizons and more complex architectures.</p>
 
           <p>One caveat worth keeping in mind as you apply any of this. Context strategy isn't portable across providers. Different models have different attention patterns, different context window behaviors, and different sensitivities to prompt structure. What works for Claude might fail on GPT-4 might fail on Gemini. I've been burned by this enough times that I now test prompts on every model I plan to support, rather than assuming my architecture generalizes.</p>
 
@@ -728,6 +720,11 @@ graph.add_edge("output_gate", END)</code></pre>
             <li id="ref-fowler">Fowler, M. "Context Engineering for Coding Agents." <a href="https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html">martinfowler.com</a>, 2025.</li>
             <li id="ref-liu">Liu, N.F. et al. "Lost in the Middle: How Language Models Use Long Contexts." <a href="https://arxiv.org/abs/2307.03172">arXiv:2307.03172</a>, 2023. Published in TACL, 2024.</li>
             <li id="ref-longmemeval">Wu, D. et al. "LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory." <a href="https://arxiv.org/abs/2410.10813">arXiv:2410.10813</a>, 2024. Published at ICLR 2025.</li>
+            <li id="ref-gaia">Mialon, G. et al. "GAIA: A Benchmark for General AI Assistants." <a href="https://arxiv.org/abs/2311.12983">arXiv:2311.12983</a>, 2023. Published at ICLR 2024.</li>
+            <li id="ref-anthropic-harness">Anthropic. "How We Built Our Multi-Agent Research System." <a href="https://www.anthropic.com/engineering/built-multi-agent-research-system">Anthropic Engineering</a>, November 2025.</li>
+            <li id="ref-schmid-manus">Schmid, P. "Lessons from Manus: Context Engineering Deep Dive." <a href="https://www.philschmid.de/manus-context-engineering">philschmid.de</a>, December 2025.</li>
+            <li id="ref-openai-agents">OpenAI. "Agents SDK." <a href="https://github.com/openai/openai-agents-python">GitHub</a>, 2025.</li>
+            <li id="ref-rcc">Huang, Y. et al. "Recurrent Context Compression: Efficiently Expanding the Context Window of LLM." <a href="https://arxiv.org/abs/2406.06110">arXiv:2406.06110</a>, 2024.</li>
           </ol>
         </section>
 

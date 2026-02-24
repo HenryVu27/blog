@@ -62,7 +62,10 @@
 }
 
 .toc{
-  position: static;
+  position: sticky;
+  top: 32px;
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
   height: fit-content;
   border: none;
   border-right: 1px solid var(--border);

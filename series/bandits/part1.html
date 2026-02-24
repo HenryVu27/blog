@@ -50,10 +50,10 @@
   <link rel="stylesheet" href="../../css/styles.css">
   <link rel="stylesheet" href="../../css/post-styles.css">
   <link rel="stylesheet" href="../../css/deep-dive-layout.css">
-  <link rel="stylesheet" href="../../css/katex-fixes.css">
-  <link rel="stylesheet" href="../../css/proof-popover.css">
+  <link rel="stylesheet" href="../../css/katex-fixes.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="../../css/proof-popover.css" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="../../css/components.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" media="print" onload="this.media='all'">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 
@@ -170,18 +170,18 @@
     }
     .control-group input[type="range"] {
       width: 160px;
-      accent-color: #9a7e3a;
+      accent-color: #888;
     }
     .control-btn {
-      background: var(--gold);
-      border: 1px solid #9a7e3a;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px 14px;
       font-size: 16px;
       font-weight: 500;
       cursor: pointer;
       transition: all 120ms ease;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.4);
+      box-shadow: none;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -189,13 +189,13 @@
       min-width: 44px;
     }
     .control-btn:hover {
-      background: #c7c3b5;
-      border-color: #56554d;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
+      background: rgba(0, 0, 0, 0.08);
+      border-color: rgba(0, 0, 0, 0.2);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
     .control-btn:active {
       transform: translateY(1px);
-      box-shadow: 0 0 0 rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.3);
+      box-shadow: none;
     }
     .control-btn svg {
       width: 18px;
@@ -251,7 +251,7 @@
     }
     .settings-arm-control input[type="range"] {
       flex: 1;
-      accent-color: #9a7e3a;
+      accent-color: #888;
     }
     .settings-arm-control .value {
       min-width: 40px;
@@ -268,8 +268,8 @@
       border-bottom: 1px solid var(--border);
     }
     .settings-presets button {
-      background: var(--gold);
-      border: 1px solid #9a7e3a;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 6px 12px;
       font-size: 14px;
@@ -285,8 +285,8 @@
       justify-content: flex-end;
     }
     .settings-actions button {
-      background: var(--gold);
-      border: 1px solid #9a7e3a;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 8px 16px;
       font-size: 15px;
@@ -298,11 +298,11 @@
       background: #c7c3b5;
     }
     .settings-actions button.primary {
-      background: #9a7e3a;
+      background: var(--text);
       color: white;
     }
     .settings-actions button.primary:hover {
-      background: #56554d;
+      background: #555;
     }
     .viz-main {
       display: grid;
@@ -361,7 +361,7 @@
       fill: var(--text);
     }
     .confidence-interval {
-      stroke: #9a7e3a;
+      stroke: #888;
       stroke-width: 2;
       fill: none;
       opacity: 0.5;

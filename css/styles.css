@@ -67,15 +67,12 @@ hr{
 
 a{
   color: var(--link);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
+  text-decoration: none;
   transition: color 150ms ease;
 }
 
 a:hover{
-  color: var(--muted);
-  text-decoration: none;
+  color: #c47a2a;
 }
 
 ul,ol{

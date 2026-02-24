@@ -46,10 +46,6 @@
 
     <div class="layout">
       <aside class="toc">
-        <div class="mode-toggle">
-          <button data-mode="builder" class="active">Builder</button>
-          <button data-mode="deep-dive">Deep Dive</button>
-        </div>
         <h2>Contents</h2>
         <ul>
           <li><a href="#from-prompts-to-context"><span class="toc-section-number">1</span><span class="toc-section-title">From Prompts to Context</span></a></li>
@@ -60,6 +56,10 @@
           <li><a href="#what-i-learned"><span class="toc-section-number">6</span><span class="toc-section-title">What I Learned</span></a></li>
           <li><a href="#references"><span class="toc-section-number">7</span><span class="toc-section-title">References</span></a></li>
         </ul>
+        <div class="mode-toggle">
+          <button data-mode="builder" class="active">Builder</button>
+          <button data-mode="deep-dive">Deep Dive</button>
+        </div>
       </aside>
 
       <article class="post">
@@ -70,9 +70,9 @@
         <section id="from-prompts-to-context">
           <h2>From Prompts to Context</h2>
 
-          <p>Sometime around mid-2025, the AI engineering community started calling what we do "context engineering" instead of "prompt engineering." The label shift wasn't cosmetic. It reflected something I'd been feeling for a while: when I'm building LLM systems, I spend almost no time on how to phrase instructions and almost all my time figuring out what information the model should see at each step.</p>
+          <p>Sometime around mid-2025, the AI engineering community started calling what we do "context engineering" instead of "prompt engineering," and the rename reflected something I'd been feeling for a while: when I'm building LLM systems, I spend almost no time on how to phrase instructions and almost all my time figuring out what information the model should see at each step.</p>
 
-          <p>Andrej Karpathy called it "the delicate art and science of filling the context window with just the right information for the next step." The key word there is <em>filling</em>. The whole job is building infrastructure that assembles the right information, in the right format, at the right time.</p>
+          <p><a href="#ref-karpathy">Andrej Karpathy</a> called it "the delicate art and science of filling the context window with just the right information for the next step." The key word there is <em>filling</em>. The whole job is building infrastructure that assembles the right information, in the right format, at the right time.</p>
 
           <p>The distinction matters because the failure mode changed. In 2023, most LLM failures were model failures: it couldn't reason well enough, or it hallucinated, or it refused. By 2025, most agent failures are context failures, where the model is perfectly capable of doing what you need but doesn't have the right information when it needs it.</p>
 
@@ -98,11 +98,11 @@
           <div class="theory-only">
             <div class="callout">
               <p><span class="mode-label">Deep Dive</span></p>
-              <p>Mei et al.'s 166-page survey (arXiv:2507.13334, analyzing 1,411 papers) provides the first mathematical formalization. They model context as a structured assembly of six typed components:</p>
+              <p><a href="#ref-mei">Mei et al.'s 166-page survey</a> (arXiv:2507.13334, analyzing 1,411 papers) provides the first mathematical formalization. They model context as a structured assembly of six typed components:</p>
               <p>$$C = A(c_\text{instr},\; c_\text{know},\; c_\text{tools},\; c_\text{mem},\; c_\text{state},\; c_\text{query})$$</p>
               <p>Context engineering then becomes a constrained optimization problem: find the assembly function $F$ that maximizes expected reward across tasks, subject to a hard window size limit:</p>
               <p>$$F^* = \arg\max_F \; \mathbb{E}_{\tau \sim \mathcal{T}} \left[\text{Reward}\!\left(P_\theta(Y \mid C_{F}(\tau)),\; Y^*_\tau\right)\right] \quad \text{s.t.} \;\; |C| \leq L_\text{max}$$</p>
-              <p>I find this framing useful because it makes the tradeoffs explicit. You're optimizing under a constraint. Every token you spend on tool definitions is a token you can't spend on conversation history. The math makes that concrete.</p>
+              <p>I find this framing useful because it makes the tradeoffs explicit: every token you spend on tool definitions is a token you can't spend on conversation history, and the math forces you to think about that budget concretely.</p>
             </div>
           </div>
         </section>
@@ -113,19 +113,19 @@
         <section id="seven-components">
           <h2>The Seven Components</h2>
 
-          <p>Every LLM call consumes a context window: a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Based on Philipp Schmid's framework (corroborated by Anthropic, LangChain, and Google), context decomposes into seven components. I'll walk through each one and share what I've found matters in practice.</p>
+          <p>Every LLM call consumes a context window: a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Based on <a href="#ref-schmid">Philipp Schmid's framework</a> (corroborated by <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, and Google), context decomposes into seven components. I'll walk through each one and share what I've found matters in practice.</p>
 
-          <p>The <strong>system prompt</strong> (or instructions) is the DNA of your agent, setting behavioral guidelines, role definitions, and rules. Anthropic recommends finding the "right altitude" between specificity and flexibility: start minimal, then iteratively add instructions based on observed failures. A counterintuitive finding from Spotify's engineering team is that larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches, which suggests you should treat your system prompt as code: versioned, reviewed, tested.</p>
+          <p>The <strong>system prompt</strong> (or instructions) is the DNA of your agent, setting behavioral guidelines, role definitions, and rules. Anthropic recommends finding the "right altitude" between specificity and flexibility: start minimal, then iteratively add instructions based on observed failures. A counterintuitive finding from <a href="#ref-spotify">Spotify's engineering team</a> is that larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches, which suggests you should treat your system prompt as code: versioned, reviewed, tested.</p>
 
-          <p>The <strong>user prompt</strong> is the immediate message from the human, and it's the one component you don't control.</p>
+          <p>The <strong>user prompt</strong> is the immediate message from the human, and since you have no control over what goes in it, the rest of your context engineering has to be robust enough to handle whatever arrives.</p>
 
-          <p>Then there's <strong>state and short-term history</strong>, meaning the current conversation turns and prior exchanges that serve as the working memory of the system. One finding that surprised me came from FlowHunt: a focused 300-token context often outperforms an unfocused 113,000-token context. What you remove matters as much as what you keep, so don't send raw histories verbatim since greetings, acknowledgments, and off-topic content waste tokens that could go toward actual task-relevant information.</p>
+          <p>Then there's <strong>state and short-term history</strong>, meaning the current conversation turns and prior exchanges that serve as the working memory of the system. One finding that surprised me came from <a href="#ref-flowhunt">FlowHunt</a>: a focused 300-token context often outperforms an unfocused 113,000-token context. What you remove matters as much as what you keep, so don't send raw histories verbatim since greetings, acknowledgments, and off-topic content waste tokens that could go toward actual task-relevant information.</p>
 
           <p><strong>Long-term memory</strong> is persistent knowledge across conversations: user preferences, facts, summaries, learned patterns. It's complex enough that I'm dedicating Part 3 entirely to it.</p>
 
-          <p><strong>Retrieved information</strong> (RAG) means external knowledge from documents, databases, and APIs, injected on-demand. The key design decision I keep coming back to: pull, don't push. Let the AI determine what context it needs via tool calls rather than front-loading everything. Inngest found this produces better results than pre-loading, and it matches my experience too. Part 2 goes deep on retrieval.</p>
+          <p><strong>Retrieved information</strong> (RAG) means external knowledge from documents, databases, and APIs, injected on-demand. The key design decision I keep coming back to: pull, don't push. Let the AI determine what context it needs via tool calls rather than front-loading everything. <a href="#ref-inngest">Inngest</a> found this produces better results than pre-loading, and it matches my experience too. Part 2 goes deep on retrieval.</p>
 
-          <p><strong>Tool definitions</strong> are the function signatures the system can invoke, and they consume context tokens whether they're used or not. Two production rules worth knowing: Inngest recommends removing any tool used less than 10% of the time because performance degrades as tool count grows, but Manus found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking where tools stay in context but get suppressed at the decoding level through a state machine.</p>
+          <p><strong>Tool definitions</strong> are the function signatures the system can invoke, and they consume context tokens whether they're used or not. Two production rules worth knowing: <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows, but <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking where tools stay in context but get suppressed at the decoding level through a state machine.</p>
 
           <p>Finally, <strong>structured output</strong> specifications: JSON schemas, type definitions, output constraints. They guide generation but also consume tokens.</p>
 
@@ -149,9 +149,9 @@
         <section id="four-strategies">
           <h2>Write / Select / Compress / Isolate</h2>
 
-          <p>LangChain's framework identifies four strategies for managing context. I find it useful because every production system I've seen uses some combination of these four, and knowing the vocabulary helps you think about what's missing from your own setup.</p>
+          <p><a href="#ref-langchain">LangChain's framework</a> identifies four strategies for managing context. I find it useful because every production system I've seen uses some combination of these four, and knowing the vocabulary helps you think about what's missing from your own setup.</p>
 
-          <p><strong>Write</strong> means storing information outside the context window for later retrieval. Scratchpads let the agent write intermediate notes during a session: observations, partial results, plans. These persist via tool calls or state objects, available for later steps without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The Manus team uses a concrete version of this: agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls.</p>
+          <p><strong>Write</strong> means storing information outside the context window for later retrieval. Scratchpads let the agent write intermediate notes during a session: observations, partial results, plans. These persist via tool calls or state objects, available for later steps without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team uses a concrete version of this: agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls.</p>
 
           <p><strong>Select</strong> means retrieving relevant information when needed. This includes reading back scratchpad notes from earlier steps, querying stored memories using embeddings or keyword search, and full RAG pipelines over documents or code. One specific pattern worth highlighting: when you have many tools, use RAG over tool descriptions to select the right one. This improves selection accuracy 3x compared to exposing all tools at once.</p>
 
@@ -168,22 +168,22 @@
         <section id="failure-modes">
           <h2>How Context Fails</h2>
 
-          <p>Drew Breunig identified four failure modes that I think explain most context-related degradation. Understanding them matters because each has a different fix. Applying the wrong mitigation wastes effort.</p>
+          <p><a href="#ref-breunig">Drew Breunig</a> identified four failure modes that I think explain most context-related degradation, and getting the diagnosis right matters because each one requires a different fix.</p>
 
           <p><strong>Context poisoning</strong> happens when a hallucination or error enters the context and gets repeatedly referenced, compounding mistakes over time. Once a wrong fact lands in the conversation history, the model treats it as ground truth and builds on it. Google DeepMind's Gemini 2.5 technical report confirmed this: if the "goals" section of an agent's context was poisoned, agents developed completely nonsensical strategies downstream. The fix is to validate information before writing to long-term memory, using structured schemas with field-level validation and treating memory writes like database writes where you check constraints before committing.</p>
 
           <p><strong>Context distraction</strong> happens when the context grows so long that the model over-focuses on accumulated history and neglects what it learned during training. Beyond ~100k tokens, agents tend toward repeating actions from history rather than synthesizing novel plans, so aggressive trimming and summarization help, along with actively removing completed or irrelevant sections.</p>
 
-          <p><strong>Context confusion</strong> is when superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. Anthropic's guiding principle applies here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome." Every token should earn its place.</p>
+          <p><strong>Context confusion</strong> is when superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. <a href="#ref-anthropic">Anthropic's</a> guiding principle applies here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome." Every token should earn its place.</p>
 
           <p><strong>Context clash</strong> occurs when new information conflicts with existing information already in the prompt. Contradictory instructions produce unpredictable behavior. The fix is establishing a hierarchy of instructions with clear precedence rules and testing for contradictions when updating context.</p>
 
-          <p>I think of these four modes as debugging categories. When an agent misbehaves, the first question is: which failure mode is active? The mitigations are different for each.</p>
+          <p>I think of these four modes as debugging categories: when an agent misbehaves, the first question I ask is which failure mode is active, because the mitigations are completely different.</p>
 
           <div class="theory-only">
             <div class="callout">
               <p><span class="mode-label">Deep Dive</span></p>
-              <p>There's a deeper mechanism behind context distraction that Anthropic calls <strong>context rot</strong>. Recall accuracy diminishes as token counts increase because the number of pairwise token relationships in self-attention scales as $O(n^2)$. At 100k+ tokens, the model's attention budget is spread thin across billions of pair interactions. Critical information gets drowned out.</p>
+              <p>There's a deeper mechanism behind context distraction that <a href="#ref-anthropic">Anthropic</a> calls <strong>context rot</strong>. Recall accuracy diminishes as token counts increase because the number of pairwise token relationships in self-attention scales as $O(n^2)$. At 100k+ tokens, the model's attention budget is spread thin across billions of pair interactions. Critical information gets drowned out.</p>
               <p>The survey quantifies this with the <strong>lost-in-the-middle</strong> finding: performance degrades by up to 73% when relevant information sits in the middle of long contexts, compared to the beginning or end. You can't fix this because it's an architectural property of self-attention. The practical implication: position matters. Put your most important context at the beginning and end of the window, not the middle.</p>
             </div>
           </div>
@@ -203,9 +203,9 @@
 
           <p>What I find interesting is how many context engineering patterns end up in a single system. This agent uses XML-tagged sections for structure, rolling summaries (every 5 turns via Gemini Flash) for compression, history trimming with a 6-turn window, on-demand hybrid RAG (dense + sparse + RRF fusion + cross-encoder reranking), semantic memory via a structured family profile, episodic memory via outcome events, and isolated guardrail contexts so input/output safety gates don't contaminate the main conversation.</p>
 
-          <p>But even with all that, there are gaps. The system has no procedural memory: the system prompt never evolves based on what works. There's no consolidation from episodic to semantic memory, so five positive outcomes for the same strategy stay as five separate records instead of becoming one fact. Memories are retrieved by recency only, with no importance scoring. Old data never expires. And the volatile conversation state block sits at the start of the prompt, breaking the KV-cache prefix on every turn (a 10x cost difference according to Manus).</p>
+          <p>But even with all that, there are gaps. The system has no procedural memory: the system prompt never evolves based on what works. There's no consolidation from episodic to semantic memory, so five positive outcomes for the same strategy stay as five separate records instead of becoming one fact. Memories are retrieved by recency only, with no importance scoring. Old data never expires. And the volatile conversation state block sits at the start of the prompt, breaking the KV-cache prefix on every turn (a 10x cost difference according to <a href="#ref-manus">Manus</a>).</p>
 
-          <p>This analysis taught me that context engineering is deeply iterative. You build something, observe the failure modes, and add techniques. No system gets it right on the first pass. Or the second.</p>
+          <p>This analysis taught me that context engineering is deeply iterative: you build something, observe the failure modes, add techniques, and repeat the whole cycle a few more times before things start to stabilize.</p>
 
           <div class="theory-only">
             <div class="callout">
@@ -222,17 +222,17 @@
         <section id="what-i-learned">
           <h2>What I Learned</h2>
 
-          <p>After building that agent, reading through the research, and looking at what teams like Manus, Spotify, and Inngest have published, a few principles feel solid enough to share.</p>
+          <p>After building that agent, reading through the research, and looking at what teams like <a href="#ref-manus">Manus</a>, <a href="#ref-spotify">Spotify</a>, and <a href="#ref-inngest">Inngest</a> have published, a few principles feel solid enough to share.</p>
 
-          <p>Start minimal and iterate on failures, adding instructions only when you observe a specific failure mode. Both Anthropic and Spotify converge on this. The instinct is to dump everything in, but less is genuinely more: FlowHunt showed that 300 focused tokens beat 113,000 unfocused ones.</p>
+          <p>Start minimal and iterate on failures, adding instructions only when you observe a specific failure mode. Both <a href="#ref-anthropic">Anthropic</a> and <a href="#ref-spotify">Spotify</a> converge on this. The instinct is to dump everything in, but less is genuinely more: <a href="#ref-flowhunt">FlowHunt</a> showed that 300 focused tokens beat 113,000 unfocused ones.</p>
 
-          <p>Structure your context with XML tags, Markdown headers, or clear delimiters since LLMs respond measurably better to structured input than unstructured dumps. And version control your prompts; Spotify found that static, versioned prompts are more reliable than dynamic ones.</p>
+          <p>Structure your context with XML tags, Markdown headers, or clear delimiters since LLMs respond measurably better to structured input than unstructured dumps. And version control your prompts; <a href="#ref-spotify">Spotify</a> found that static, versioned prompts are more reliable than dynamic ones.</p>
 
-          <p>On the cost side, preserve cache stability. Manus reports that cached tokens on Claude Sonnet cost $0.30/MTok vs $3/MTok uncached, so keeping prompt prefixes stable and append-only matters because any mutation invalidates the cache.</p>
+          <p>On the cost side, preserve cache stability. <a href="#ref-manus">Manus</a> reports that cached tokens on Claude Sonnet cost $0.30/MTok vs $3/MTok uncached, so keeping prompt prefixes stable and append-only matters because any mutation invalidates the cache.</p>
 
-          <p>Minimize your tool count by removing tools used less than 10% of the time since fewer tools mean fewer dimensions of unpredictability. Spotify found, counterintuitively, that deliberately restricting tool access improved reliability.</p>
+          <p>Minimize your tool count by removing tools used less than 10% of the time since fewer tools mean fewer dimensions of unpredictability. <a href="#ref-spotify">Spotify</a> found, counterintuitively, that deliberately restricting tool access improved reliability.</p>
 
-          <p>For agents specifically, isolate with sub-agents rather than maintaining one massive shared context, and keep failure traces in the context; Manus found that models seeing their own errors implicitly update beliefs and reduce mistake repetition. Build observability from day one too, logging every tool call with inputs, outputs, and timing, because you'll need that data for evaluation and iteration.</p>
+          <p>For agents specifically, isolate with sub-agents rather than maintaining one massive shared context, and keep failure traces in the context; <a href="#ref-manus">Manus</a> found that models seeing their own errors implicitly update beliefs and reduce mistake repetition. Build observability from day one too, logging every tool call with inputs, outputs, and timing, because you'll need that data for evaluation and iteration.</p>
 
           <p>One last thing: match your architecture to your model. Different models have different strengths, and what works for Claude might not work for GPT-4 might not work for Gemini. Context strategy isn't portable across providers without testing.</p>
 
@@ -246,20 +246,20 @@
           <h2>References</h2>
 
           <ol>
-            <li>Karpathy, A. "Context Engineering." <a href="https://x.com/karpathy/status/1937902205765607626">X/Twitter</a>, June 2025.</li>
-            <li>Lutke, T. "Context Engineering over Prompt Engineering." <a href="https://x.com/tobi/status/1935533422589399127">X/Twitter</a>, June 2025.</li>
-            <li>Schmid, P. "Context Engineering." <a href="https://www.philschmid.de/context-engineering">philschmid.de</a>, 2025.</li>
-            <li>Rajasekaran, P. et al. "Effective Context Engineering for AI Agents." <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic Engineering</a>, September 2025.</li>
-            <li>Martin, L. "Context Engineering for Agents." <a href="https://blog.langchain.com/context-engineering-for-agents/">LangChain Blog</a>, July 2025.</li>
-            <li>Breunig, D. "How Contexts Fail and How to Fix Them." <a href="https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html">dbreunig.com</a>, June 2025.</li>
-            <li>Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">manus.im</a>, July 2025.</li>
-            <li>Spotify Engineering. "Context Engineering: Background Coding Agents Part 2." <a href="https://engineering.atspotify.com/2025/11/context-engineering-background-coding-agents-part-2">engineering.atspotify.com</a>, November 2025.</li>
-            <li>Inngest. "Five Critical Lessons for Context Engineering." <a href="https://www.inngest.com/blog/five-lessons-for-context-engineering">inngest.com</a>, 2025.</li>
-            <li>Mei, Z. et al. "A Survey of Context Engineering for Large Language Models." <a href="https://arxiv.org/abs/2507.13334">arXiv:2507.13334</a>, July 2025.</li>
-            <li>Willison, S. "Context Engineering." <a href="https://simonwillison.net/2025/Jun/27/context-engineering/">simonwillison.net</a>, June 2025.</li>
-            <li>Osmani, A. "Context Engineering: Bringing Engineering Discipline to AI." <a href="https://addyo.substack.com/p/context-engineering-bringing-engineering">Substack</a>, 2025.</li>
-            <li>FlowHunt. "Context Engineering: The Definitive Guide." <a href="https://www.flowhunt.io/blog/context-engineering/">flowhunt.io</a>, 2025.</li>
-            <li>Fowler, M. "Context Engineering for Coding Agents." <a href="https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html">martinfowler.com</a>, 2025.</li>
+            <li id="ref-karpathy">Karpathy, A. "Context Engineering." <a href="https://x.com/karpathy/status/1937902205765607626">X/Twitter</a>, June 2025.</li>
+            <li id="ref-lutke">Lutke, T. "Context Engineering over Prompt Engineering." <a href="https://x.com/tobi/status/1935533422589399127">X/Twitter</a>, June 2025.</li>
+            <li id="ref-schmid">Schmid, P. "Context Engineering." <a href="https://www.philschmid.de/context-engineering">philschmid.de</a>, 2025.</li>
+            <li id="ref-anthropic">Rajasekaran, P. et al. "Effective Context Engineering for AI Agents." <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic Engineering</a>, September 2025.</li>
+            <li id="ref-langchain">Martin, L. "Context Engineering for Agents." <a href="https://blog.langchain.com/context-engineering-for-agents/">LangChain Blog</a>, July 2025.</li>
+            <li id="ref-breunig">Breunig, D. "How Contexts Fail and How to Fix Them." <a href="https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html">dbreunig.com</a>, June 2025.</li>
+            <li id="ref-manus">Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">manus.im</a>, July 2025.</li>
+            <li id="ref-spotify">Spotify Engineering. "Context Engineering: Background Coding Agents Part 2." <a href="https://engineering.atspotify.com/2025/11/context-engineering-background-coding-agents-part-2">engineering.atspotify.com</a>, November 2025.</li>
+            <li id="ref-inngest">Inngest. "Five Critical Lessons for Context Engineering." <a href="https://www.inngest.com/blog/five-lessons-for-context-engineering">inngest.com</a>, 2025.</li>
+            <li id="ref-mei">Mei, Z. et al. "A Survey of Context Engineering for Large Language Models." <a href="https://arxiv.org/abs/2507.13334">arXiv:2507.13334</a>, July 2025.</li>
+            <li id="ref-willison">Willison, S. "Context Engineering." <a href="https://simonwillison.net/2025/Jun/27/context-engineering/">simonwillison.net</a>, June 2025.</li>
+            <li id="ref-osmani">Osmani, A. "Context Engineering: Bringing Engineering Discipline to AI." <a href="https://addyo.substack.com/p/context-engineering-bringing-engineering">Substack</a>, 2025.</li>
+            <li id="ref-flowhunt">FlowHunt. "Context Engineering: The Definitive Guide." <a href="https://www.flowhunt.io/blog/context-engineering/">flowhunt.io</a>, 2025.</li>
+            <li id="ref-fowler">Fowler, M. "Context Engineering for Coding Agents." <a href="https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html">martinfowler.com</a>, 2025.</li>
           </ol>
         </section>
 

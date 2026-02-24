@@ -79,20 +79,36 @@
   margin-top:-6px;
 }
 
-/* Larger spacing between sections with a full-bleed divider */
+/* Larger spacing between sections with ornamental fleuron divider */
 .post section + section{
   margin-top: 64px;
 }
 
 .post section + section::before{
-  content: "";
+  content: "\2767";
   display: block;
-  height: 1px;
-  background: var(--border);
-  /* Robust full-bleed line without horizontal scrollbars */
-  box-shadow: 0 0 0 100vmax var(--border);
-  clip-path: inset(0 -100vmax);
-  margin: 64px 0; /* equal space above and below */
+  text-align: center;
+  font-size: 20px;
+  color: var(--muted);
+  margin: 56px 0;
+  height: auto;
+  background:
+    linear-gradient(var(--border), var(--border)) left center / calc(50% - 24px) 1px no-repeat,
+    linear-gradient(var(--border), var(--border)) right center / calc(50% - 24px) 1px no-repeat;
+  box-shadow: none;
+  clip-path: none;
+}
+
+/* Drop cap: first letter of opening paragraph, manuscript style */
+.post > section:first-child > p:first-of-type::first-letter {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  float: left;
+  font-size: 3.8em;
+  line-height: 0.8;
+  padding-right: 8px;
+  padding-top: 4px;
+  color: var(--manuscript-blue);
 }
 
 

@@ -516,7 +516,7 @@ graph.add_edge("output_gate", END)</code></pre>
 
           <p>When I audited this agent against the best practices I'd just finished researching for this post, it was humbling. I found violations of principles I had literally just written about, in my own code, while the blog post draft was still open in the next tab. Five specific problems stood out.</p>
 
-          <p>The most expensive one, and the one I'm most embarrassed about, is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix: if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (&#36;0.30/MTok cached vs &#36;3/MTok uncached on Claude Sonnet). The fix is one line, move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns.</p>
+          <p>The most expensive one, and the one I'm most embarrassed about, is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix: if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (<span class="nokatex">$0.30/MTok cached vs $3/MTok uncached</span> on Claude Sonnet). The fix is one line, move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns.</p>
 
           <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#fafafa;">
             <div style="margin-bottom:16px;">
@@ -569,7 +569,7 @@ graph.add_edge("output_gate", END)</code></pre>
                   <div style="color:#9a8a3c; font-size:10px;">volatile</div>
                 </div>
               </div>
-              <div style="font-size:10px; color:#4a8c5c; margin-top:4px;">&uarr; Stable prefix. &#36;0.30/MTok cached vs &#36;3.00/MTok uncached (10x).</div>
+              <div class="nokatex" style="font-size:10px; color:#4a8c5c; margin-top:4px;">&uarr; Stable prefix. $0.30/MTok cached vs $3.00/MTok uncached (10x).</div>
             </div>
           </div>
 
@@ -641,5 +641,6 @@ graph.add_edge("output_gate", END)</code></pre>
 
   <script src="../../js/katex-init.js"></script>
   <script src="../../js/mode-toggle.js"></script>
+  <script src="../../js/sticky-toc.js"></script>
 </body>
 </html>

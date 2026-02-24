@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function() {
       {left: "$$", right: "$$", display: true},
       {left: "$", right: "$", display: false}
     ],
-    ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+    ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+    ignoredClasses: ["nokatex"]
   });
 });

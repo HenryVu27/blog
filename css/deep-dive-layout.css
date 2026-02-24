@@ -62,7 +62,8 @@
 }
 
 .toc{
-  position: static;
+  position: sticky;
+  top: 32px;
   height: fit-content;
   border: none;
   border-right: 1px solid var(--border);

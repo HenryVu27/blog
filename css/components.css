@@ -9,7 +9,7 @@
   margin: 24px 0 0 0;
 }
 .series-nav h3 {
-  font-family: var(--font-serif);
+  font-family: var(--font-uncial);
   margin: 0 0 12px 0;
   font-size: 22px;
   font-weight: 400;
@@ -27,7 +27,7 @@
   background: var(--code-bg);
 }
 .algorithm-box h4 {
-  font-family: var(--font-serif);
+  font-family: var(--font-uncial);
   margin: 0 0 12px 0;
   font-size: 19px;
   font-weight: 500;

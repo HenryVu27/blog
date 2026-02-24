@@ -38,7 +38,7 @@
         <h3>AI Engineering Series</h3>
         <ul>
           <li><strong>Part 1: Context Engineering Fundamentals</strong> (current)</li>
-          <li>Part 2: RAG — From Naive to Agentic (coming soon)</li>
+          <li>Part 2: RAG, From Naive to Agentic (coming soon)</li>
           <li>Part 3: Memory Engineering (coming soon)</li>
           <li>Part 4: Building AI Agents (coming soon)</li>
           <li>Part 5: Multi-Agent Systems (coming soon)</li>
@@ -70,13 +70,13 @@
         <section id="from-prompts-to-context">
           <h2>From Prompts to Context</h2>
 
-          <p>In mid-2025, the AI engineering community quietly retired "prompt engineering" as the label for what practitioners actually do when building LLM systems. The replacement — <strong>context engineering</strong> — stuck because it describes the real work: deciding what information fills the context window, not how to phrase a single instruction.</p>
+          <p>In mid-2025, the AI engineering community quietly retired "prompt engineering" as the label for what practitioners actually do when building LLM systems. The replacement, <strong>context engineering</strong>, stuck because it describes the real work: deciding what information fills the context window, not how to phrase a single instruction.</p>
 
-          <p>Andrej Karpathy put it directly: context engineering is "the delicate art and science of filling the context window with just the right information for the next step." Philipp Schmid defined it as "designing and building dynamic systems that provide the right information and tools, in the right format, at the right time." Both definitions point at the same thing — this is systems design, not copywriting.</p>
+          <p>Andrej Karpathy put it directly: context engineering is "the delicate art and science of filling the context window with just the right information for the next step." Philipp Schmid defined it as "designing and building dynamic systems that provide the right information and tools, in the right format, at the right time." Both definitions point at the same thing. This is systems design, not copywriting.</p>
 
-          <p>The distinction matters because the failure mode changed. In 2023, most LLM failures were model failures: the model couldn't reason well enough, or hallucinated, or refused. By 2025, most agent failures are <strong>context failures</strong> — the model had the capability but didn't have the right information at the right time. Schmid claims that proper context engineering can push success rates from ~30% to over 90%.</p>
+          <p>The distinction matters because the failure mode changed. In 2023, most LLM failures were model failures: the model couldn't reason well enough, or hallucinated, or refused. By 2025, most agent failures are <strong>context failures</strong>: the model had the capability but didn't have the right information at the right time. Schmid claims that proper context engineering can push success rates from ~30% to over 90%.</p>
 
-          <p>Here's where the two disciplines differ:</p>
+          <p>The two disciplines differ in important ways:</p>
 
           <table>
             <thead>
@@ -131,7 +131,7 @@
               <p>$$C = A(c_\text{instr},\; c_\text{know},\; c_\text{tools},\; c_\text{mem},\; c_\text{state},\; c_\text{query})$$</p>
               <p>where $A$ is an assembly function orchestrating six typed components: instructions, external knowledge, tool definitions, persistent memory, dynamic state, and the immediate query. Context engineering then becomes an optimization problem:</p>
               <p>$$F^* = \arg\max_F \; \mathbb{E}_{\tau \sim \mathcal{T}} \left[\text{Reward}\!\left(P_\theta(Y \mid C_{F}(\tau)),\; Y^*_\tau\right)\right] \quad \text{s.t.} \;\; |C| \leq L_\text{max}$$</p>
-              <p>Find the assembly function $F$ that maximizes expected reward across tasks $\tau$, subject to a hard context length constraint $L_\text{max}$. This framing connects context engineering to information theory, Bayesian inference, and constrained optimization — it isn't just "craft."</p>
+              <p>Find the assembly function $F$ that maximizes expected reward across tasks $\tau$, subject to a hard context length constraint $L_\text{max}$. This framing connects context engineering to information theory, Bayesian inference, and constrained optimization. It isn't just "craft."</p>
             </div>
           </div>
         </section>
@@ -142,15 +142,15 @@
         <section id="seven-components">
           <h2>The Seven Components of Context</h2>
 
-          <p>Every LLM call consumes a context window — a fixed-size buffer of tokens that contains everything the model can see. What you put in that buffer determines what the model can do. Based on Philipp Schmid's framework (corroborated by Anthropic, LangChain, and Google), context decomposes into seven components.</p>
+          <p>Every LLM call consumes a context window: a fixed-size buffer of tokens that contains everything the model can see. What you put in that buffer determines what the model can do. Based on Philipp Schmid's framework (corroborated by Anthropic, LangChain, and Google), context decomposes into seven components.</p>
 
           <h3>1. Instructions / System Prompt</h3>
 
-          <p>Behavioral guidelines, role definitions, rules, and personality. This is the "DNA" of the agent — it shapes every response.</p>
+          <p>Behavioral guidelines, role definitions, rules, and personality. This is the "DNA" of the agent. It shapes every response.</p>
 
           <p>Anthropic recommends finding the "right altitude": balancing specificity with flexibility. Start minimal, then iteratively add instructions based on observed failure modes. Organize into distinct sections using XML tags or Markdown headers.</p>
 
-          <p>A counterintuitive finding from Spotify: larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. Treat your system prompt as code — versioned, reviewed, tested.</p>
+          <p>A counterintuitive finding from Spotify: larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. Treat your system prompt as code: versioned, reviewed, tested.</p>
 
           <h3>2. User Prompt</h3>
 
@@ -158,9 +158,9 @@
 
           <h3>3. State / Short-term History</h3>
 
-          <p>Current conversation turns and prior exchanges — the "working memory" of the system.</p>
+          <p>Current conversation turns and prior exchanges. The "working memory" of the system.</p>
 
-          <p>A critical finding from FlowHunt: <strong>a focused 300-token context often outperforms an unfocused 113,000-token context.</strong> What you remove can matter as much as what you keep. Don't send raw histories verbatim — greetings, acknowledgments, and off-topic content waste tokens.</p>
+          <p>A critical finding from FlowHunt: <strong>a focused 300-token context often outperforms an unfocused 113,000-token context.</strong> What you remove can matter as much as what you keep. Don't send raw histories verbatim. Greetings, acknowledgments, and off-topic content waste tokens.</p>
 
           <h3>4. Long-term Memory</h3>
 
@@ -174,12 +174,12 @@
 
           <h3>6. Available Tools</h3>
 
-          <p>Function definitions the system can invoke. These definitions themselves consume context tokens — every tool you expose costs tokens whether it's used or not.</p>
+          <p>Function definitions the system can invoke. These definitions themselves consume context tokens. Every tool you expose costs tokens whether it's used or not.</p>
 
           <p>Two production rules:</p>
           <ul class="list-tight">
             <li><strong>Remove rarely-used tools.</strong> Inngest: remove any tool used less than 10% of the time. Performance degrades as tool count grows.</li>
-            <li><strong>Mask, don't remove.</strong> Manus: dynamically loading/removing tools breaks KV-cache (10x cost difference between cached and uncached tokens). Use logits masking instead — tools stay in context but are suppressed at the decoding level.</li>
+            <li><strong>Mask, don't remove.</strong> Manus: dynamically loading/removing tools breaks KV-cache (10x cost difference between cached and uncached tokens). Use logits masking instead. Tools stay in context but are suppressed at the decoding level.</li>
           </ul>
 
           <h3>7. Structured Output</h3>
@@ -188,7 +188,7 @@
 
           <h3>Token Budget Overview</h3>
 
-          <p>Here's a rough allocation for a typical agentic system:</p>
+          <p>A rough allocation for a typical agentic system:</p>
 
           <table>
             <thead>
@@ -244,7 +244,7 @@
               <p><span class="mode-label">Deep Dive</span></p>
               <p>The survey formalizes optimal retrieval as an information-theoretic problem:</p>
               <p>$$\text{Retrieve}^* = \arg\max_{\text{Retrieve}} \; I(Y^*;\; c_\text{know} \mid c_\text{query})$$</p>
-              <p>Optimal retrieval maximizes the mutual information between the target answer $Y^*$ and retrieved knowledge $c_\text{know}$, conditioned on the query. This connects RAG design to information theory — the best retrieval function is the one that reduces the most uncertainty about the answer.</p>
+              <p>Optimal retrieval maximizes the mutual information between the target answer $Y^*$ and retrieved knowledge $c_\text{know}$, conditioned on the query. This connects RAG design to information theory. The best retrieval function is the one that reduces the most uncertainty about the answer.</p>
               <p>Context can also be framed as Bayesian posterior inference:</p>
               <p>$$P(C \mid c_\text{query}, \ldots) \propto P(c_\text{query} \mid C) \cdot P(C \mid \text{History}, \text{World})$$</p>
               <p>We're combining the likelihood of the query given a context assembly with the prior over contexts given interaction history and world state.</p>
@@ -265,7 +265,7 @@
           <p>Store information <em>outside</em> the context window for later retrieval.</p>
 
           <ul class="list-tight">
-            <li><strong>Scratchpads:</strong> The agent writes intermediate notes during a session — observations, partial results, plans. These persist via tool calls or state objects, available for later steps without occupying the context window continuously.</li>
+            <li><strong>Scratchpads:</strong> The agent writes intermediate notes during a session (observations, partial results, plans). These persist via tool calls or state objects, available for later steps without occupying the context window continuously.</li>
             <li><strong>Memories:</strong> Cross-session retention. The agent generates reflections or facts from the current conversation and stores them in a persistent backend (vector DB, knowledge graph, plain files).</li>
           </ul>
 
@@ -303,7 +303,7 @@
             <li><strong>State schema design:</strong> Separate LLM-exposed fields from auxiliary context storage. Not everything the system knows needs to be in the window.</li>
           </ul>
 
-          <p>Here's how these strategies map to common scenarios:</p>
+          <p>These strategies map to common scenarios like this:</p>
 
           <table>
             <thead>
@@ -337,7 +337,7 @@
             </tbody>
           </table>
 
-          <p>Most production systems use all four. The question is the mix — and that depends on your task profile, model, and latency budget.</p>
+          <p>Most production systems use all four. The question is the mix, and that depends on your task profile, model, and latency budget.</p>
         </section>
 
         <!-- ============================================================ -->
@@ -354,7 +354,7 @@
 
           <p>Google DeepMind's Gemini 2.5 technical report confirmed this: if the "goals" section of an agent's context was poisoned, agents developed completely nonsensical strategies downstream.</p>
 
-          <p><strong>Mitigation:</strong> Validate information before writing to long-term memory. Use structured schemas with field-level validation. Treat memory writes like database writes — check constraints before committing.</p>
+          <p><strong>Mitigation:</strong> Validate information before writing to long-term memory. Use structured schemas with field-level validation. Treat memory writes like database writes: check constraints before committing.</p>
 
           <h3>2. Context Distraction</h3>
 
@@ -375,14 +375,14 @@
           <p><strong>Mitigation:</strong> Establish a hierarchy of instructions with clear precedence rules. Test for contradictions. When updating context, check for conflicts with existing content.</p>
 
           <div class="callout">
-            <p><strong>Key takeaway:</strong> These four failure modes — poisoning, distraction, confusion, clash — are the context engineering equivalent of debugging categories. When an agent misbehaves, diagnose which failure mode is active before applying a fix. The mitigations are different for each.</p>
+            <p><strong>Key takeaway:</strong> These four failure modes (poisoning, distraction, confusion, clash) are the context engineering equivalent of debugging categories. When an agent misbehaves, diagnose which failure mode is active before applying a fix. The mitigations are different for each.</p>
           </div>
 
           <div class="theory-only">
             <div class="callout">
               <p><span class="mode-label">Deep Dive</span></p>
               <p><strong>Context rot</strong> is the deeper mechanism behind distraction. Anthropic's team explains it through the transformer's attention architecture: recall accuracy diminishes as token counts increase because the number of pairwise token relationships scales as $O(n^2)$. At 100k+ tokens, the model's attention budget is spread thin across billions of pair interactions, and critical information gets drowned out.</p>
-              <p>The survey quantifies this with the <strong>lost-in-the-middle</strong> finding: performance degrades by up to <strong>73%</strong> when relevant information is positioned in the middle of long contexts, compared to the beginning or end. This isn't a model bug — it's an architectural property of self-attention. The practical implication: position matters. Put the most important context at the beginning and end of the window, not the middle.</p>
+              <p>The survey quantifies this with the <strong>lost-in-the-middle</strong> finding: performance degrades by up to <strong>73%</strong> when relevant information is positioned in the middle of long contexts, compared to the beginning or end. This isn't a model bug. It's an architectural property of self-attention. The practical implication: position matters. Put the most important context at the beginning and end of the window, not the middle.</p>
             </div>
           </div>
         </section>
@@ -393,7 +393,7 @@
         <section id="token-budget">
           <h2>The Token Budget in Practice</h2>
 
-          <p>Abstract principles are useful, but what does a real context budget look like? Here's a case study from a production ReAct agent (an ADHD coaching assistant built with LangGraph) showing the exact token allocation the LLM receives on each turn.</p>
+          <p>Abstract principles are useful, but what does a real context budget look like? Consider a production ReAct agent (an ADHD coaching assistant built with LangGraph) and the exact token allocation the LLM receives on each turn.</p>
 
           <h3>What the LLM Actually Sees</h3>
 
@@ -507,7 +507,7 @@
               <tr>
                 <td><strong>Isolate</strong></td>
                 <td>Guardrail isolation</td>
-                <td>Input/output safety gates run in separate context — no contamination</td>
+                <td>Input/output safety gates run in separate context, no contamination</td>
               </tr>
             </tbody>
           </table>
@@ -558,8 +558,8 @@
           <div class="theory-only">
             <div class="callout">
               <p><span class="mode-label">Deep Dive</span></p>
-              <p><strong>The GAIA Gap.</strong> How much does context engineering matter? The GAIA benchmark provides the starkest number: <strong>human accuracy is 92%, GPT-4 accuracy is 15%.</strong> A 77-point gap. The model isn't the bottleneck — context assembly is. On the GTA benchmark, GPT-4 completes fewer than 50% of tasks. On WebArena, the top agent (IBM CUGA) reaches only 61.7%.</p>
-              <p>These benchmarks require integrating information from multiple sources, using tools, maintaining state across steps — exactly the problems context engineering addresses. The gap between model capability (measured on narrow benchmarks) and system capability (measured on realistic tasks) is the context engineering gap.</p>
+              <p><strong>The GAIA Gap.</strong> How much does context engineering matter? The GAIA benchmark provides the starkest number: <strong>human accuracy is 92%, GPT-4 accuracy is 15%.</strong> A 77-point gap. The model isn't the bottleneck. Context assembly is. On the GTA benchmark, GPT-4 completes fewer than 50% of tasks. On WebArena, the top agent (IBM CUGA) reaches only 61.7%.</p>
+              <p>These benchmarks require integrating information from multiple sources, using tools, maintaining state across steps. Exactly the problems context engineering addresses. The gap between model capability (measured on narrow benchmarks) and system capability (measured on realistic tasks) is the context engineering gap.</p>
               <p>Commercial memory systems fare poorly too. LongMemEval (500 curated questions) finds <strong>30% accuracy degradation</strong> in commercial assistants during extended interactions. GPT-4, Claude, and Llama 3.1 all struggle with episodic memory involving interconnected events, even in brief contexts.</p>
             </div>
           </div>
@@ -625,7 +625,7 @@
             <tbody>
               <tr>
                 <td>6</td>
-                <td><strong>Preserve cache stability.</strong> Keep prompt prefixes stable and append-only. Any mutation invalidates KV-cache — cached tokens cost $0.30/MTok vs $3/MTok uncached (10x).</td>
+                <td><strong>Preserve cache stability.</strong> Keep prompt prefixes stable and append-only. Any mutation invalidates KV-cache. Cached tokens cost $0.30/MTok vs $3/MTok uncached (10x).</td>
                 <td>Manus</td>
               </tr>
               <tr>

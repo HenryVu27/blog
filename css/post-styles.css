@@ -17,8 +17,12 @@
 }
 
 .post h3{
-  font-size: 19px;
-  margin: 20px 0 6px;
+  font-size: 26px;
+  margin: 24px 0 8px;
+}
+
+.post strong, .post b, .post th{
+  font-weight: 600;
 }
 
 .post p{

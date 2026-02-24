@@ -25,6 +25,10 @@
   <meta property="article:tag" content="context window">
   <meta property="article:tag" content="RAG">
   <meta property="article:tag" content="token budget">
+  <meta property="article:tag" content="prompt engineering">
+  <meta property="article:tag" content="context window optimization">
+  <meta property="article:tag" content="LLM context management">
+  <meta property="article:tag" content="AI agents">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
@@ -52,11 +56,11 @@
   <link rel="stylesheet" href="../../css/deep-dive-layout.css">
   <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/mode-toggle.css">
-  <link rel="stylesheet" href="../../css/prism-blog.css">
-  <link rel="stylesheet" href="../../css/code-blocks.css">
+  <link rel="stylesheet" href="../../css/prism-blog.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="../../css/code-blocks.css" media="print" onload="this.media='all'">
   <script>try{if(localStorage.getItem('blog-reading-mode')==='deep-dive')document.documentElement.classList.add('deep-dive-mode')}catch(e){}</script>
   <!-- KaTeX for Deep Dive math -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" media="print" onload="this.media='all'">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 
@@ -105,6 +109,7 @@
       "url": "https://www.henryvu.blog/"
     },
     "keywords": ["context engineering", "AI engineering", "LLM", "context window", "token budget", "RAG", "prompt engineering", "AI agents"],
+    "abstract": "Context engineering is the discipline of building the right information into an LLM's context window at inference time. A context window is composed of seven components: system prompts, user prompts, conversation state, long-term memory, retrieved knowledge (RAG), tool definitions, and output schemas. The four strategies for managing these components are write (authoring static instructions), select (retrieving relevant information via RAG or memory), compress (reducing token usage through summarization or distillation), and isolate (splitting work across multiple LLM calls to stay within context limits). Common failure modes include context dilution (too much irrelevant information drowning out the signal), context distraction (conflicting instructions confusing the model), context clash (contradictory information in different parts of the window), and context confusion (ambiguous references the model cannot resolve). Effective context engineering requires measuring context quality through metrics like sufficiency, noise ratio, and utilization, rather than treating the context window as an unlimited text dump.",
     "speakable": {
       "@type": "SpeakableSpecification",
       "cssSelector": ["#seven-components", "#four-strategies", "#failure-modes"]

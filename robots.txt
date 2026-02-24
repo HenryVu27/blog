@@ -23,3 +23,8 @@ User-agent: Applebot-Extended
 Allow: /
 
 Sitemap: https://www.henryvu.blog/sitemap.xml
+Feed: https://www.henryvu.blog/feed.xml
+
+# LLM-friendly content
+# llms.txt: https://www.henryvu.blog/llms.txt
+# llms-full.txt: https://www.henryvu.blog/llms-full.txt

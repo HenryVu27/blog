@@ -1,0 +1,686 @@
+# Henry Vu's Technical Blog - Full Content
+
+> Deep-dive technical content about AI engineering, ML systems, and decision-making algorithms. Written by a practitioner who builds real systems.
+
+---
+
+## Article: What Fills the Context Window: A Guide to Context Engineering
+
+**Published:** 2026-02-24 | **Author:** Henry Vu | **Series:** AI Engineering (Part 1 of 5)
+**URL:** https://www.henryvu.blog/series/ai-engineering/part1.html
+
+### From Prompts to Context
+
+When GPT-3 landed in 2020, early adopters quickly discovered that tiny changes in phrasing produced wildly different outputs. Swap "summarize" for "explain briefly," add "step by step," rearrange a few words, tell it to roleplay as a character with no safety guidelines, and the same model would go from incoherent to useful to giving you a recipe for homemade biological weapons. That sensitivity spawned an entire discipline called prompt engineering, the craft of writing instructions that reliably steer language models toward useful behavior.
+
+For a while, prompt engineering was the whole game. Your system prompt was a paragraph or two, the context window was 4K tokens, and the main skill was wordsmithing, finding the exact phrasing, the right few-shot examples, the magic "think step by step" incantation that unlocked the behavior you wanted.
+
+Context windows eventually went from 4K to 200K tokens, and models got good enough that phrasing stopped being the bottleneck for most tasks. Sometime around mid-2025, the community started calling what we do "context engineering" instead, and the new label caught on fast. [Andrej Karpathy](https://x.com/karpathy/status/1937902205765607626) called it "the delicate art and science of filling the context window with just the right information for the next step." I like that framing because it puts the emphasis on information selection, not wordsmithing.
+
+Most agent failures I encounter today are context failures, where the model can do what I need but doesn't have the right information when it needs it. The system prompt is but one of seven components that fill the context window, and for a simple single-turn task, careful prompt engineering is all you need. But the moment you add retrieval, tools, multi-step reasoning, or agent workflows, the challenge shifts from "how do I phrase this instruction" to "what information does the model need to see right now, and how do I assemble it reliably."
+
+This post walks through those seven components, the strategies for managing them, how they fail, and what a real token budget looks like in a diabetes management coaching agent I built with LangGraph. I'll go deeper on RAG in Part 2, memory in Part 3, agents in Part 4, and multi-agent coordination in Part 5.
+
+Mei et al.'s 166-page survey (arXiv:2507.13334, analyzing 1,411 papers) provides the first mathematical formalization for context engineering. They model context as a structured assembly of six typed components:
+
+$$C = A(c_\text{instr},\; c_\text{know},\; c_\text{tools},\; c_\text{mem},\; c_\text{state},\; c_\text{query})$$
+
+Context engineering then becomes a constrained optimization problem, where you find the assembly function $F$ that maximizes expected reward across tasks, subject to a hard window size limit:
+
+$$F^* = \arg\max_F \; \mathbb{E}_{\tau \sim \mathcal{T}} \left[\text{Reward}\!\left(P_\theta(Y \mid C_{F}(\tau)),\; Y^*_\tau\right)\right] \quad \text{s.t.} \;\; |C| \leq L_\text{max}$$
+
+My first reaction was that this is ML researchers dressing up practitioner intuition in math to make it paper-worthy. But coming from an optimization background, the formulation maps onto an intuition I'm already familiar with.
+
+### The Seven Components
+
+Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition ([Manus](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus), [Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), [LangChain](https://blog.langchain.com/context-engineering-for-agents/), Google), and seven components turns out to be the right granularity.
+
+**Context Window** (8K-200K tokens):
+- **System prompt** (500-2,000 tokens)
+- **User prompt** (variable)
+- **State + conversation history** (500-5,000 tokens)
+- **Long-term memory** (variable)
+- **Retrieved information / RAG** (0-10,000 tokens)
+- **Tool definitions** (500-3,000 tokens)
+- **Schema** (50-500 tokens)
+
+Of the seven, the **system prompt** is where most people start, and rightfully so. It sets behavioral guidelines, role definitions, and rules for your agent. What I didn't expect when I started building agents is how much the system prompt wants to grow. Every failure mode you encounter tempts you to add another instruction, and before long you're at 4,000 tokens of rules that sometimes contradict each other. I've learned (the expensive way) to start minimal and iteratively add instructions based on observed failures. [Spotify's engineering team](https://engineering.atspotify.com/2025/11/context-engineering-background-coding-agents-part-2) went even further and found that larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. I treat my system prompts as code now: versioned, reviewed, tested.
+
+My agent's system prompt is broken into XML-tagged sections, each responsible for a distinct behavioral concern:
+
+```xml
+<identity>
+  Personality, voice, coach name
+</identity>
+
+<boundaries>
+  5 hard scope rules + output gate awareness
+  "If your response recommends specific medications...
+   the entire response will be discarded."
+</boundaries>
+
+<patient-context>
+  Structured profile, session summary, goals
+</patient-context>
+
+<approach>
+  Progressive profiling, evidence-based guidance
+</approach>
+
+<tools>
+  When to search, when to update profile
+</tools>
+
+<response-guide>
+  Adaptive length, tone, situation matching
+</response-guide>
+
+<examples>
+  6 few-shot patient coaching conversations
+</examples>
+```
+
+I started using XML tags mostly for my own sanity (it's easier to review a prompt when you can collapse sections), but it turns out LLMs respond measurably better to structured input than unstructured dumps. Both [Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) and Google recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which matters more than you'd think once your prompt is 2,000+ tokens and three people are editing it.
+
+One surprisingly high-leverage system prompt technique comes from [OpenAI's GPT-4.1 prompting guide](https://cookbook.openai.com/examples/gpt4-1_prompting_guide): three specific instructions that increased their SWE-bench score by ~20%. (1) Persistence: "keep going until the user's query is completely resolved." (2) Tool-calling: "use your tools to answer questions rather than relying on memory." (3) Planning: explicitly asking the model to plan before acting. Three sentences transformed the model "from a chatbot-like state into a much more eager agent," which says something about how sensitive agent behavior is to system prompt phrasing even in 2025.
+
+I spend the least time worrying about the **user prompt** because it's the one thing I don't control. The immediate message from the human can be anything, from well-structured to incoherent, concise to rambling. The rest of your context engineering has to be robust enough to handle whatever arrives.
+
+Where I've seen the most waste is **state and short-term history**, or memory for short, the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations just dump the raw history in verbatim, greetings, acknowledgments, off-topic tangents. The [LongMemEval benchmark](https://arxiv.org/abs/2410.10813) (Wu et al., ICLR 2025) showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.
+
+A design principle that took me longer than it should have to internalize: in mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a *projection* for each turn. The context window is a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.
+
+A simple block with state information is injected to give the model temporal awareness and continuity across the ReAct loop:
+
+```python
+def build_conversation_state(turn, phase, recent_tool_calls, active_topic, current_datetime):
+    lines = [f"  <turn>{turn}</turn>", f"  <phase>{phase}</phase>"]
+    if current_datetime:
+        day_name = current_datetime.strftime("%A")
+        time_of_day = "morning" if hour < 12 else "afternoon" if hour < 17 else "evening"
+        lines.append(f"  <datetime>{day_name} {time_of_day}</datetime>")
+    if recent_tool_calls:
+        lines.append(f"  <last_tools>{', '.join(recent_tool_calls)}</last_tools>")
+    if active_topic:
+        lines.append(f"  <focus>{active_topic}</focus>")
+    return "<conversation_state>\n" + "\n".join(lines) + "\n</conversation_state>"
+```
+
+This 50-100 token block tells the model what turn it's on, what phase the conversation is in, what time of day it is, and which tools it already called.
+
+I'm dedicating Part 3 entirely to **long-term memory** (persistent knowledge across conversations, things like user preferences, facts, summaries, learned patterns) due to the complexity.
+
+I spend the most engineering time on **retrieved information**, the RAG layer. External knowledge from documents, databases, and APIs gets injected on-demand, and the design decision I keep coming back to is to let the model pull what it needs via tool calls rather than front-loading everything. The tricky part is evaluating retrieval quality, because the model's output can fail for reasons that have nothing to do with what you retrieved, and standard metrics like recall@k don't capture whether the retrieved context actually helped the model reason correctly. Part 2 goes deep on retrieval and evaluation.
+
+In my agent, the retrieval tool automatically enriches queries with what it already knows about the patient:
+
+```python
+@tool
+async def search_knowledge_base(query, document_type=None, tags=None, condition_type=None):
+    state = await session_store.get(session_id)
+
+    # Auto-apply condition filter from patient profile
+    if not condition_type and state.patient_profile.diagnosis:
+        condition_type = state.patient_profile.diagnosis
+
+    filters = RetrievalFilters(document_type=document_type, tags=tags, condition_type=condition_type)
+    response = await retriever.retrieve(query=query, filters=filters, state=state)
+```
+
+The agent decides when to search (pull, not push), and the tool enriches the query behind the scenes. The condition filter means a Type 2 patient never sees Type 1 insulin pump troubleshooting guides, without the patient or the model needing to specify that constraint explicitly.
+
+**Tool definitions** are the sneaky budget item. Function signatures the system can invoke consume context tokens whether they're used or not, and there's a genuine tension in how to manage them. [Inngest](https://www.inngest.com/blog/five-lessons-for-context-engineering) recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But [Manus](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus) found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking, where tools stay in context but get suppressed at the decoding level through a state machine.
+
+I don't think there's a clean answer here yet. I'm currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you're at Manus's scale with dozens of tools, the cache math probably dominates.
+
+The broader principle from [Manus's engineering blog](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus) is worth internalizing regardless of tool count: never reorder or mutate tokens already in the KV-cache prefix. Treat your prompt prefix as append-only. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Both Anthropic and OpenAI now offer explicit cache control with up to 90% discounts on cached input tokens, but the gotchas are subtle: JSON key ordering instability in some languages (Swift, Go) breaks caches silently, toggling features like web search invalidates the system cache, and the cache follows a strict hierarchy (`tools` -> `system` -> `messages`) where changes at any level invalidate everything after it.
+
+**Structured output** specifications (JSON schemas, type definitions, output constraints) are easy to overlook in a token budget because they feel like "free" structure. They're not. At scale they add up, and I've seen schemas that consume 300+ tokens before the model even starts generating.
+
+> **Typical Token Allocation (Agentic System)**
+>
+> | Component | Tokens | Behavior |
+> |---|---|---|
+> | System instructions | 500-2,000 | Static per session |
+> | Conversation history | 500-5,000 | Grows, needs trimming |
+> | RAG results | 0-10,000 | On-demand, per tool call |
+> | Tool definitions | 500-3,000 | Permanent, always present |
+> | State / structured output | 50-500 | Dynamic per turn |
+>
+> Total must fit the model's window (8k-200k depending on provider). Getting this budget right is less about cramming in more and more about being ruthless with what you leave out.
+
+Mei et al.'s survey also formalizes optimal retrieval as an information-theoretic problem. The best retrieval function maximizes mutual information between the target answer and retrieved knowledge, conditioned on the query:
+
+$$\text{Retrieve}^* = \arg\max_{\text{Retrieve}} \; I(Y^*;\; c_\text{know} \mid c_\text{query})$$
+
+And context assembly can be framed as Bayesian posterior inference, combining the likelihood of the query given a context with the prior over contexts given interaction history:
+
+$$P(C \mid c_\text{query}, \ldots) \propto P(c_\text{query} \mid C) \cdot P(C \mid \text{History}, \text{World})$$
+
+Again, more math than most practitioners will ever need day-to-day. But I found the mutual information framing helpful for answering one specific question: when two retrieval approaches return different documents, the one that tells the model more *new* information (higher mutual information with the answer, conditional on the query) is the better one. This provides some intuition as to why hybrid retrieval beats pure semantic search.
+
+### Write / Select / Compress / Isolate
+
+Every production context system I've seen uses some combination of four strategies, and [LangChain's framework](https://blog.langchain.com/context-engineering-for-agents/) gives them clean names. I find the vocabulary useful not because the categories are surprising, but because asking "which of these four am I underinvesting in?" is usually the fastest way to improve a system.
+
+**Writing** means getting information out of the context window and into external storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The [Manus](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus) team has a concrete version of this that I really like: their agents maintain a `todo.md` file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent. (Though Manus later found that roughly a third of all agent actions were spent updating the todo list, and shifted to a dedicated planner agent instead. Even clever patterns have costs.)
+
+My first version wrote a rolling summary every 5 turns and called it a day. That's fine for a prototype, but production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under (imagine Claude Code running on million-line codebase). I think of it as three tiers:
+
+1. **Raw context** when below ~75% capacity. If the window has room, don't compress at all. Raw turns carry more signal than any summary.
+2. **Compact first** when approaching the budget. Strip low-signal content (greetings, filler acknowledgments, tool call boilerplate) while keeping messages structurally intact. No LLM call needed.
+3. **Summarize** only when compaction isn't enough. Replace older turns with a generated summary, preserving the recent window verbatim.
+
+The 75% threshold matters more than it might seem. I call it the **pre-rot threshold**: compress proactively at ~75% capacity, not reactively at 95%. By the time you're near the wall, attention quality has already degraded across the last 20% of growth (this connects directly to the distraction failure mode in Section 4). Compressing early keeps the model in its high-performance zone.
+
+```python
+async def manage_context(self, session_id, current_turn, window_budget):
+    messages = await self._store.get_messages(session_id)
+    current_usage = estimate_tokens(messages)
+
+    # Tier 1: Raw context fits — do nothing
+    if current_usage < window_budget * 0.75:
+        return messages
+
+    # Tier 2: Compact — strip low-signal content, keep messages intact
+    compacted = self._compact(messages)
+    if estimate_tokens(compacted) < window_budget * 0.85:
+        return compacted
+
+    # Tier 3: Summarize — replace old turns with generated summary
+    cutoff = self._find_summary_boundary(compacted)
+    summary = await self._summarize(compacted[:cutoff])
+    return [summary_message(summary)] + compacted[cutoff:]
+```
+
+The `_compact` step does straightforward string surgery: it strips "thanks!", "ok sounds good", empty assistant acknowledgments, and tool call metadata that the model doesn't need to see on future turns. No LLM call, just pattern matching. The summarization tier only fires when compaction alone can't get below 85% capacity, which in practice means conversations beyond ~15 turns.
+
+One finding I keep coming back to from the [recurrent context compression](https://arxiv.org/abs/2406.06110) research: compressing instructions and context simultaneously degrades responses. You need to compress the data but preserve the instructions separately. I was summarizing entire turns including the system-injected guidance in my first attempt, and the model started ignoring its own rules.
+
+**Selecting** is the complement, retrieving relevant information back when needed. This includes reading back scratchpad notes from earlier steps, querying stored memories using embeddings or keyword search, and full RAG pipelines over documents or code. One pattern worth calling out specifically: if you have many tools, you can use RAG over tool descriptions to select the right one. The [RAG-MCP paper](https://arxiv.org/abs/2505.03275) (Writer.com) measured a 3x improvement in selection accuracy compared to exposing all tools at once (from 13.6% to 43.1%); the agent needs a search engine just to find its own capabilities.
+
+Selection quality depends heavily on query quality. My agent rewrites the user's message into a self-contained retrieval query before searching:
+
+```python
+# "My numbers have been all over the place lately"
+# -> "blood sugar management strategies Type 2 patient on metformin irregular post-meal readings"
+
+async def rewrite(self, query, conversation_history, patient_profile):
+    recent_turns = conversation_history[-3:]
+    prompt = f"""Rewrite the search query to be self-contained.
+    Resolve pronouns, add implicit context from conversation.
+    Known: diagnosis={profile.diagnosis}, medications={profile.current_medications}
+
+    Rules:
+    - Keep it concise (under 30 words)
+    - Resolve pronouns ("it" -> the patient's condition)
+    - Strip emotional language, focus on the information need"""
+```
+
+The comment at the top shows why this matters. "My numbers have been all over the place lately" has almost zero retrieval value as-is: no condition type, no medication context, no timeframe. The rewriter infers "post-meal readings" from the last 3 turns, adds the patient's diagnosis and medication context, and produces a query that actually hits relevant documents.
+
+**Compression** reduces tokens while maintaining task performance. Summarization replaces older conversation history with a condensed version (Claude Code applies auto-compact when approaching context limits). Trimming removes older messages, and the critical detail is how you trim. Per-message FIFO (drop the oldest message) is the naive approach, and it breaks things in subtle ways. Dropping an individual assistant message can orphan a tool result from its tool call, producing a conversation that the API rejects or the model misinterprets. Production SDKs from both [OpenAI](https://github.com/openai/openai-agents-python) and Anthropic trim in **atomic turn groups**: a user message plus all assistant messages and tool results that follow it, removed as a unit.
+
+```python
+def trim_oldest_turn(messages):
+    """Remove the oldest complete turn group atomically."""
+    if not messages:
+        return messages
+    i = 0
+    while i < len(messages):
+        if i > 0 and messages[i].role == "user":
+            break
+        i += 1
+    return messages[i:]
+```
+
+The function walks forward from the start until it hits the next user message, then slices off everything before it. One complete turn (user message, assistant response, any tool calls and results in between) gets removed as an atomic unit. My agent calls this in a loop until the conversation fits within the character budget, which handles the same two problems as a message cap plus character budget but without the risk of orphaned tool results.
+
+**Isolation** means splitting information across separate processing units so each one gets a clean, focused context window. Multi-agent systems give each sub-agent its own window focused on a specific subtask, returning a condensed summary (1,000-2,000 tokens) to the lead agent. HuggingFace's CodeAgent isolates token-heavy objects in sandbox environments, keeping only references in the main context. You can also separate LLM-exposed fields from auxiliary context storage in your state schema, because not everything the system knows needs to be in the window.
+
+My agent isolates safety classification into separate LLM calls so the guardrail context never contaminates the main patient conversation:
+
+```python
+# Each node runs in its own isolated LLM call with its own context
+graph = StateGraph(CoachingState)
+
+graph.add_node("input_gate", input_gate_node)       # Safety classifier
+graph.add_node("pro_react_agent", pro_agent)         # Main agent (complex queries)
+graph.add_node("flash_react_agent", flash_agent)     # Main agent (simple messages)
+graph.add_node("output_gate", output_gate_node)      # Scope validator
+
+graph.set_entry_point("input_gate")
+graph.add_conditional_edges("input_gate", route_after_input_gate, {
+    END: END,                                        # Blocked -> stop
+    "pro_react_agent": "pro_react_agent",            # Complex -> Pro + thinking
+    "flash_react_agent": "flash_react_agent",        # Simple -> Flash
+})
+graph.add_edge("pro_react_agent", "output_gate")
+graph.add_edge("flash_react_agent", "output_gate")
+graph.add_edge("output_gate", END)
+```
+
+The input gate sees only the latest user message and a short classification prompt. The output gate sees only the agent's response and a scope-checking prompt. Neither gate's context (safety rules, classification examples) appears in the main agent's window, keeping the patient conversation clean and focused.
+
+If you're building an agent and something feels off about the outputs, run through these four categories and ask which one you're neglecting. In my experience the answer is almost always compression or isolation; people over-invest in writing and selecting because those feel like "building features," while trimming old history and splitting contexts feel like cleanup work.
+
+### How Context Fails
+
+When an agent misbehaves, my first question is always "what kind of context failure is this?" because the mitigations are completely different depending on the answer. [Drew Breunig](https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html) laid out four failure modes that I think cover most of what goes wrong, and I've started using them as a debugging checklist.
+
+> **Four Context Failure Modes**
+>
+> | Mode | Cause | Fix |
+> |---|---|---|
+> | Poisoning | Error enters context, compounds downstream | Validate before memory writes |
+> | Distraction | History too long, drowns out training | Aggressive trimming + summarization |
+> | Confusion | Noise treated as signal | Curate ruthlessly, earn every token |
+> | Clash | Contradictory instructions in prompt | Clear precedence hierarchy |
+
+**Context poisoning** is the scariest one. A hallucination or error enters the context and gets repeatedly referenced, compounding mistakes over time. Once a wrong fact lands in the conversation history, the model treats it as ground truth and builds on it. Google DeepMind's Gemini 2.5 technical report showed just how bad this gets: a Pokemon-playing agent hallucinated the existence of an item called "TEA," wrote it into its goals scratchpad, and then spent hundreds of actions trying to find something that doesn't exist in the game. The agent also developed a "black-out strategy" (intentionally fainting all its Pokemon to teleport) rather than navigating normally. Once a hallucination enters a persistent scratchpad, the model treats it as ground truth and builds increasingly nonsensical plans on top of it. The fix is to validate information before writing to long-term memory, treating memory writes like database writes where you check constraints before committing.
+
+**Context distraction** is subtler. The context grows so long that the model over-focuses on accumulated history and neglects what it learned during training. Beyond ~100k tokens, I've noticed agents tend toward repeating actions from history rather than synthesizing novel plans. Aggressive trimming and summarization help, along with actively removing completed or irrelevant sections. I suspect most people's context windows are 2-3x larger than they need to be.
+
+This is why the pre-rot threshold from Section 3 matters: compress proactively at ~75% capacity, not reactively at 95%. By the time you're near the wall, attention quality has already degraded across the last 20% of growth.
+
+**Context confusion** is what happens when superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. [Anthropic's](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) guiding principle is the right one here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome." Every token should earn its place, and most don't.
+
+**Context clash** is the one I find most often in my own code, probably because it's the easiest to create accidentally. It happens when new information conflicts with existing information already in the prompt, and contradictory instructions produce unpredictable behavior. My own agent has one I caught during an audit for this post. The system prompt says "When READING information you already have in the patient context above, use it directly, do not re-fetch with `get_patient_profile`." But `get_patient_profile` is still available as a callable tool. The instruction and the tool list contradict each other. The agent sometimes calls the tool anyway, wasting a round-trip to fetch data that's already in the prompt. The fix is straightforward (remove the tool), but the clash was easy to miss because the instruction is in the `<tools>` section of the prompt and the tool definition is in Python code, and I never reviewed them side by side until I went looking for exactly this kind of problem.
+
+There's a deeper mechanism behind context distraction that [Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) calls **context rot**. They attribute it to the $O(n^2)$ pairwise token relationships in self-attention: at 100K+ tokens, the model's attention budget is spread across billions of pair interactions, and critical information gets drowned out. The full story is more nuanced than that framing suggests. Positional encoding degradation (especially RoPE-based encodings at positions beyond the training distribution), attention sink phenomena where early tokens absorb disproportionate weight, and training data skew toward shorter contexts all contribute. But the practical consequence is the same regardless of which mechanism dominates.
+
+Mei et al.'s survey cites the **lost-in-the-middle** finding ([Liu et al., 2023](https://arxiv.org/abs/2307.03172)) to quantify this: performance degrades significantly when relevant information sits in the middle of long contexts versus the beginning or end. Liu et al. found a consistent U-shaped curve across models and settings, with accuracy dropping by 20%+ in some configurations. The exact magnitude varies by model, task, and number of documents, but the core result (middle positions perform worst) has been replicated across multiple studies and model families.
+
+### A Real Token Budget
+
+All of the above is easier to understand with a concrete example, so let me walk through the diabetes management coaching assistant I built as a ReAct agent with LangGraph. The system prompt ranges from ~2,000 to ~4,050 tokens depending on session maturity, assembled dynamically from several blocks.
+
+**Architecture:** Patient -> Input Gate (safety check) -> Pro Agent (complex + thinking) / Flash Agent (simple queries) -> Output Gate (scope check) -> Response
+
+Background processes: rolling summary, profile updates, outcome tracking. Each node runs in its own isolated LLM call with its own context window.
+
+| Component | Tokens | Type |
+|---|---|---|
+| Conversation state (turn count, phase, datetime) | 50-100 | Dynamic (every turn) |
+| Identity block (personality, voice) | ~350 | Static |
+| Boundaries (5 hard scope rules) | ~280 | Static |
+| Patient context (profile, summary, goals) | 80-700 | Dynamic (per session) |
+| Approach + tools + response guides | ~470 | Static |
+| Few-shot examples (6) | ~550 | Static |
+| RAG results (last 3, conditional) | 0-1,500 | Conditional |
+| **System prompt total** | **~2,000-4,050** | **Mixed** |
+| Conversation window (6 turns max) | 500-5,000 | Dynamic (rolling) |
+| Tool results (`search_knowledge_base`) | 0-10,000 | On-demand |
+
+The conversation window holds 6 turns max, char-budgeted at 120,000 characters. Messages from turns already covered by the rolling summary are excluded.
+
+Everything gets assembled in a single `prepare_context` hook that runs before every LLM call in the ReAct loop. The static sections form a stable prefix for KV-cache hits, and the volatile conversation state goes at the end:
+
+```python
+async def prepare_context(state: CoachingState):
+    session_id = state.get("session_id", "default")
+    session_state = await session_store.get(session_id)
+    turn_count = session_state.turn_count
+    cache_key = (session_id, turn_count)
+
+    # Skip rebuild if nothing mutated since last call
+    has_mutation = _has_mutating_tool(state["messages"])
+    if cache_key in _prompt_cache and not has_mutation:
+        system_prompt = _prompt_cache[cache_key]
+    else:
+        summary = await session_store.get_latest_summary(session_id)
+        episodes = await session_store.get_recent_episodes(session_id, limit=5)
+        tool_results = await session_store.get_recent_tool_results(session_id, limit=3)
+
+        system_prompt = build_system_prompt(
+            profile=session_state.patient_profile,
+            active_strategies=session_state.active_strategies,
+            goals=session_state.goals, outcomes=session_state.outcomes,
+            session_summary=summary_text,
+        )
+
+        # Static prefix first (cacheable), volatile state appended last
+        state_block = build_conversation_state(turn_count, phase, recent_tool_names, ...)
+        system_prompt = system_prompt + "\n\n" + state_block
+
+    # Trim conversation: drop oldest complete turn groups atomically
+    conversation = [m for m in messages if not isinstance(m, SystemMessage)]
+    while estimate_chars(conversation) > remaining_budget and len(conversation) > 2:
+        conversation = trim_oldest_turn(conversation)
+
+    return {"llm_input_messages": [SystemMessage(system_prompt)] + conversation}
+```
+
+This function is where all the context engineering actually happens. Load state, build the prompt from components, append the volatile state block at the end (so the static sections form a cacheable prefix), and trim the conversation using turn-group-aware removal. Every technique I described in the earlier sections (XML structure, tiered compression, atomic trimming, isolation) converges in this one function.
+
+> **Context Engineering Techniques Used**
+>
+> | Category | Technique | Implementation |
+> |---|---|---|
+> | Structure | XML-tagged sections | `<identity>`, `<boundaries>`, `<patient-context>`, etc. |
+> | Compression | Tiered (raw -> compact -> summarize) | Pre-rot threshold at 75% capacity |
+> | Compression | Atomic turn-group trimming | Drop oldest complete turn, never orphan tool results |
+> | Memory | Semantic (patient profile) | Structured schema, tool-driven updates |
+> | Memory | Episodic (outcomes) | Created on `track_outcome`, stored with emotion |
+> | RAG | Hybrid search | Dense + sparse + RRF + cross-encoder reranking |
+> | RAG | Query rewriting | Pronoun resolution + profile context injection |
+> | Routing | Dual-model | Flash for simple messages, Pro with thinking for complex |
+> | Safety | Isolated gates | Input + output classifiers in separate LLM calls |
+
+#### Two Catches from My Own Audit
+
+When I audited this agent against the best practices I'd just finished researching, two problems jumped out that I wouldn't have caught without specifically looking.
+
+The expensive one is a **KV-cache violation**. Look at the `prepare_context` code above. The volatile `<conversation_state>` block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix: if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. [Manus](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus) reports this is a 10x cost difference ($0.30/MTok cached vs $3/MTok uncached on Claude Sonnet). The fix is one line, move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns. The broader principle from Section 2 applies here too: treat the prompt prefix as append-only, and sort sections by volatility so the stable parts come first.
+
+The subtler one is a **profile-in-prompt-and-tool clash**. The patient profile is already injected into the `<patient-context>` section of the system prompt on every turn. But `get_patient_profile` also exists as a callable tool. The tool exists to let the agent "check what it knows," but the agent already knows; it's right there in the prompt. I mentioned this in Section 4 as a context clash, and it is, but it's also context confusion in a way I didn't appreciate until I watched the agent's behavior. The tool's existence signals to the model that the profile might *not* be in context, which makes it less likely to trust the data it already has. The instruction says "use the profile in `<patient-context>` directly," but the tool's mere availability creates an implicit counter-signal. Removing the tool entirely fixed the redundant fetches and, more importantly, made the agent more confident in referencing profile data from the prompt.
+
+The benchmarks suggest context engineering matters a lot more than most people realize. On GAIA, human accuracy is 92% while GPT-4 hits 15%. A 77-point gap. On GTA, GPT-4 completes fewer than 50% of tasks. On WebArena, the top agent (IBM CUGA) reaches only 61.7%. These benchmarks all require integrating information from multiple sources, using tools, and maintaining state across steps, which is exactly what context engineering addresses.
+
+Memory systems fare poorly too. LongMemEval (500 curated questions) finds 30% accuracy degradation in commercial assistants during extended interactions. GPT-4, Claude, and Llama 3.1 all struggle with episodic memory involving interconnected events, even in brief contexts. The gap between model capability on narrow benchmarks and system capability on realistic tasks is, I think, the context engineering gap.
+
+### Measuring Context Quality
+
+The one metric I track reliably is **cache hit rate**, because Anthropic hands it to you for free. Every API response includes `cache_read_input_tokens` and `cache_creation_input_tokens`, and the ratio tells you whether your prefix ordering is stable across turns. After fixing the KV-cache violation from Section 5, my cache hit rate went from ~0% to ~85% on turns 2+, which I could verify directly from the billing dashboard. If your cache hit rate is low, something in your prompt prefix is changing between calls, and the fix is almost always moving volatile content later in the prompt.
+
+Beyond that, I keep an eye on **cost per conversation** (total API spend divided by completed sessions) because it rolls up cache efficiency, context size, model routing, and retrieval volume into a single number. [Letta's Context-Bench](https://www.letta.com/blog/context-bench) reinforces why this matters more than per-token price: Claude Sonnet 4.5 led their benchmark at 74.0% accuracy for $24.58, while GPT-5 reached 72.67% for $43.56, almost double the cost for slightly lower performance. Models with higher unit costs sometimes use far fewer tokens, so the aggregate figure is what counts.
+
+The metrics I *want* but haven't built yet are per-component token budgets (logging how much each prompt section actually consumes versus my design-time estimates) and task completion rate bucketed by context size. The second one would tell me whether more context is actually helping or triggering the distraction failure mode from Section 4. I have a strong intuition that completion degrades above ~30K tokens, but intuition without data is just a guess.
+
+On the benchmarking side, [ContextBench](https://arxiv.org/abs/2602.05892) (February 2025) is worth knowing about. It tests whether coding agents can retrieve the right context from 66 real repositories across 8 languages, and the headline numbers are sobering, as even SOTA models achieve block-level F1 below 0.45 and line-level F1 below 0.35. Higher recall was consistently favored over precision, suggesting it's better to include a few irrelevant chunks than to miss a critical one. Sophisticated scaffolding didn't necessarily lead to better retrieval either, which complicates the "just add more RAG infrastructure" instinct.
+
+### What I Learned
+
+If I had to distill this post into one actionable idea, it's that context engineering is mostly about removal, not addition. The instinct is always to add more information, more tools, more history, more instructions. But every improvement I've made to my agent involved taking something out or moving it around, not putting more in. Remove the redundant tool. Move the volatile state block to the end of the prompt. Compress proactively at 75% capacity instead of reactively at 95%. Trim in atomic turn groups instead of shaving individual messages.
+
+This covers within-session context management for a single agent. Multi-session continuity and memory systems that improve over time rather than accumulating garbage are Part 3 territory. Production agent harnesses where the filesystem becomes the source of truth, and the context window is just a view into external state, are Part 4. If you're building a single-session agent today, the patterns here apply directly; the later parts extend them to longer time horizons and more complex architectures.
+
+One caveat worth keeping in mind as you apply any of this. Context strategy isn't portable across providers. Different models have different attention patterns, different context window behaviors, and different sensitivities to prompt structure. What works for Claude might fail on GPT might fail on Gemini. I've been burned by this enough times that I now test prompts on every model I plan to support, rather than assuming my architecture generalizes.
+
+If you spot errors or have war stories from your own context engineering work, I'd love to hear about it on [X](https://x.com/HenryVu27) or [LinkedIn](https://www.linkedin.com/in/henry-vu27/).
+
+### References
+
+1. Karpathy, A. "Context Engineering." [X/Twitter](https://x.com/karpathy/status/1937902205765607626), June 2025.
+2. Lutke, T. "Context Engineering over Prompt Engineering." [X/Twitter](https://x.com/tobi/status/1935533422589399127), June 2025.
+3. Rajasekaran, P. et al. "Effective Context Engineering for AI Agents." [Anthropic Engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), September 2025.
+4. Martin, L. "Context Engineering for Agents." [LangChain Blog](https://blog.langchain.com/context-engineering-for-agents/), July 2025.
+5. Breunig, D. "How Contexts Fail and How to Fix Them." [dbreunig.com](https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html), June 2025.
+6. Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." [Manus Blog](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus), July 2025.
+7. Spotify Engineering. "Context Engineering: Background Coding Agents Part 2." [engineering.atspotify.com](https://engineering.atspotify.com/2025/11/context-engineering-background-coding-agents-part-2), November 2025.
+8. Inngest. "Five Critical Lessons for Context Engineering." [inngest.com](https://www.inngest.com/blog/five-lessons-for-context-engineering), 2025.
+9. Mei, Z. et al. "A Survey of Context Engineering for Large Language Models." [arXiv:2507.13334](https://arxiv.org/abs/2507.13334), July 2025.
+10. Willison, S. "Context Engineering." [simonwillison.net](https://simonwillison.net/2025/Jun/27/context-engineering/), June 2025.
+11. Osmani, A. "Context Engineering: Bringing Engineering Discipline to AI." [Substack](https://addyo.substack.com/p/context-engineering-bringing-engineering), 2025.
+12. Fowler, M. "Context Engineering for Coding Agents." [martinfowler.com](https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html), 2025.
+13. Liu, N.F. et al. "Lost in the Middle: How Language Models Use Long Contexts." [arXiv:2307.03172](https://arxiv.org/abs/2307.03172), 2023. Published in TACL, 2024.
+14. Wu, D. et al. "LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory." [arXiv:2410.10813](https://arxiv.org/abs/2410.10813), 2024. Published at ICLR 2025.
+15. Mialon, G. et al. "GAIA: A Benchmark for General AI Assistants." [arXiv:2311.12983](https://arxiv.org/abs/2311.12983), 2023. Published at ICLR 2024.
+16. Anthropic. "How We Built Our Multi-Agent Research System." [Anthropic Engineering](https://www.anthropic.com/engineering/built-multi-agent-research-system), November 2025.
+17. OpenAI. "Agents SDK." [GitHub](https://github.com/openai/openai-agents-python), 2025.
+18. Huang, Y. et al. "Recurrent Context Compression: Efficiently Expanding the Context Window of LLM." [arXiv:2406.06110](https://arxiv.org/abs/2406.06110), 2024.
+19. Writer.com. "RAG-MCP: Mitigating Prompt Bloat in Tool-Augmented LLMs." [arXiv:2505.03275](https://arxiv.org/abs/2505.03275), 2025.
+20. OpenAI. "GPT-4.1 Prompting Guide." [OpenAI Cookbook](https://cookbook.openai.com/examples/gpt4-1_prompting_guide), 2025.
+21. Letta. "Context-Bench: Benchmarking Long-Horizon Agent Memory." [letta.com](https://www.letta.com/blog/context-bench), October 2025.
+22. Fournier, C. et al. "ContextBench: A Benchmark for Context Retrieval in Coding Agents." [arXiv:2602.05892](https://arxiv.org/abs/2602.05892), February 2025.
+
+---
+
+## Article: Multi-Armed Bandits: Foundations
+
+**Published:** 2025-09-17 | **Author:** Henry Vu | **Series:** Multi-Armed Bandits (Part 1 of 3)
+**URL:** https://www.henryvu.blog/series/bandits/part1.html
+
+### Multi-Armed Bandits and the Exploration-Exploitation Trade-off
+
+If you have been around modern LLMs, you have probably heard of reinforcement learning. At its core, RL is an interaction loop: a learner chooses an action, receives feedback from the environment (reward), updates its rule for acting next time, and repeats. Much of today's LLM finetuning to align with human preferences can be seen through this lens.
+
+Unlike representation learning where the learner tries to "imitate" the data, RL forces the learner to interact with the environment. The central question in this interaction is how to balance *exploration* and *exploitation*. Should the learner take advantage of current knowledge and exploit the option that currently looks best to maximize immediate reward? Or should it take some risks to explore, potentially sacrificing short-term gains to improve knowledge and long-term performance? Too much greed misses better options; too much exploration wastes opportunities.
+
+This fundamental tension between exploration and exploitation appears everywhere in sequential decision-making. Multi-armed bandits capture this trade-off in its simplest form: a single-state Markov decision process focused only on action selection under uncertainty. We now see applications of bandits across industries where information arrives in sequential manner. Examples range from ad placement, recommender systems, packet routing, to more theoretical settings like convex optimization and Brownian motion.
+
+But what are bandit problems exactly?
+
+A key early motivation came from clinical trials. **William R. Thompson**, in his 1933 paper, proposed assigning treatments adaptively using accumulating evidence, favoring promising options while still testing alternatives enough to learn.
+
+The name "multi-armed bandit" came later. In the 1950s, Mosteller and Bush studied learning in animals and humans. Mice faced left/right choices in a T-shaped maze with uncertain rewards. For humans, they built a two-armed machine: each lever paid out randomly with unknown probabilities. The setup echoed the "one-armed bandit" slot machine, and the term "two-armed," then "multi-armed," bandit stuck.
+
+### A Classic Dilemma
+
+Imagine you're playing a three-armed bandit machine. You've already pulled each lever several times and observed these payoffs (in dollars):
+
+| Round | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| **Arm 1** | $5 | - | $5 | - | $5 | - |
+| **Arm 2** | - | $0 | - | $0 | - | - |
+| **Arm 3** | - | - | $15 | - | - | $0 |
+
+So far, Arm 1 averages $5, Arm 2 averages $0, and Arm 3 averages $7.50. You have 10 more pulls remaining. Do you stick with Arm 1 (reliable $5), gamble on Arm 3 (high variance but higher average), or give Arm 2 another chance? How do you balance exploiting what seems best versus exploring to learn more?
+
+This illustrates the core dilemma in bandit problems: balancing **exploration** (trying uncertain options to gather information) and **exploitation** (using the currently best-performing option to maximize immediate reward).
+
+### The Regret and Finite-Armed Stochastic Bandits
+
+Bandit theory can quickly become intimidating as you could dive arbitrarily deep into measure theory, sigma-algebras, or martingales. But that isn't necessary to grasp the core ideas. Instead, let's build intuition with the simplest meaningful setting: finite-armed stochastic bandits. This framework captures the essence of exploration versus exploitation while remaining concrete enough to analyze common solution strategies.
+
+The problem statement is as follows: we have $K$ arms, where pulling arm $i$ at time $t$ yields reward $X_{i,t}$ drawn from an unknown distribution $\nu_i$ with mean $\mu_i$. The learner's goal is to minimize *regret* after $n$ rounds, which is the difference between the cumulative reward achieved by the learner, and that of an oracle that always pulls the optimal arm.
+
+Why not evaluate a learner by raw cumulative reward $\sum_{t=1}^n X_t$?
+
+- It is random: comparing policies requires a utility for the distribution of $S_n = \sum_{t=1}^n X_t$.
+- The instance is unknown: a policy that maximizes $\mathbb{E}[S_n]$ for one set of rewards may perform poorly on another.
+
+*Regret* avoids both by comparing the learner to an oracle that always pulls the best arm.
+
+Define the optimal arm as $i^* = \arg\max_{i \in [K]} \mu_i$ with optimal mean $\mu^* = \mu_{i^*}$. The gap for arm $i$ is $\Delta_i = \mu^* - \mu_i$. After $n$ rounds, the cumulative regret is:
+
+$$R_n = n\mu^* - \mathbb{E}\!\left[\sum_{t=1}^n X_{I_t, t}\right]$$
+
+where $I_t$ is the arm selected at time $t$. Minimizing regret is equivalent to maximizing expected reward, but regret normalizes performance relative to the (unknown) optimum. If rewards were known, always pulling $i^*$ would give $R_n=0$.
+
+Let $\Delta_i = \mu^* - \mu_i$ and let $N_i(n) = \sum_{t=1}^n \mathbb{1}_{\{I_t = i\}}$ be the (random) number of pulls of arm $i$ by round $n$. Then we have the regret decomposition:
+
+$$R_n = \sum_{i=1}^K \Delta_i\, \mathbb{E}[N_i(n)]$$
+
+This identity exposes the exploration-exploitation trade-off: each pull of a suboptimal arm incurs $\Delta_i$ expected loss. Good algorithms keep $\mathbb{E}[N_i(n)]$ small for large gaps while still exploring when gaps are small, targeting sublinear regret $R_n = o(n)$. The decomposition also provides a powerful framework for algorithm analysis. Instead of directly bounding the complex random quantity $R_n$, we can analyze each $\mathbb{E}[N_i(n)]$ separately.
+
+Now let's formalize the problem setup.
+
+> **Problem Setup**
+>
+> - $K$ arms with unknown reward distributions $\nu_1, \ldots, \nu_K$
+> - At round $t$, learner selects arm $I_t$ and receives reward $X_{I_t,t} \sim \nu_{I_t}$
+> - Arm $i$ has mean reward $\mu_i = \mathbb{E}[\nu_i]$
+> - Optimal arm: $i^* = \arg\max_i \mu_i$, gap: $\Delta_i = \mu^* - \mu_i$
+> - Assumption: rewards are $\sigma$-subgaussian
+> - Goal: Minimize regret $R_n = n\mu^* - \mathbb{E}[\sum_{t=1}^n X_{I_t,t}]$
+
+### Concentration Inequalities
+
+Before analyzing bandit algorithms, we need one more tool from probability theory: concentration of measure. The core challenge of the bandit problem is that the optimal action has the largest mean reward, but these means are initially unknown and must be learned from observations. This raises a fundamental question: how confidently can we estimate the mean of an action from a finite number of samples?
+
+To answer this, we study tail probabilities: the probability that our empirical estimate deviates significantly from the true mean. Tight bounds on these probabilities let us construct confidence intervals, ranges within which the true mean lies with high probability. The tighter these intervals, the more efficiently we can balance exploration and exploitation.
+
+We begin with two classical inequalities that provide our first handle on tail probabilities.
+
+**Markov's Inequality:** For any non-negative random variable $X$ and $\varepsilon > 0$,
+
+$$\mathbb{P}(X \geq \varepsilon) \leq \frac{\mathbb{E}[X]}{\varepsilon}.$$
+
+**Chebyshev's Inequality:** For any random variable $X$ with finite variance,
+
+$$\mathbb{P}\left(|X - \mathbb{E}[X]| \geq \varepsilon\right) \leq \frac{\mathbb{V}[X]}{\varepsilon^2}.$$
+
+To see Chebyshev's limitations, apply it to a sample mean $\hat{\mu}_n = \frac{1}{n}\sum_{i=1}^n X_i$ where each $X_i$ has variance $\sigma^2$. Since $\mathbb{V}[\hat{\mu}_n] = \sigma^2/n$,
+
+$$\mathbb{P}(|\hat{\mu}_n - \mu| \geq \varepsilon) \leq \frac{\sigma^2}{n\varepsilon^2}.$$
+
+This bound exhibits polynomial decay in both parameters $\varepsilon$ and $n$. Chebyshev's and Markov's inequalities are nice because they make no assumptions about the distribution of $X$, and only rely on the existence of the mean and variance. However, when $X$ has well-behaved tails (like Gaussian or bounded random variables), they are a bit too loose. And to get failure probability $\delta$, we need $n = \Omega(\sigma^2/(\varepsilon^2\delta))$ samples, linearly in $1/\delta$.
+
+To obtain exponentially decaying tail bounds, we introduce the notion of **subgaussian random variables**. A random variable $X$ with $\mathbb{E}[X] = 0$ is called $\sigma$-subgaussian if its moment generating function satisfies
+
+$$\mathbb{E}[\exp(\lambda X)] \leq \exp\left(\frac{\lambda^2 \sigma^2}{2}\right) \quad \text{for all } \lambda \in \mathbb{R}.$$
+
+Intuitively, this says that $X$ has tails no heavier than a Gaussian with variance $\sigma^2$. Bounded random variables, Gaussian random variables, and many other common distributions satisfy this property. The power of subgaussianity lies in the following fact:
+
+If $X$ is $\sigma$-subgaussian with $\mathbb{E}[X] = 0$, then for any $\varepsilon \geq 0$,
+
+$$\mathbb{P}(X \geq \varepsilon) \leq \exp\left(-\frac{\varepsilon^2}{2\sigma^2}\right).$$
+
+The real power appears when we apply this to sample means. For $\hat{\mu}_n = \frac{1}{n}\sum_{i=1}^n X_i$ with each $X_i$ being $\sigma$-subgaussian with mean $\mu$, we get a much tighter bound:
+
+$$\mathbb{P}(|\hat{\mu}_n - \mu| \geq \varepsilon) \leq 2\exp\left(-\frac{n\varepsilon^2}{2\sigma^2}\right).$$
+
+Subgaussian random variables have convenient closure properties that make them easy to work with in practice.
+
+> **Properties of Subgaussian Random Variables**
+>
+> Suppose $X$ is $\sigma$-subgaussian with $\mathbb{E}[X] = 0$, and $X_1, X_2$ are independent and $\sigma_1$- and $\sigma_2$-subgaussian, respectively. Then:
+>
+> 1. $\mathbb{E}[X] = 0$ and $\mathbb{V}[X] \leq \sigma^2$
+> 2. For any constant $c \in \mathbb{R}$, $cX$ is $|c|\sigma$-subgaussian
+> 3. $X_1 + X_2$ is $\sqrt{\sigma_1^2 + \sigma_2^2}$-subgaussian
+
+These properties immediately give us concentration bounds for sample means, which are the building blocks of bandit algorithms.
+
+Let $X_1, \ldots, X_n$ be independent, $\sigma$-subgaussian random variables with mean $\mu$. Let $\hat{\mu} = \frac{1}{n}\sum_{i=1}^n X_i$. Then for any $\varepsilon \geq 0$,
+
+$$\mathbb{P}(\hat{\mu} \geq \mu + \varepsilon) \leq \exp\left(-\frac{n\varepsilon^2}{2\sigma^2}\right) \quad \text{and} \quad \mathbb{P}(\hat{\mu} \leq \mu - \varepsilon) \leq \exp\left(-\frac{n\varepsilon^2}{2\sigma^2}\right).$$
+
+Inverting the bound: setting $2\exp(-n\varepsilon^2/(2\sigma^2)) = \delta$ and solving for $\varepsilon$, we get that after $n$ samples, with probability at least $1 - \delta$,
+
+$$\mu \in \left[\hat{\mu}_n - \sqrt{\frac{2\sigma^2\log(2/\delta)}{n}}, \; \hat{\mu}_n + \sqrt{\frac{2\sigma^2\log(2/\delta)}{n}}\right].$$
+
+This confidence interval is the foundation of the UCB algorithm. The width shrinks as $1/\sqrt{n}$. We will see the powerful implications of this bound in the next section.
+
+### Explore-then-Commit
+
+Before diving into principled algorithms, consider these simple heuristics:
+
+- **Greedy:** Always play the arm with the highest empirical mean. This can get stuck on a suboptimal arm due to lack of exploration, leading to linear regret.
+- **Uniform exploration:** Play all arms an equal number of times. This is pure exploration with no exploitation, also yielding linear regret.
+- **epsilon-greedy:** With probability $1-\epsilon$, exploit by playing the empirically best arm; with probability $\epsilon$, explore by playing a random arm. This achieves $O(\log n)$ regret with proper tuning.
+
+While epsilon-greedy can work reasonably well, it explores uniformly without considering confidence in the estimates. This motivates more sophisticated approaches.
+
+The first principled method we explore is called Explore-then-Commit. The approach is, explore each action/arm a fixed number of times ($m$), then exploit the knowledge by choosing the arm with the largest empirical payoff.
+
+> **Explore-then-Commit Algorithm**
+>
+> 1. **Explore phase:** Pull each arm exactly $m$ times
+> 2. **Compute empirical means:** $\hat{\mu}_i = \frac{1}{m}\sum_{j=1}^m X_{i,j}$ for each arm $i$
+> 3. **Commit phase:** Select $\hat{i} = \arg\max_i \hat{\mu}_i$ and pull it for all remaining $n - mK$ rounds
+
+To analyze the regret of ETC, recall that $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$ from the regret decomposition above. Let's denote $i^* = \arg\max_i \mu_i$ as the optimal arm.
+
+> **Theorem (ETC Regret Bound)**
+>
+> $$R_n \leq m \sum_{i=1}^K \Delta_i + (n - mK) \sum_{i=1}^K \Delta_i \exp\left(-\frac{m\Delta_i^2}{4}\right)$$
+
+Intuitively, this bound captures the exploration-exploitation balance. Choosing a large $m$ means more time sampling every arm, so the first term (proportional to $m$) grows. Picking $m$ too small raises the chance of committing to a suboptimal arm, inflating the second term, which decreases only when $m$ is large enough to make the misidentification probability tiny.
+
+**Proof:** In the first $mK$ rounds, the policy is deterministic, choosing each action exactly $m$ times. Subsequently it chooses a single action maximizing the average reward during exploration. Thus,
+
+$$\mathbb{E}[N_i(n)] = m + (n - mK)\mathbb{P}(I_{mK+1} = i) \tag{1}$$
+
+$$\leq m + (n - mK)\mathbb{P}\left(\hat{\mu}_i(mK) \geq \max_{j \neq i} \hat{\mu}_j(mK)\right)$$
+
+The probability on the right-hand side is bounded by:
+
+$$\begin{aligned}
+\mathbb{P}\left(\hat{\mu}_i(mK) \geq \max_{j \neq i} \hat{\mu}_j(mK)\right) &\leq \mathbb{P}(\hat{\mu}_i(mK) \geq \hat{\mu}_{i^*}(mK)) \\
+&= \mathbb{P}(\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*}) \geq \Delta_i)
+\end{aligned}$$
+
+Then, we can show that $\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*})$ is $\sqrt{2/m}$-subgaussian, which follows from standard subgaussian properties. Hence by Hoeffding's inequality:
+
+$$\mathbb{P}(\hat{\mu}_i(mK) - \mu_i - \hat{\mu}_{i^*}(mK) + \mu_{i^*} \geq \Delta_i) \leq \exp\left(-\frac{m\Delta_i^2}{4}\right)$$
+
+Substituting this into (1) gives:
+
+$$\mathbb{E}[N_i(n)] \leq m + (n - mK)\exp\left(-\frac{m\Delta_i^2}{4}\right)$$
+
+Using the regret decomposition $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$ yields the regret bound stated above.
+
+To choose the right $m$, we simplify to the basic two-arm instance: arm 1 is optimal ($\Delta_1=0$) and arm 2 is suboptimal with gap $\Delta_2=\Delta$. Then $K=2$ and the bound becomes
+
+$$R_n \;\le\; m\,\Delta + (n-2m)\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right) \;\le\; m\,\Delta + n\,\Delta\,\exp\!\left(-\tfrac{m\Delta^2}{4}\right)$$
+
+The optimal choice is $m = \max\left\{1, \left\lceil \frac{4}{\Delta^2} \log\!\left(\frac{n\Delta^2}{4}\right) \right\rceil \right\}$ for gap $\Delta$. For the worst-case over gaps, this gives:
+
+$$R_n \leq \Delta + C\sqrt{n}$$
+
+where $C > 0$ is a universal constant. When $\Delta \leq 1$, we get $R_n \leq 1 + C\sqrt{n}$, or simply $R_n = O(\sqrt{n})$.
+
+The previous choice of $m$ is close to the optimal choice, but it depends on both the unknown gap $\Delta$ and time horizon $n$. A standard alternative is to pick $m$ as a function of horizon $n$ only. For two 1-subgaussian arms, this yields a *gap-free* bound:
+
+$$R_n = O(n^{2/3})$$
+
+### Upper Confidence Bound (UCB)
+
+UCB elegantly addresses ETC's limitations by adaptively balancing exploration and exploitation. Instead of rigid phases, UCB constructs confidence intervals around arm means and selects the arm with highest upper confidence bound, a principle which we call *optimism under uncertainty*.
+
+At time $t$, having selected arm $i$ a total of $N_i(t-1)$ times and observed empirical mean $\hat{\mu}_i(t-1)$, UCB selects:
+
+$$I_t = \arg\max_{i \in [K]} \left( \hat{\mu}_i(t-1) + \sqrt{\frac{2\log (1/\delta)}{N_i(t-1)}} \right)$$
+
+The term $\hat{\mu}_i(t-1)$ is the *exploitation* component, favoring arms that have produced large average rewards so far. The square-root term is the *exploration bonus* (confidence width): it is larger for arms with few samples ($N_i(t-1)$ small) and decreases as $1/\sqrt{N_i(t-1)}$, encouraging additional pulls until the estimate is accurate.
+
+The expression inside the argmax is called the *index* of arm $i$. Index algorithms form a broad class of bandit strategies where each arm is assigned a numerical score (the index) based on its historical performance and uncertainty. The algorithm then simply selects the arm with the highest index at each round. Intuitively, this leads to sublinear regret because when the optimal arm's index overestimates its true mean, any suboptimal arm must achieve an index value exceeding the optimal arm's index to be selected. However, this can't happen too often as the learner continues to explore the environment and update its estimates.
+
+The UCB algorithm is defined as follows:
+
+> **UCB Algorithm**
+>
+> **Input:** Confidence parameter $\delta \in (0,1)$
+>
+> **Initialization:** Pull each arm once
+>
+> **For rounds $t = K+1, K+2, \ldots, n$:**
+>
+> 1. Compute UCB for each arm: $\mathrm{UCB}_i(t, \delta) = \hat{\mu}_i(t-1) + \sqrt{\frac{2\log (1/\delta)}{N_i(t-1)}}$
+> 2. Select arm: $I_t = \arg\max_i \mathrm{UCB}_i(t, \delta)$
+> 3. Observe reward and update estimates
+
+Without loss of generality, let arm 1 be optimal with mean $\mu_1=\mu^*$, analysis for the regret after $n$ rounds can start by writing regret decomposition:
+
+$$R_n \,=\, \sum_{i=1}^K \Delta_i\,\mathbb{E}[N_i(n)],\qquad \Delta_i = \mu_1 - \mu_i.$$
+
+Then, we can bound $\mathbb{E}[N_i(n)]$ for every suboptimal arm $i\neq 1$. We observe after the initial period where UCB pulls each arm once, suboptimal arm $i$ can only be selected at time $t$ only if its index exceeds that of the optimal arm.
+
+For this to happen, at least one of the following two events occur:
+
+(a) The index of action $i$ is larger than the true mean of a specific optimal arm.
+
+(b) The index of a specific optimal arm is smaller than its true mean.
+
+To formalize this, we introduce the **good event $G_i$** for each suboptimal arm $i \neq 1$, which captures the scenario where all confidence intervals behave as intended.
+
+$$G_i = \left\{ \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) > \mu_1 \right\} \cap \left\{ \hat{\mu}_{i, u_i} + \sqrt{\frac{2}{u_i} \log(1/\delta)} < \mu_1 \right\}$$
+
+Here, $u_i$ is a threshold number of pulls for arm $i$ (to be chosen later), and $\delta$ is a small probability parameter. The first condition ensures that the optimal arm's index never dips below its true mean during the entire horizon, while the second guarantees that after $u_i$ samples, the index for arm $i$ falls below $\mu_1$ forever after. The crux of the regret bound is to show two things:
+
+- If $G_i$ holds, arm $i$ is played at most $u_i$ times, in other words, $T_i(n) \leq u_i$.
+- The probability $\mathbb{P}(G_i^c)$ is small.
+
+Combining these two results, decompose the expected number of pulls by conditioning on whether $G_i$ occurs:
+
+$$\mathbb{E}[T_i(n)] = \mathbb{E}[\mathbb{1}\{G_i\} T_i(n)] + \mathbb{E}[\mathbb{1}\{G_i^c\} T_i(n)] \leq u_i + \mathbb{P}(G_i^c) \cdot n,$$
+
+where we used $T_i(n) \leq u_i$ on event $G_i$, and $T_i(n) \leq n$ always holds (since we cannot pull more than $n$ times total).
+
+With $\delta = 1/n^2$ and choosing $c = 1/2$, we obtain from the bound above
+
+$$\mathbb{E}[T_i(n)] \leq u_i + 1 + n^{1-2c^2/(1-c)^2} = \left\lceil \frac{8\log(n^2)}{(1-1/2)^2\Delta_i^2} \right\rceil + 1 + n^{-1} \leq 3 + \frac{16\log(n)}{\Delta_i^2}.$$
+
+Using the regret decomposition $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[T_i(n)]$, we get the instance-dependent bound:
+
+$$R_n \leq \sum_{i:\Delta_i>0} \Delta_i \left( 3 + \frac{16\log(n)}{\Delta_i^2} \right) = 3\sum_{i:\Delta_i>0}\Delta_i + \sum_{i:\Delta_i>0} \frac{16\log(n)}{\Delta_i}.$$
+
+For the gap-free bound, we partition arms into those with small gaps ($\Delta_i < \Delta$) and large gaps ($\Delta_i \geq \Delta$) for a threshold $\Delta$ to be chosen, and obtain:
+
+$$R_n \leq 8\sqrt{kn\log(n)} + O(1)$$
+
+### References
+
+1. Lattimore, T., & Szepesvari, C. (2020). *Bandit Algorithms*. Cambridge University Press.

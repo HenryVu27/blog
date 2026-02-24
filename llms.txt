@@ -2,6 +2,8 @@
 
 > Deep-dive technical content about AI engineering, ML systems, and decision-making algorithms. Written by a practitioner who builds real systems.
 
+> For full article content in Markdown, see: https://www.henryvu.blog/llms-full.txt
+
 ## About This Site
 
 This blog publishes long-form, citation-dense technical articles about AI/ML engineering. The focus is on demystifying complex systems through patient, layered explanation with evidence backing every claim.

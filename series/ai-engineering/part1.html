@@ -26,10 +26,6 @@
         <h1 class="title">Context Engineering Fundamentals</h1>
         <div class="meta">
           2026-02-23 · 20 min read
-          <span class="mode-toggle">
-            <button data-mode="builder" class="active">Builder</button>
-            <button data-mode="deep-dive">Deep Dive</button>
-          </span>
         </div>
         <hr>
       </header>
@@ -50,6 +46,10 @@
 
     <div class="layout">
       <aside class="toc">
+        <div class="mode-toggle">
+          <button data-mode="builder" class="active">Builder</button>
+          <button data-mode="deep-dive">Deep Dive</button>
+        </div>
         <h2>Contents</h2>
         <ul>
           <li><a href="#from-prompts-to-context"><span class="toc-section-number">1</span><span class="toc-section-title">From Prompts to Context</span></a></li>
@@ -74,7 +74,7 @@
 
           <p>Andrej Karpathy called it "the delicate art and science of filling the context window with just the right information for the next step." The key word there is <em>filling</em>. The whole job is building infrastructure that assembles the right information, in the right format, at the right time.</p>
 
-          <p>Why does the distinction matter? Because the failure mode changed. In 2023, most LLM failures were model failures: it couldn't reason well enough, or it hallucinated, or it refused. By 2025, Schmid argues that most agent failures are context failures. The model has the capability. It just doesn't have the right information when it needs it. And he claims proper context engineering can push agent success rates from ~30% to over 90%.</p>
+          <p>The distinction matters because the failure mode changed. In 2023, most LLM failures were model failures: it couldn't reason well enough, or it hallucinated, or it refused. By 2025, most agent failures are context failures, where the model is perfectly capable of doing what you need but doesn't have the right information when it needs it.</p>
 
           <p>I think the clearest way to see the difference is this:</p>
 

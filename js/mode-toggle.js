@@ -2,18 +2,6 @@
 (function() {
   var STORAGE_KEY = 'blog-reading-mode';
 
-  function rerenderKatex() {
-    if (typeof renderMathInElement === 'function') {
-      renderMathInElement(document.body, {
-        delimiters: [
-          {left: "$$", right: "$$", display: true},
-          {left: "$", right: "$", display: false}
-        ],
-        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
-      });
-    }
-  }
-
   function setMode(mode) {
     if (mode === 'deep-dive') {
       document.body.classList.add('deep-dive-mode');
@@ -27,9 +15,6 @@
       btn.classList.toggle('active', btn.dataset.mode === mode);
     });
 
-    // Re-render KaTeX for newly visible content
-    rerenderKatex();
-
     try { localStorage.setItem(STORAGE_KEY, mode); } catch(e) {}
   }
 
@@ -41,7 +26,10 @@
 
     document.querySelectorAll('.mode-toggle button').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        setMode(btn.dataset.mode);
+        if (btn.dataset.mode !== saved) {
+          try { localStorage.setItem(STORAGE_KEY, btn.dataset.mode); } catch(e) {}
+          location.reload();
+        }
       });
     });
   });

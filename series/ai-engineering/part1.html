@@ -26,6 +26,10 @@
         <h1 class="title">Context Engineering Fundamentals</h1>
         <div class="meta">
           2026-02-23 · 20 min read
+          <span class="mode-toggle">
+            <button data-mode="builder" class="active">Builder</button>
+            <button data-mode="deep-dive">Deep Dive</button>
+          </span>
         </div>
         <hr>
       </header>
@@ -56,10 +60,6 @@
           <li><a href="#what-i-learned"><span class="toc-section-number">6</span><span class="toc-section-title">What I Learned</span></a></li>
           <li><a href="#references"><span class="toc-section-number">7</span><span class="toc-section-title">References</span></a></li>
         </ul>
-        <div class="mode-toggle">
-          <button data-mode="builder" class="active">Builder</button>
-          <button data-mode="deep-dive">Deep Dive</button>
-        </div>
       </aside>
 
       <article class="post">
@@ -228,7 +228,7 @@
 
           <p>Structure your context with XML tags, Markdown headers, or clear delimiters since LLMs respond measurably better to structured input than unstructured dumps. And version control your prompts; <a href="#ref-spotify">Spotify</a> found that static, versioned prompts are more reliable than dynamic ones.</p>
 
-          <p>On the cost side, preserve cache stability. <a href="#ref-manus">Manus</a> reports that cached tokens on Claude Sonnet cost $0.30/MTok vs $3/MTok uncached, so keeping prompt prefixes stable and append-only matters because any mutation invalidates the cache.</p>
+          <p>On the cost side, preserve cache stability. <a href="#ref-manus">Manus</a> reports that cached tokens on Claude Sonnet cost &#36;0.30/MTok vs &#36;3/MTok uncached, so keeping prompt prefixes stable and append-only matters because any mutation invalidates the cache.</p>
 
           <p>Minimize your tool count by removing tools used less than 10% of the time since fewer tools mean fewer dimensions of unpredictability. <a href="#ref-spotify">Spotify</a> found, counterintuitively, that deliberately restricting tool access improved reliability.</p>
 

@@ -76,11 +76,11 @@
 
           <p><a href="#ref-karpathy">Andrej Karpathy</a> called it "the delicate art and science of filling the context window with just the right information for the next step." I like that framing because it puts the emphasis on information selection, not wordsmithing.</p>
 
-          <p>What makes the rename more than cosmetic is that the dominant failure mode shifted. In 2023, most LLM failures were model failures. The model couldn't reason well enough, or it hallucinated, or it refused. By 2025, most agent failures I encounter are context failures, where the model is perfectly capable of doing what I need but doesn't have the right information when it needs it. <a href="#ref-schmid">Philipp Schmid</a> puts it more strongly: "Most agent failures are not model failures anymore, they are context failures." I've debugged more broken agents by fixing what goes *into* the prompt than by fixing the prompt itself.</p>
+          <p>You could dismiss the rename as a branding exercise, same job with a fancier title. But the dominant failure mode actually shifted. Context windows went from 4K to 200K tokens. Base models got dramatically smarter. Hallucination rates dropped. By 2025, the models are capable enough that the bottleneck moved upstream: most agent failures I encounter are context failures, where the model can do what I need but doesn't have the right information when it needs it. <a href="#ref-schmid">Philipp Schmid</a> puts it more strongly: "Most agent failures are not model failures anymore, they are context failures." I've debugged more broken agents by fixing what goes *into* the prompt than by fixing the prompt itself.</p>
 
           <p>The system prompt is one of seven things that fill the context window, and for a simple classification task, careful prompt engineering is all you need. But the moment you add retrieval, tools, multi-step reasoning, or agent workflows, you're doing context engineering whether you call it that or not. Context engineering is the bigger tent that prompt engineering lives inside.</p>
 
-          <p>This post walks through those seven components, the strategies for managing them, how they fail, and what a real token budget looks like in an ADHD coaching agent I built with LangGraph (with code). I'll go deeper on RAG in Part 2, memory in Part 3, agents in Part 4, and multi-agent coordination in Part 5.</p>
+          <p>This post walks through those seven components, the strategies for managing them, how they fail, and what a real token budget looks like in a diabetes management coaching agent I built with LangGraph (with code). I'll go deeper on RAG in Part 2, memory in Part 3, agents in Part 4, and multi-agent coordination in Part 5.</p>
 
           <div class="theory-only">
             <div class="callout">
@@ -100,7 +100,7 @@
         <section id="seven-components">
           <h2>The Seven Components</h2>
 
-          <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-schmid">Philipp Schmid</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, Google), and I've found seven components to be the right granularity. I'll walk through each one with code from my ADHD coaching agent, but what I want to emphasize is how unevenly they matter in practice.</p>
+          <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-schmid">Philipp Schmid</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, Google), and I've found seven components to be the right granularity. I'll walk through each one with code from my diabetes coaching agent, but what I want to emphasize is how unevenly they matter in practice.</p>
 
           <div style="border:1px solid var(--border); border-radius:8px; padding:20px 24px; margin:24px 0; background:#fafafa;">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
@@ -154,9 +154,9 @@
    the entire response will be discarded."
 &lt;/boundaries&gt;
 
-&lt;family-context&gt;
+&lt;patient-context&gt;
   Structured profile, session summary, goals
-&lt;/family-context&gt;
+&lt;/patient-context&gt;
 
 &lt;approach&gt;
   Progressive profiling, evidence-based guidance
@@ -171,7 +171,7 @@
 &lt;/response-guide&gt;
 
 &lt;examples&gt;
-  6 few-shot coaching conversations
+  6 few-shot patient coaching conversations
 &lt;/examples&gt;</code></pre>
 
           <p>I started using XML tags mostly for my own sanity (it's easier to review a prompt when you can collapse sections), but it turns out LLMs respond measurably better to structured input than unstructured dumps. Both <a href="#ref-anthropic">Anthropic</a> and Google recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which matters more than you'd think once your prompt is 2,000+ tokens and three people are editing it.</p>
@@ -200,20 +200,20 @@
 
           <p>I spend the most engineering time on <strong>retrieved information</strong>, the RAG layer. External knowledge from documents, databases, and APIs gets injected on-demand, and the design decision I keep coming back to is to let the model pull what it needs via tool calls rather than front-loading everything. I tried the front-loading approach first (stuffing all potentially relevant docs into context at the start of each turn) and it worked terribly. <a href="#ref-inngest">Inngest</a> measured the same thing; pull consistently beats push. Part 2 goes deep on retrieval.</p>
 
-          <p>In my agent, the retrieval tool automatically enriches queries with what it already knows about the family:</p>
+          <p>In my agent, the retrieval tool automatically enriches queries with what it already knows about the patient:</p>
 
 <pre><code>@tool
-async def search_knowledge_base(query, document_type=None, tags=None, age_range=None):
+async def search_knowledge_base(query, document_type=None, tags=None, condition_type=None):
     state = await session_store.get(session_id)
 
-    # Auto-apply age filter from family profile
-    if not age_range and state.family_profile.child_age:
-        age_range = _age_to_range(state.family_profile.child_age)
+    # Auto-apply condition filter from patient profile
+    if not condition_type and state.patient_profile.diagnosis:
+        condition_type = state.patient_profile.diagnosis
 
-    filters = RetrievalFilters(document_type=document_type, tags=tags, age_range=age_range)
+    filters = RetrievalFilters(document_type=document_type, tags=tags, condition_type=condition_type)
     response = await retriever.retrieve(query=query, filters=filters, state=state)</code></pre>
 
-          <p>The agent decides when to search (pull, not push), and the tool enriches the query behind the scenes. The age filter means a parent of a 6-year-old never sees adolescent strategies, without the parent or the model needing to specify that constraint explicitly.</p>
+          <p>The agent decides when to search (pull, not push), and the tool enriches the query behind the scenes. The condition filter means a Type 2 patient never sees Type 1 insulin pump troubleshooting guides, without the patient or the model needing to specify that constraint explicitly.</p>
 
           <p><strong>Tool definitions</strong> are the sneaky budget item. Function signatures the system can invoke consume context tokens whether they're used or not, and there's a genuine tension in how to manage them. <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking, where tools stay in context but get suppressed at the decoding level through a state machine. I don't think there's a clean answer here yet. I'm currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you're at Manus's scale with dozens of tools, the cache math probably dominates. Worth noting separately: Anthropic and OpenAI both offer explicit cache control headers that let you pin specific prefix segments in the KV-cache, complementing the implicit prefix caching that Manus optimizes for. If you're making repeated calls with stable tool definitions, these APIs can cut your per-call cost significantly even without restructuring your prompt.</p>
 
@@ -268,9 +268,9 @@ async def search_knowledge_base(query, document_type=None, tags=None, age_range=
     conversation_text = "\n".join(f"{m['role'].upper()}: {m['content']}" for m in messages)
 
     prompt = f"""Summarize this coaching conversation concisely. Focus on:
-    - Key family information shared
+    - Key patient health data shared (readings, symptoms, adherence)
     - Strategies discussed or recommended
-    - Parent's emotional state and concerns
+    - Patient's concerns and motivation level
     Omit: greetings, small talk, generic acknowledgments.
 
     Previous summary: {existing.summary if existing else ""}
@@ -286,21 +286,21 @@ async def search_knowledge_base(query, document_type=None, tags=None, age_range=
 
           <p>Selection quality depends heavily on query quality. My agent rewrites the user's message into a self-contained retrieval query before searching:</p>
 
-<pre><code># "What do I do when he won't stop?"
-# -&gt; "strategies for 8 year old ADHD homework meltdowns refusing to stop"
+<pre><code># "My numbers have been all over the place lately"
+# -&gt; "blood sugar management strategies Type 2 patient on metformin irregular post-meal readings"
 
-async def rewrite(self, query, conversation_history, family_profile):
+async def rewrite(self, query, conversation_history, patient_profile):
     recent_turns = conversation_history[-3:]
     prompt = f"""Rewrite the search query to be self-contained.
     Resolve pronouns, add implicit context from conversation.
-    Known: child_name={profile.child_name}, age={profile.child_age}
+    Known: diagnosis={profile.diagnosis}, medications={profile.current_medications}
 
     Rules:
     - Keep it concise (under 30 words)
-    - Resolve pronouns ("he" -&gt; the child's name)
+    - Resolve pronouns ("it" -&gt; the patient's condition)
     - Strip emotional language, focus on the information need"""</code></pre>
 
-          <p>The comment at the top shows why this matters. "What do I do when he won't stop?" has zero retrieval value as-is: no subject, no age, no context. The rewriter resolves "he" to the child, infers "homework meltdowns" from the last 3 turns, and produces a query that actually hits relevant documents.</p>
+          <p>The comment at the top shows why this matters. "My numbers have been all over the place lately" has almost zero retrieval value as-is: no condition type, no medication context, no timeframe. The rewriter infers "post-meal readings" from the last 3 turns, adds the patient's diagnosis and medication context, and produces a query that actually hits relevant documents.</p>
 
           <p><strong>Compression</strong> reduces tokens while maintaining task performance. Summarization replaces older conversation history with a condensed version (Claude Code applies auto-compact when approaching context limits, though the exact threshold has shifted across releases). Trimming removes older messages using heuristics (drop oldest N) or trained pruners like the Provence model, which identifies which messages contribute least to task performance. One finding I keep coming back to from the recurrent context compression research, because I violated it in my first attempt: compressing instructions and context simultaneously degrades responses. You need to compress the data but preserve the instructions separately. I was summarizing entire turns including the system-injected guidance, and the model started ignoring its own rules.</p>
 
@@ -315,11 +315,11 @@ remaining = CONTEXT_MAX_CHARS - len(system_prompt)
 while estimate_chars(conversation) &gt; remaining and len(conversation) &gt; 2:
     conversation = conversation[1:]  # Drop oldest</code></pre>
 
-          <p>The two-pass approach handles two different problems. The message cap prevents the model from getting distracted by old turns, and the character budget prevents the total context from overflowing, accounting for the fact that system prompts vary in size depending on how much family context has been accumulated.</p>
+          <p>The two-pass approach handles two different problems. The message cap prevents the model from getting distracted by old turns, and the character budget prevents the total context from overflowing, accounting for the fact that system prompts vary in size depending on how much patient context has been accumulated.</p>
 
           <p><strong>Isolation</strong> means splitting information across separate processing units so each one gets a clean, focused context window. Multi-agent systems give each sub-agent its own window focused on a specific subtask, returning a condensed summary (1,000-2,000 tokens) to the lead agent. HuggingFace's CodeAgent isolates token-heavy objects in sandbox environments, keeping only references in the main context. You can also separate LLM-exposed fields from auxiliary context storage in your state schema, because not everything the system knows needs to be in the window.</p>
 
-          <p>My agent isolates safety classification into separate LLM calls so the guardrail context never contaminates the main coaching conversation:</p>
+          <p>My agent isolates safety classification into separate LLM calls so the guardrail context never contaminates the main patient conversation:</p>
 
 <pre><code># Each node runs in its own isolated LLM call with its own context
 graph = StateGraph(CoachingState)
@@ -339,7 +339,7 @@ graph.add_edge("pro_react_agent", "output_gate")
 graph.add_edge("flash_react_agent", "output_gate")
 graph.add_edge("output_gate", END)</code></pre>
 
-          <p>The input gate sees only the latest user message and a short classification prompt. The output gate sees only the agent's response and a scope-checking prompt. Neither gate's context (safety rules, classification examples) appears in the main agent's window, keeping the coaching conversation clean and focused.</p>
+          <p>The input gate sees only the latest user message and a short classification prompt. The output gate sees only the agent's response and a scope-checking prompt. Neither gate's context (safety rules, classification examples) appears in the main agent's window, keeping the patient conversation clean and focused.</p>
 
           <p>If you're building an agent and something feels off about the outputs, run through these four categories and ask which one you're neglecting. In my experience the answer is almost always compression or isolation; people over-invest in writing and selecting because those feel like "building features," while trimming old history and splitting contexts feel like cleanup work.</p>
         </section>
@@ -373,7 +373,7 @@ graph.add_edge("output_gate", END)</code></pre>
 
           <p><strong>Context confusion</strong> is what happens when superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. <a href="#ref-anthropic">Anthropic's</a> guiding principle is the right one here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome." Every token should earn its place, and most don't.</p>
 
-          <p><strong>Context clash</strong> is the one I find most often in my own code, probably because it's the easiest to create accidentally. It happens when new information conflicts with existing information already in the prompt, and contradictory instructions produce unpredictable behavior. My own agent has one I caught during an audit for this post. The system prompt says "When READING information you already have in the family context above, use it directly, do not re-fetch with <code>get_family_profile</code>." But <code>get_family_profile</code> is still available as a callable tool. The instruction and the tool list contradict each other. The agent sometimes calls the tool anyway, wasting a round-trip to fetch data that's already in the prompt. The fix is straightforward (remove the tool), but the clash was easy to miss because the instruction is in the <code>&lt;tools&gt;</code> section of the prompt and the tool definition is in Python code, and I never reviewed them side by side until I went looking for exactly this kind of problem.</p>
+          <p><strong>Context clash</strong> is the one I find most often in my own code, probably because it's the easiest to create accidentally. It happens when new information conflicts with existing information already in the prompt, and contradictory instructions produce unpredictable behavior. My own agent has one I caught during an audit for this post. The system prompt says "When READING information you already have in the patient context above, use it directly, do not re-fetch with <code>get_patient_profile</code>." But <code>get_patient_profile</code> is still available as a callable tool. The instruction and the tool list contradict each other. The agent sometimes calls the tool anyway, wasting a round-trip to fetch data that's already in the prompt. The fix is straightforward (remove the tool), but the clash was easy to miss because the instruction is in the <code>&lt;tools&gt;</code> section of the prompt and the tool definition is in Python code, and I never reviewed them side by side until I went looking for exactly this kind of problem.</p>
 
           <div class="theory-only">
             <div class="callout">
@@ -390,12 +390,12 @@ graph.add_edge("output_gate", END)</code></pre>
         <section id="token-budget">
           <h2>A Real Token Budget</h2>
 
-          <p>All of the above is easier to understand with a concrete example, so let me walk through the ADHD coaching assistant I built as a ReAct agent with LangGraph. The system prompt ranges from ~2,000 to ~4,050 tokens depending on session maturity, assembled dynamically from several blocks.</p>
+          <p>All of the above is easier to understand with a concrete example, so let me walk through the diabetes management coaching assistant I built as a ReAct agent with LangGraph. The system prompt ranges from ~2,000 to ~4,050 tokens depending on session maturity, assembled dynamically from several blocks.</p>
 
           <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#fafafa; overflow-x:auto;">
             <div style="display:flex; align-items:center; gap:0; min-width:700px; justify-content:center; flex-wrap:nowrap;">
               <div style="background:white; border:2px solid var(--border); border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
-                <div style="font-weight:600; font-size:13px;">Parent</div>
+                <div style="font-weight:600; font-size:13px;">Patient</div>
                 <div style="font-size:10px; color:var(--muted);">message</div>
               </div>
               <div style="color:#bbb; font-size:18px; padding:0 6px;">&rarr;</div>
@@ -444,7 +444,7 @@ graph.add_edge("output_gate", END)</code></pre>
               <tr><td>Conversation state (turn count, phase, datetime)</td><td>50-100</td><td>Dynamic (every turn)</td></tr>
               <tr><td>Identity block (personality, voice)</td><td>~350</td><td>Static</td></tr>
               <tr><td>Boundaries (5 hard scope rules)</td><td>~280</td><td>Static</td></tr>
-              <tr><td>Family context (profile, summary, goals)</td><td>80-700</td><td>Dynamic (per session)</td></tr>
+              <tr><td>Patient context (profile, summary, goals)</td><td>80-700</td><td>Dynamic (per session)</td></tr>
               <tr><td>Approach + tools + response guides</td><td>~470</td><td>Static</td></tr>
               <tr><td>Few-shot examples (6)</td><td>~550</td><td>Static</td></tr>
               <tr><td>RAG results (last 3, conditional)</td><td>0-1,500</td><td>Conditional</td></tr>
@@ -474,7 +474,7 @@ graph.add_edge("output_gate", END)</code></pre>
         tool_results = await session_store.get_recent_tool_results(session_id, limit=3)
 
         system_prompt = build_system_prompt(
-            profile=session_state.family_profile,
+            profile=session_state.patient_profile,
             active_strategies=session_state.active_strategies,
             goals=session_state.goals, outcomes=session_state.outcomes,
             session_summary=summary_text,
@@ -499,10 +499,10 @@ graph.add_edge("output_gate", END)</code></pre>
             <table>
               <thead><tr><th>Category</th><th>Technique</th><th>Implementation</th></tr></thead>
               <tbody>
-                <tr><td>Structure</td><td>XML-tagged sections</td><td><code>&lt;identity&gt;</code>, <code>&lt;boundaries&gt;</code>, <code>&lt;family-context&gt;</code>, etc.</td></tr>
+                <tr><td>Structure</td><td>XML-tagged sections</td><td><code>&lt;identity&gt;</code>, <code>&lt;boundaries&gt;</code>, <code>&lt;patient-context&gt;</code>, etc.</td></tr>
                 <tr><td>Compression</td><td>Rolling summary</td><td>Every 5 turns via Gemini Flash</td></tr>
                 <tr><td>Compression</td><td>History trimming</td><td>6-turn window + 120K char budget</td></tr>
-                <tr><td>Memory</td><td>Semantic (family profile)</td><td>Structured schema, tool-driven updates</td></tr>
+                <tr><td>Memory</td><td>Semantic (patient profile)</td><td>Structured schema, tool-driven updates</td></tr>
                 <tr><td>Memory</td><td>Episodic (outcomes)</td><td>Created on <code>track_outcome</code>, stored with emotion</td></tr>
                 <tr><td>RAG</td><td>Hybrid search</td><td>Dense + sparse + RRF + cross-encoder reranking</td></tr>
                 <tr><td>RAG</td><td>Query rewriting</td><td>Pronoun resolution + profile context injection</td></tr>
@@ -573,13 +573,13 @@ graph.add_edge("output_gate", END)</code></pre>
             </div>
           </div>
 
-          <p>I also have <strong>no memory validation</strong>. When the agent calls <code>update_family_profile</code>, the LLM extracts facts from the conversation ("child is 8 years old," "diagnosed last year") and writes them directly to the profile. No conflict detection (what if the profile already says the child is 7?), no enum validation (what if the LLM writes "ADHD-ish" instead of one of the valid subtypes?), no versioning (if the extraction hallucinates, the bad data overwrites the good data with no rollback). This is exactly the context poisoning failure mode from Section 4, and I built it knowing better.</p>
+          <p>I also have <strong>no memory validation</strong>. When the agent calls <code>update_patient_profile</code>, the LLM extracts facts from the conversation ("A1C is 7.2," "started metformin three months ago") and writes them directly to the profile. No conflict detection (what if the profile already says A1C is 6.8 from a more recent lab?), no enum validation (what if the LLM writes "pre-diabetic-ish" instead of one of the valid condition categories?), no versioning (if the extraction hallucinates, the bad data overwrites the good data with no rollback). This is exactly the context poisoning failure mode from Section 4, and I built it knowing better.</p>
 
-          <p>Then there's the <strong>redundant <code>get_family_profile</code> tool</strong>. The family profile is already injected into the <code>&lt;family-context&gt;</code> section of the system prompt on every turn. The tool exists to let the agent "check what it knows," but the agent already knows; it's in the prompt. I mentioned this in Section 4 as a context clash, and it is, but it's also context confusion in a way I didn't appreciate until I watched the agent's behavior. The tool's existence signals to the model that the profile might not be in context, which makes it less likely to trust the data it already has. The tool is actively making the agent dumber.</p>
+          <p>Then there's the <strong>redundant <code>get_patient_profile</code> tool</strong>. The patient profile is already injected into the <code>&lt;patient-context&gt;</code> section of the system prompt on every turn. The tool exists to let the agent "check what it knows," but the agent already knows; it's in the prompt. I mentioned this in Section 4 as a context clash, and it is, but it's also context confusion in a way I didn't appreciate until I watched the agent's behavior. The tool's existence signals to the model that the profile might not be in context, which makes it less likely to trust the data it already has. The tool is actively making the agent dumber.</p>
 
-          <p>My <strong>FIFO trimming is content-blind</strong>, which means the trimming code drops the oldest message first, regardless of what's in it. A message like "we tried the timer strategy and it made things worse" (high signal, contains an outcome) gets dropped before a filler "thanks!" or "ok sounds good" message, purely because the filler is newer. A smarter approach would score messages by information density and preserve high-signal messages even if they're older. The Provence model from the research does exactly this: it trains a pruner to identify which messages contribute least to task performance. I haven't implemented anything like that yet, but it's high on my list.</p>
+          <p>My <strong>FIFO trimming is content-blind</strong>, which means the trimming code drops the oldest message first, regardless of what's in it. A message like "we tried the post-meal walking routine and blood sugar actually spiked" (high signal, contains an outcome) gets dropped before a filler "thanks!" or "ok sounds good" message, purely because the filler is newer. A smarter approach would score messages by information density and preserve high-signal messages even if they're older. The Provence model from the research does exactly this: it trains a pruner to identify which messages contribute least to task performance. I haven't implemented anything like that yet, but it's high on my list.</p>
 
-          <p>And finally, <strong>no importance scoring for episodic memory</strong>. Episodes (tracked outcomes, strategy results) are retrieved by recency alone. A breakthrough moment from 3 weeks ago where a family discovered their child responds to visual timers gets ranked below a routine check-in from yesterday. The Stanford generative agents paper showed that combining recency, importance, and relevance produces much better retrieval than any single factor. My agent uses one of the three. That's going to be a significant Part 3 topic.</p>
+          <p>And finally, <strong>no importance scoring for episodic memory</strong>. Episodes (tracked outcomes, strategy results) are retrieved by recency alone. A breakthrough moment from 3 weeks ago where a patient discovered that 15-minute post-meal walks consistently dropped their blood sugar by 40 mg/dL gets ranked below a routine check-in from yesterday. The Stanford generative agents paper showed that combining recency, importance, and relevance produces much better retrieval than any single factor. My agent uses one of the three. That's going to be a significant Part 3 topic.</p>
 
           <div class="theory-only">
             <div class="callout">

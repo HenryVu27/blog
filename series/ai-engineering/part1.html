@@ -102,47 +102,40 @@
 
           <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-schmid">Philipp Schmid</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, Google), and I've found seven components to be the right granularity. I'll walk through each one with code from my ADHD coaching agent, but what I want to emphasize is how unevenly they matter in practice.</p>
 
-          <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#fafafa;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-              <span style="font-size:13px; font-weight:500; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted);">Context Window</span>
+          <div style="border:1px solid var(--border); border-radius:8px; padding:20px 24px; margin:24px 0; background:#fafafa;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+              <span style="font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted);">Context Window</span>
               <span style="flex:1; border-top:1px solid var(--border);"></span>
-              <span style="font-size:13px; color:var(--muted);">8K-200K tokens</span>
+              <span style="font-size:12px; color:var(--muted);">8K-200K tokens</span>
             </div>
-            <div style="display:flex; flex-direction:column; gap:2px; font-size:14px;">
-              <div style="display:flex; align-items:center; background:#e8e5de; border-radius:6px; padding:10px 14px; min-height:36px;">
-                <span style="flex:1; font-weight:500;">System prompt</span>
-                <span style="color:var(--muted); font-size:13px;">500-2,000 tok</span>
-                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">static</span>
+            <div style="display:flex; flex-direction:column; gap:3px; font-size:13px;">
+              <div style="display:flex; align-items:center; background:#eeedea; border-radius:4px; padding:8px 12px;">
+                <span style="flex:1;">System prompt</span>
+                <span style="color:var(--muted); font-size:12px;">500-2,000</span>
               </div>
-              <div style="display:flex; align-items:center; background:#f0eeea; border-radius:6px; padding:10px 14px;">
-                <span style="flex:1; font-weight:500;">User prompt</span>
-                <span style="color:var(--muted); font-size:13px;">variable</span>
-                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">per turn</span>
+              <div style="display:flex; align-items:center; background:#eeedea; border-radius:4px; padding:6px 12px;">
+                <span style="flex:1;">User prompt</span>
+                <span style="color:var(--muted); font-size:12px;">variable</span>
               </div>
-              <div style="display:flex; align-items:center; background:#e8e5de; border-radius:6px; padding:10px 14px; min-height:48px;">
-                <span style="flex:1; font-weight:500;">State + conversation history</span>
-                <span style="color:var(--muted); font-size:13px;">500-5,000 tok</span>
-                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">dynamic</span>
+              <div style="display:flex; align-items:center; background:#eeedea; border-radius:4px; padding:14px 12px;">
+                <span style="flex:1;">State + conversation history</span>
+                <span style="color:var(--muted); font-size:12px;">500-5,000</span>
               </div>
-              <div style="display:flex; align-items:center; background:#f0eeea; border-radius:6px; padding:10px 14px;">
-                <span style="flex:1; font-weight:500;">Long-term memory</span>
-                <span style="color:var(--muted); font-size:13px;">variable</span>
-                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">per session</span>
+              <div style="display:flex; align-items:center; background:#eeedea; border-radius:4px; padding:8px 12px;">
+                <span style="flex:1;">Long-term memory</span>
+                <span style="color:var(--muted); font-size:12px;">variable</span>
               </div>
-              <div style="display:flex; align-items:center; background:#e8e5de; border-radius:6px; padding:10px 14px; min-height:56px;">
-                <span style="flex:1; font-weight:500;">Retrieved information (RAG)</span>
-                <span style="color:var(--muted); font-size:13px;">0-10,000 tok</span>
-                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">on-demand</span>
+              <div style="display:flex; align-items:center; background:#eeedea; border-radius:4px; padding:20px 12px;">
+                <span style="flex:1;">Retrieved information (RAG)</span>
+                <span style="color:var(--muted); font-size:12px;">0-10,000</span>
               </div>
-              <div style="display:flex; align-items:center; background:#f0eeea; border-radius:6px; padding:10px 14px;">
-                <span style="flex:1; font-weight:500;">Tool definitions</span>
-                <span style="color:var(--muted); font-size:13px;">500-3,000 tok</span>
-                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">static</span>
+              <div style="display:flex; align-items:center; background:#eeedea; border-radius:4px; padding:10px 12px;">
+                <span style="flex:1;">Tool definitions</span>
+                <span style="color:var(--muted); font-size:12px;">500-3,000</span>
               </div>
-              <div style="display:flex; align-items:center; background:#e8e5de; border-radius:6px; padding:10px 14px;">
-                <span style="flex:1; font-weight:500;">Structured output</span>
-                <span style="color:var(--muted); font-size:13px;">50-500 tok</span>
-                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">static</span>
+              <div style="display:flex; align-items:center; background:#eeedea; border-radius:4px; padding:6px 12px;">
+                <span style="flex:1;">Structured output</span>
+                <span style="color:var(--muted); font-size:12px;">50-500</span>
               </div>
             </div>
           </div>
@@ -262,32 +255,6 @@ async def search_knowledge_base(query, document_type=None, tags=None, age_range=
           <h2>Write / Select / Compress / Isolate</h2>
 
           <p>Every production context system I've seen uses some combination of four strategies, and <a href="#ref-langchain">LangChain's framework</a> gives them clean names. I find the vocabulary useful not because the categories are surprising, but because asking "which of these four am I underinvesting in?" is usually the fastest way to improve a system.</p>
-
-          <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#fafafa;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:600px; margin:0 auto;">
-              <div style="border:2px solid #c5c2b8; border-radius:8px; padding:16px; background:white; position:relative;">
-                <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Write</div>
-                <div style="font-size:12px; color:var(--muted); line-height:1.5;">Rolling summaries<br>Profile updates<br>Scratchpads</div>
-                <div style="position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:#e8e5de; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);">1</div>
-              </div>
-              <div style="border:2px solid #c5c2b8; border-radius:8px; padding:16px; background:white; position:relative;">
-                <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Select</div>
-                <div style="font-size:12px; color:var(--muted); line-height:1.5;">RAG search<br>Query rewriting<br>Memory retrieval</div>
-                <div style="position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:#e8e5de; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);">2</div>
-              </div>
-              <div style="border:2px solid #c5c2b8; border-radius:8px; padding:16px; background:white; position:relative;">
-                <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Compress</div>
-                <div style="font-size:12px; color:var(--muted); line-height:1.5;">Summarization<br>FIFO trimming<br>Char budget</div>
-                <div style="position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:#e8e5de; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);">3</div>
-              </div>
-              <div style="border:2px solid #c5c2b8; border-radius:8px; padding:16px; background:white; position:relative;">
-                <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Isolate</div>
-                <div style="font-size:12px; color:var(--muted); line-height:1.5;">Input/output gates<br>Dual-model routing<br>Sub-agent contexts</div>
-                <div style="position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:#e8e5de; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);">4</div>
-              </div>
-            </div>
-            <div style="text-align:center; margin-top:12px; font-size:12px; color:var(--muted);">Most production systems use all four. The question is the mix.</div>
-          </div>
 
           <p><strong>Writing</strong> means getting information out of the context window and into external storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team has a concrete version of this that I really like: their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent.</p>
 

@@ -109,9 +109,10 @@
 }
 
 .toc h2{
+  font-family: var(--font-serif);
   font-size: 29px;
   margin: 0 0 16px 0;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .post {

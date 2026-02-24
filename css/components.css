@@ -9,8 +9,10 @@
   margin: 24px 0 0 0;
 }
 .series-nav h3 {
+  font-family: var(--font-serif);
   margin: 0 0 12px 0;
   font-size: 22px;
+  font-weight: 400;
 }
 .series-nav ul {
   margin: 0;
@@ -25,9 +27,10 @@
   background: var(--code-bg);
 }
 .algorithm-box h4 {
+  font-family: var(--font-serif);
   margin: 0 0 12px 0;
   font-size: 19px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .theorem-box {

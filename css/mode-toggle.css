@@ -1,4 +1,4 @@
-/* Builder / Deep Dive mode toggle — inline with meta */
+/* TLDR / Deep Dive mode toggle — inline with meta */
 
 .mode-toggle {
   display: flex;
@@ -35,7 +35,7 @@
   color: var(--text);
 }
 
-/* Hide theory-only content in builder mode (default) */
+/* Hide theory-only content in TLDR mode (default) */
 .theory-only {
   display: none;
 }
@@ -63,6 +63,50 @@ li.theory-only {
 body.deep-dive-mode li.theory-only,
 html.deep-dive-mode li.theory-only {
   display: list-item;
+}
+
+/* Hide deep-dive-only content in TLDR mode (default) */
+.deep-dive-only {
+  display: none;
+}
+body.deep-dive-mode .deep-dive-only,
+html.deep-dive-mode .deep-dive-only {
+  display: block;
+}
+tr.deep-dive-only {
+  display: none;
+}
+body.deep-dive-mode tr.deep-dive-only,
+html.deep-dive-mode tr.deep-dive-only {
+  display: table-row;
+}
+li.deep-dive-only {
+  display: none;
+}
+body.deep-dive-mode li.deep-dive-only,
+html.deep-dive-mode li.deep-dive-only {
+  display: list-item;
+}
+
+/* Show tldr-only content in TLDR mode (default), hide in Deep Dive */
+.tldr-only {
+  display: block;
+}
+span.tldr-only {
+  display: inline;
+}
+body.deep-dive-mode .tldr-only,
+html.deep-dive-mode .tldr-only {
+  display: none;
+}
+
+/* Inline variants for deep-dive-only */
+span.deep-dive-only {
+  display: none;
+}
+body.deep-dive-mode span.deep-dive-only,
+html.deep-dive-mode span.deep-dive-only {
+  display: inline;
 }
 
 /* Subtle indicator label for mode-specific blocks */

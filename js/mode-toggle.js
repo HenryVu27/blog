@@ -1,4 +1,4 @@
-// Builder / Deep Dive mode toggle
+// TLDR / Deep Dive mode toggle
 (function() {
   var STORAGE_KEY = 'blog-reading-mode';
 
@@ -20,8 +20,10 @@
 
   // Initialize on DOM ready
   document.addEventListener('DOMContentLoaded', function() {
-    var saved = 'builder';
-    try { saved = localStorage.getItem(STORAGE_KEY) || 'builder'; } catch(e) {}
+    var saved = 'tldr';
+    try { saved = localStorage.getItem(STORAGE_KEY) || 'tldr'; } catch(e) {}
+    // Migrate legacy 'builder' preference
+    if (saved === 'builder') saved = 'tldr';
     setMode(saved);
 
     document.querySelectorAll('.mode-toggle button').forEach(function(btn) {

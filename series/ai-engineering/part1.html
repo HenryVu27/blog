@@ -815,9 +815,8 @@ graph.add_edge("output_gate", END)</code></pre>
 
           <p>The metrics I <em>want</em> but haven't built yet are per-component token budgets (logging how much each prompt section actually consumes versus my design-time estimates) and task completion rate bucketed by context size. The second one would tell me whether more context is actually helping or triggering the distraction failure mode from Section 4. I have a strong intuition that completion degrades above ~30K tokens, but intuition without data is just a guess.</p>
 
-          <p>On the benchmarking side, <a href="#ref-contextbench">ContextBench</a> (February 2025) is worth knowing about. It tests whether coding agents can retrieve the right context from 66 real repositories across 8 languages, and the headline numbers are sobering: even state-of-the-art models achieve block-level F1 below 0.45 and line-level F1 below 0.35. Higher recall was consistently favored over precision, suggesting it's better to include a few irrelevant chunks than to miss a critical one. Sophisticated scaffolding didn't necessarily lead to better retrieval either, which complicates the "just add more RAG infrastructure" instinct.</p>
+          <p>On the benchmarking side, <a href="#ref-contextbench">ContextBench</a> (February 2025) is worth knowing about. It tests whether coding agents can retrieve the right context from 66 real repositories across 8 languages, and the headline numbers are sobering, as even SOTA models achieve block-level F1 below 0.45 and line-level F1 below 0.35. Higher recall was consistently favored over precision, suggesting it's better to include a few irrelevant chunks than to miss a critical one. Sophisticated scaffolding didn't necessarily lead to better retrieval either, which complicates the "just add more RAG infrastructure" instinct.</p>
 
-          <p>What I'm building next is an offline replay system that logs every API call (prompt, completion, token counts, cache stats), then replays recorded conversations against different context strategies and diffs the outputs.</p>
           </div>
         </section>
 

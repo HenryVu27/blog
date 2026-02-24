@@ -72,7 +72,7 @@
 
           <p>Sometime around mid-2025, the AI engineering community started calling what we do "context engineering" instead of "prompt engineering." The label shift wasn't cosmetic. It reflected something I'd been feeling for a while: when I'm building LLM systems, I spend almost no time on how to phrase instructions and almost all my time figuring out what information the model should see at each step.</p>
 
-          <p>Andrej Karpathy called it "the delicate art and science of filling the context window with just the right information for the next step." Philipp Schmid defined it as building "dynamic systems that provide the right information and tools, in the right format, at the right time." Both are saying the same thing. This is systems design work, not copywriting.</p>
+          <p>Andrej Karpathy called it "the delicate art and science of filling the context window with just the right information for the next step." The key word there is <em>filling</em>. The whole job is building infrastructure that assembles the right information, in the right format, at the right time.</p>
 
           <p>Why does the distinction matter? Because the failure mode changed. In 2023, most LLM failures were model failures: it couldn't reason well enough, or it hallucinated, or it refused. By 2025, Schmid argues that most agent failures are context failures. The model has the capability. It just doesn't have the right information when it needs it. And he claims proper context engineering can push agent success rates from ~30% to over 90%.</p>
 

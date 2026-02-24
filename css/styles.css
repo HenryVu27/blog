@@ -1,17 +1,20 @@
 /* Minimal, clean blog styles */
-/* Typeface: Source Serif 4 for headings, system UI for body */
+/* Typeface: Cormorant Garamond for headings, system UI for body */
 
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap');
 
 :root{
-  --bg: #ffffff;
-  --text: #333333;
-  --muted: #666666;
-  --accent: #000000;
-  --link: #000000;
+  --bg: #faf8f4;
+  --text: #2c2420;
+  --muted: #6b5e53;
+  --accent: #2c2420;
+  --link: #2c2420;
   --border: #e5e7eb;
-  --code-bg: #f5f7fb;
-  --font-serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --code-bg: #f3f1ec;
+  --vermillion: #8b2500;
+  --gold: #c9a84c;
+  --manuscript-blue: #1a3a5c;
+  --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -36,7 +39,7 @@ html,body{
 .title{
   font-family: var(--font-serif);
   font-size: 44px;
-  font-weight: 400;
+  font-weight: 300;
   line-height: 1.2;
   margin: 0 0 16px 0;
 }
@@ -71,7 +74,7 @@ a{
 }
 
 a:hover{
-  color: #c47a2a;
+  color: var(--vermillion);
 }
 
 ul,ol{
@@ -117,7 +120,7 @@ pre{
 }
 
 .nav a:hover{
-  color: #c47a2a;
+  color: var(--vermillion);
 }
 
 .back-btn{

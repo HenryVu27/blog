@@ -3,8 +3,8 @@
 
 .proof-popover-trigger{
   display: inline-block;
-  background: #d4d1c4;
-  border: 1px solid #6b6a61;
+  background: var(--gold);
+  border: 1px solid #9a7e3a;
   border-radius: 8px;
   padding: 2px 8px;
   cursor: pointer;
@@ -12,8 +12,8 @@
   transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
 }
 .proof-popover-trigger:hover{
-  background: #c7c3b5;
-  border-color: #56554d;
+  background: #b8953f;
+  border-color: #7d6730;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
 }
 
@@ -25,7 +25,7 @@
   max-width: min(98vw, 900px);
   max-height: 480px;
   overflow: auto;
-  background: #ffffff;
+  background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 8px;

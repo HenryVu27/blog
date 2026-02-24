@@ -5,7 +5,6 @@
   gap: 0;
   margin-left: 16px;
   vertical-align: baseline;
-  border-bottom: 1px solid var(--border);
 }
 
 .mode-toggle button {

@@ -80,7 +80,7 @@
 
           <p>Context engineering is a superset of prompt engineering. The system prompt is one of seven things that fill the context window, and for a simple classification task, careful prompt engineering is all you need. But the moment you add retrieval, tools, multi-step reasoning, or agent workflows, you're doing context engineering whether you call it that or not.</p>
 
-          <p>This post covers what those seven components are, the strategies for managing them, how they fail, and what a real token budget looks like in a production agent I built. In later parts, I'll go deeper on RAG (Part 2), memory (Part 3), agents (Part 4), and multi-agent coordination (Part 5).</p>
+          <p>This post covers what those seven components are, the strategies for managing them, how they fail, and what a real token budget looks like in an ADHD coaching agent I built with LangGraph, with code. In later parts, I'll go deeper on RAG (Part 2), memory (Part 3), agents (Part 4), and multi-agent coordination (Part 5).</p>
 
           <div class="theory-only">
             <div class="callout">
@@ -100,23 +100,148 @@
         <section id="seven-components">
           <h2>The Seven Components</h2>
 
-          <p>Every LLM call consumes a context window: a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Based on <a href="#ref-schmid">Philipp Schmid's framework</a> (corroborated by <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, and Google), context decomposes into seven components. I'll walk through each one, but what I want to emphasize is how unevenly they matter in practice.</p>
+          <p>Every LLM call consumes a context window: a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Based on <a href="#ref-schmid">Philipp Schmid's framework</a> (corroborated by <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, and Google), context decomposes into seven components. I'll walk through each one with code from my ADHD coaching agent, but what I want to emphasize is how unevenly they matter in practice.</p>
 
-          <p>Of the seven, the <strong>system prompt</strong> is where most people start, and rightfully so: it sets behavioral guidelines, role definitions, and rules for your agent. What I didn't expect when I started building agents is how much the system prompt wants to grow. Every failure mode you encounter tempts you to add another instruction, and before long you're at 4,000 tokens of rules that sometimes contradict each other. Anthropic recommends finding the "right altitude" between specificity and flexibility: start minimal, then iteratively add instructions based on observed failures. A counterintuitive finding from <a href="#ref-spotify">Spotify's engineering team</a> reinforces this: larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. Treat your system prompt as code: versioned, reviewed, tested.</p>
+          <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#fafafa;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+              <span style="font-size:13px; font-weight:500; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted);">Context Window</span>
+              <span style="flex:1; border-top:1px solid var(--border);"></span>
+              <span style="font-size:13px; color:var(--muted);">8K-200K tokens</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:2px; font-size:14px;">
+              <div style="display:flex; align-items:center; background:#e8e5de; border-radius:6px; padding:10px 14px; min-height:36px;">
+                <span style="flex:1; font-weight:500;">System prompt</span>
+                <span style="color:var(--muted); font-size:13px;">500-2,000 tok</span>
+                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">static</span>
+              </div>
+              <div style="display:flex; align-items:center; background:#f0eeea; border-radius:6px; padding:10px 14px;">
+                <span style="flex:1; font-weight:500;">User prompt</span>
+                <span style="color:var(--muted); font-size:13px;">variable</span>
+                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">per turn</span>
+              </div>
+              <div style="display:flex; align-items:center; background:#e8e5de; border-radius:6px; padding:10px 14px; min-height:48px;">
+                <span style="flex:1; font-weight:500;">State + conversation history</span>
+                <span style="color:var(--muted); font-size:13px;">500-5,000 tok</span>
+                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">dynamic</span>
+              </div>
+              <div style="display:flex; align-items:center; background:#f0eeea; border-radius:6px; padding:10px 14px;">
+                <span style="flex:1; font-weight:500;">Long-term memory</span>
+                <span style="color:var(--muted); font-size:13px;">variable</span>
+                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">per session</span>
+              </div>
+              <div style="display:flex; align-items:center; background:#e8e5de; border-radius:6px; padding:10px 14px; min-height:56px;">
+                <span style="flex:1; font-weight:500;">Retrieved information (RAG)</span>
+                <span style="color:var(--muted); font-size:13px;">0-10,000 tok</span>
+                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">on-demand</span>
+              </div>
+              <div style="display:flex; align-items:center; background:#f0eeea; border-radius:6px; padding:10px 14px;">
+                <span style="flex:1; font-weight:500;">Tool definitions</span>
+                <span style="color:var(--muted); font-size:13px;">500-3,000 tok</span>
+                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">static</span>
+              </div>
+              <div style="display:flex; align-items:center; background:#e8e5de; border-radius:6px; padding:10px 14px;">
+                <span style="flex:1; font-weight:500;">Structured output</span>
+                <span style="color:var(--muted); font-size:13px;">50-500 tok</span>
+                <span style="margin-left:12px; font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--muted);">static</span>
+              </div>
+            </div>
+          </div>
+
+          <p>Of the seven, the <strong>system prompt</strong> is where most people start, and rightfully so: it sets behavioral guidelines, role definitions, and rules for your agent. What I didn't expect when I started building agents is how much the system prompt wants to grow. Every failure mode you encounter tempts you to add another instruction, and before long you're at 4,000 tokens of rules that sometimes contradict each other. Anthropic recommends finding the "right altitude" between specificity and flexibility: start minimal, then iteratively add instructions based on observed failures. <a href="#ref-spotify">Spotify's engineering team</a> found that larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. Treat your system prompt as code: versioned, reviewed, tested.</p>
+
+          <p>My agent's system prompt is broken into XML-tagged sections, each responsible for a distinct behavioral concern:</p>
+
+<pre><code>&lt;identity&gt;
+  Personality, voice, coach name
+&lt;/identity&gt;
+
+&lt;boundaries&gt;
+  5 hard scope rules + output gate awareness
+  "If your response recommends specific medications...
+   the entire response will be discarded."
+&lt;/boundaries&gt;
+
+&lt;family-context&gt;
+  Structured profile, session summary, goals
+&lt;/family-context&gt;
+
+&lt;approach&gt;
+  Progressive profiling, evidence-based guidance
+&lt;/approach&gt;
+
+&lt;tools&gt;
+  When to search, when to update profile
+&lt;/tools&gt;
+
+&lt;response-guide&gt;
+  Adaptive length, tone, situation matching
+&lt;/response-guide&gt;
+
+&lt;examples&gt;
+  6 few-shot coaching conversations
+&lt;/examples&gt;</code></pre>
+
+          <p>The XML tags aren't decoration. Both <a href="#ref-anthropic">Anthropic</a> and Google recommend structured delimiters because LLMs respond measurably better to structured input than unstructured dumps. The tags also make it easy to add or remove sections without breaking the rest of the prompt, and they give you a natural unit for version control diffs.</p>
 
           <p>I spend the least time worrying about the <strong>user prompt</strong> because it's the one thing I don't control. The immediate message from the human can be anything: well-structured or incoherent, concise or rambling. The rest of your context engineering has to be robust enough to handle whatever arrives.</p>
 
-          <p>The component where I've seen the most waste is <strong>state and short-term history</strong>: the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations just dump the raw history in verbatim, including greetings, acknowledgments, and off-topic tangents. One finding that reshaped how I think about this came from <a href="#ref-flowhunt">FlowHunt</a>: a focused 300-token context often outperforms an unfocused 113,000-token context. What you remove from history matters at least as much as what you keep.</p>
+          <p>The component where I've seen the most waste is <strong>state and short-term history</strong>: the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations just dump the raw history in verbatim, including greetings, acknowledgments, and off-topic tangents. <a href="#ref-flowhunt">FlowHunt</a> found that a focused 300-token context often outperforms an unfocused 113,000-token context. What you remove from history matters at least as much as what you keep.</p>
+
+          <p>My agent injects a compact state block that gives the model temporal awareness and continuity across the ReAct loop:</p>
+
+<pre><code>def build_conversation_state(turn, phase, recent_tool_calls, active_topic, current_datetime):
+    lines = [f"  &lt;turn&gt;{turn}&lt;/turn&gt;", f"  &lt;phase&gt;{phase}&lt;/phase&gt;"]
+    if current_datetime:
+        day_name = current_datetime.strftime("%A")
+        time_of_day = "morning" if hour &lt; 12 else "afternoon" if hour &lt; 17 else "evening"
+        lines.append(f"  &lt;datetime&gt;{day_name} {time_of_day}&lt;/datetime&gt;")
+    if recent_tool_calls:
+        lines.append(f"  &lt;last_tools&gt;{', '.join(recent_tool_calls)}&lt;/last_tools&gt;")
+    if active_topic:
+        lines.append(f"  &lt;focus&gt;{active_topic}&lt;/focus&gt;")
+    return "&lt;conversation_state&gt;\n" + "\n".join(lines) + "\n&lt;/conversation_state&gt;"</code></pre>
+
+          <p>This 50-100 token block tells the model what turn it's on, what phase the conversation is in, what time of day it is, and which tools it already called. Without it, the agent re-calls tools it used two turns ago or asks "how can I help you today?" on turn 8.</p>
 
           <p>I'm dedicating Part 3 entirely to <strong>long-term memory</strong> (persistent knowledge across conversations: user preferences, facts, summaries, learned patterns) because it's complex enough to need its own treatment.</p>
 
           <p>The component I spend the most engineering time on is <strong>retrieved information</strong>, the RAG layer. External knowledge from documents, databases, and APIs gets injected on-demand, and the key design decision I keep coming back to is: pull, don't push. Let the AI determine what context it needs via tool calls rather than front-loading everything. <a href="#ref-inngest">Inngest</a> found this produces better results than pre-loading, and it matches my experience too. Part 2 goes deep on retrieval.</p>
 
+          <p>In my agent, the retrieval tool automatically enriches queries with what it already knows about the family:</p>
+
+<pre><code>@tool
+async def search_knowledge_base(query, document_type=None, tags=None, age_range=None):
+    state = await session_store.get(session_id)
+
+    # Auto-apply age filter from family profile
+    if not age_range and state.family_profile.child_age:
+        age_range = _age_to_range(state.family_profile.child_age)
+
+    filters = RetrievalFilters(document_type=document_type, tags=tags, age_range=age_range)
+    response = await retriever.retrieve(query=query, filters=filters, state=state)</code></pre>
+
+          <p>The agent decides when to search (pull, not push), and the tool enriches the query behind the scenes. The age filter means a parent of a 6-year-old never sees adolescent strategies, without the parent or the model needing to specify that constraint explicitly.</p>
+
           <p>Then there are <strong>tool definitions</strong>, the sneaky budget item. Function signatures the system can invoke consume context tokens whether they're used or not, and two production findings create an interesting tension. <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking: tools stay in context but get suppressed at the decoding level through a state machine. That tradeoff between fewer tools and cache stability is one of the trickier design decisions in context engineering.</p>
 
           <p>And <strong>structured output</strong> specifications (JSON schemas, type definitions, output constraints) guide generation but also consume tokens. They're easy to overlook in a token budget because they feel like "free" structure, but at scale they add up.</p>
 
-          <p>In a typical agentic system, the rough allocation looks like this: system instructions take 500-2,000 tokens (static per session), conversation history grows from 500-5,000 and needs trimming, RAG results swing from 0-10,000 on-demand, and tool definitions sit at 500-3,000 tokens permanently. The total has to fit the model's window (8k-200k depending on provider), and the art is maximizing signal per token.</p>
+          <div class="algorithm-box">
+            <h4>Typical Token Allocation (Agentic System)</h4>
+            <table>
+              <thead>
+                <tr><th>Component</th><th>Tokens</th><th>Behavior</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>System instructions</td><td>500-2,000</td><td>Static per session</td></tr>
+                <tr><td>Conversation history</td><td>500-5,000</td><td>Grows, needs trimming</td></tr>
+                <tr><td>RAG results</td><td>0-10,000</td><td>On-demand, per tool call</td></tr>
+                <tr><td>Tool definitions</td><td>500-3,000</td><td>Permanent, always present</td></tr>
+                <tr><td>State / structured output</td><td>50-500</td><td>Dynamic per turn</td></tr>
+              </tbody>
+            </table>
+            <p>Total must fit the model's window (8k-200k depending on provider). The art is maximizing signal per token.</p>
+          </div>
 
           <div class="theory-only">
             <div class="callout">
@@ -138,13 +263,116 @@
 
           <p><a href="#ref-langchain">LangChain's framework</a> identifies four strategies for managing context, and I find the vocabulary useful because every production system I've seen uses some combination of all four. Knowing which one you're underinvesting in is usually the fastest way to improve a system.</p>
 
+          <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#fafafa;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:600px; margin:0 auto;">
+              <div style="border:2px solid #c5c2b8; border-radius:8px; padding:16px; background:white; position:relative;">
+                <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Write</div>
+                <div style="font-size:12px; color:var(--muted); line-height:1.5;">Rolling summaries<br>Profile updates<br>Scratchpads</div>
+                <div style="position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:#e8e5de; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);">1</div>
+              </div>
+              <div style="border:2px solid #c5c2b8; border-radius:8px; padding:16px; background:white; position:relative;">
+                <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Select</div>
+                <div style="font-size:12px; color:var(--muted); line-height:1.5;">RAG search<br>Query rewriting<br>Memory retrieval</div>
+                <div style="position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:#e8e5de; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);">2</div>
+              </div>
+              <div style="border:2px solid #c5c2b8; border-radius:8px; padding:16px; background:white; position:relative;">
+                <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Compress</div>
+                <div style="font-size:12px; color:var(--muted); line-height:1.5;">Summarization<br>FIFO trimming<br>Char budget</div>
+                <div style="position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:#e8e5de; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);">3</div>
+              </div>
+              <div style="border:2px solid #c5c2b8; border-radius:8px; padding:16px; background:white; position:relative;">
+                <div style="font-weight:600; font-size:15px; margin-bottom:6px;">Isolate</div>
+                <div style="font-size:12px; color:var(--muted); line-height:1.5;">Input/output gates<br>Dual-model routing<br>Sub-agent contexts</div>
+                <div style="position:absolute; top:10px; right:10px; width:22px; height:22px; border-radius:50%; background:#e8e5de; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);">4</div>
+              </div>
+            </div>
+            <div style="text-align:center; margin-top:12px; font-size:12px; color:var(--muted);">Most production systems use all four. The question is the mix.</div>
+          </div>
+
           <p>The first is <strong>writing</strong> information out of the context window for later retrieval. Scratchpads let the agent write intermediate notes during a session: observations, partial results, plans. These persist via tool calls or state objects, available for later steps without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team uses a concrete version of this: agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls.</p>
+
+          <p>My agent writes rolling summaries every 5 turns, using a cheap Gemini Flash call to compress the conversation into 2-4 sentences:</p>
+
+<pre><code>async def _update_summary(self, session_id, current_turn):
+    existing = await self._store.get_latest_summary(session_id)
+    start_turn = (existing.covers_through_turn + 1) if existing else 1
+    messages = await self._store.get_messages_range(session_id, start_turn, current_turn)
+
+    conversation_text = "\n".join(f"{m['role'].upper()}: {m['content']}" for m in messages)
+
+    prompt = f"""Summarize this coaching conversation concisely. Focus on:
+    - Key family information shared
+    - Strategies discussed or recommended
+    - Parent's emotional state and concerns
+    Omit: greetings, small talk, generic acknowledgments.
+
+    Previous summary: {existing.summary if existing else ""}
+    New conversation: {conversation_text}
+
+    Write a concise summary (2-4 sentences)."""
+
+    summary = await self._gemini.generate(prompt, temperature=0.0)</code></pre>
+
+          <p>The summary replaces the turns it covers, so the context window never accumulates unbounded history. On turn 20, the model sees a summary covering turns 1-15 plus the raw last 5 turns, rather than all 20 turns verbatim.</p>
 
           <p>The complement of writing is <strong>selecting</strong>: retrieving relevant information back when needed. This includes reading back scratchpad notes from earlier steps, querying stored memories using embeddings or keyword search, and full RAG pipelines over documents or code. One specific pattern worth highlighting: when you have many tools, use RAG over tool descriptions to select the right one, which improves selection accuracy 3x compared to exposing all tools at once.</p>
 
+          <p>Selection quality depends heavily on query quality. My agent rewrites the user's message into a self-contained retrieval query before searching:</p>
+
+<pre><code># "What do I do when he won't stop?"
+# -&gt; "strategies for 8 year old ADHD homework meltdowns refusing to stop"
+
+async def rewrite(self, query, conversation_history, family_profile):
+    recent_turns = conversation_history[-3:]
+    prompt = f"""Rewrite the search query to be self-contained.
+    Resolve pronouns, add implicit context from conversation.
+    Known: child_name={profile.child_name}, age={profile.child_age}
+
+    Rules:
+    - Keep it concise (under 30 words)
+    - Resolve pronouns ("he" -&gt; the child's name)
+    - Strip emotional language, focus on the information need"""</code></pre>
+
+          <p>The comment at the top shows why this matters. "What do I do when he won't stop?" has zero retrieval value as-is: no subject, no age, no context. The rewriter resolves "he" to the child, infers "homework meltdowns" from the last 3 turns, and produces a query that actually hits relevant documents.</p>
+
           <p><strong>Compression</strong> reduces tokens while maintaining task performance. Summarization replaces older conversation history with a condensed version; Claude Code applies auto-compact at 95% context utilization. Trimming removes older messages using heuristics (drop oldest N) or trained pruners like the Provence model, which identifies which messages contribute least to task performance. One finding I keep coming back to from recurrent context compression research: compressing instructions and context simultaneously degrades responses. Compress the data, but preserve the instructions separately.</p>
 
+          <p>My agent uses a two-pass trimming strategy: first a hard message count cap, then a character budget that accounts for the system prompt size:</p>
+
+<pre><code># Pass 1: Message count cap (6 turns = 12 messages)
+max_messages = CONTEXT_WINDOW_TURNS * 2  # 6 * 2 = 12
+conversation = conversation[-max_messages:]
+
+# Pass 2: Character budget (subtract system prompt from 120K char limit)
+remaining = CONTEXT_MAX_CHARS - len(system_prompt)
+while estimate_chars(conversation) &gt; remaining and len(conversation) &gt; 2:
+    conversation = conversation[1:]  # Drop oldest</code></pre>
+
+          <p>The two-pass approach handles two different problems: the message cap prevents the model from getting distracted by old turns, and the character budget prevents the total context from overflowing, accounting for the fact that system prompts vary in size depending on how much family context has been accumulated.</p>
+
           <p>The fourth strategy, <strong>isolation</strong>, means splitting information across separate processing units. Multi-agent systems give each sub-agent its own clean context window focused on a specific subtask, returning a condensed summary (1,000-2,000 tokens) to the lead agent. HuggingFace's CodeAgent isolates token-heavy objects in sandbox environments, keeping only references in the main context. You can also separate LLM-exposed fields from auxiliary context storage in your state schema, because not everything the system knows needs to be in the window.</p>
+
+          <p>My agent isolates safety classification into separate LLM calls so the guardrail context never contaminates the main coaching conversation:</p>
+
+<pre><code># Each node runs in its own isolated LLM call with its own context
+graph = StateGraph(CoachingState)
+
+graph.add_node("input_gate", input_gate_node)       # Safety classifier
+graph.add_node("pro_react_agent", pro_agent)         # Main agent (complex queries)
+graph.add_node("flash_react_agent", flash_agent)     # Main agent (simple messages)
+graph.add_node("output_gate", output_gate_node)      # Scope validator
+
+graph.set_entry_point("input_gate")
+graph.add_conditional_edges("input_gate", route_after_input_gate, {
+    END: END,                                        # Blocked -&gt; stop
+    "pro_react_agent": "pro_react_agent",            # Complex -&gt; Pro + thinking
+    "flash_react_agent": "flash_react_agent",        # Simple -&gt; Flash
+})
+graph.add_edge("pro_react_agent", "output_gate")
+graph.add_edge("flash_react_agent", "output_gate")
+graph.add_edge("output_gate", END)</code></pre>
+
+          <p>The input gate sees only the latest user message and a short classification prompt. The output gate sees only the agent's response and a scope-checking prompt. Neither gate's context (safety rules, classification examples) appears in the main agent's window, keeping the coaching conversation clean and focused.</p>
 
           <p>Most production systems use all four. The question is the mix, and that depends on your task profile, model, and latency budget.</p>
         </section>
@@ -157,6 +385,21 @@
 
           <p><a href="#ref-breunig">Drew Breunig</a> identified four failure modes that I think explain most context-related degradation, and getting the diagnosis right matters because each one requires a different fix.</p>
 
+          <div class="algorithm-box">
+            <h4>Four Context Failure Modes</h4>
+            <table>
+              <thead>
+                <tr><th>Mode</th><th>Cause</th><th>Fix</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Poisoning</td><td>Error enters context, compounds downstream</td><td>Validate before memory writes</td></tr>
+                <tr><td>Distraction</td><td>History too long, drowns out training</td><td>Aggressive trimming + summarization</td></tr>
+                <tr><td>Confusion</td><td>Noise treated as signal</td><td>Curate ruthlessly, earn every token</td></tr>
+                <tr><td>Clash</td><td>Contradictory instructions in prompt</td><td>Clear precedence hierarchy</td></tr>
+              </tbody>
+            </table>
+          </div>
+
           <p><strong>Context poisoning</strong> happens when a hallucination or error enters the context and gets repeatedly referenced, compounding mistakes over time. Once a wrong fact lands in the conversation history, the model treats it as ground truth and builds on it. Google DeepMind's Gemini 2.5 technical report confirmed this: if the "goals" section of an agent's context was poisoned, agents developed completely nonsensical strategies downstream. The fix is to validate information before writing to long-term memory, using structured schemas with field-level validation and treating memory writes like database writes where you check constraints before committing.</p>
 
           <p><strong>Context distraction</strong> happens when the context grows so long that the model over-focuses on accumulated history and neglects what it learned during training. Beyond ~100k tokens, agents tend toward repeating actions from history rather than synthesizing novel plans, so aggressive trimming and summarization help, along with actively removing completed or irrelevant sections.</p>
@@ -164,6 +407,8 @@
           <p><strong>Context confusion</strong> is when superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. <a href="#ref-anthropic">Anthropic's</a> guiding principle applies here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome." Every token should earn its place.</p>
 
           <p><strong>Context clash</strong> occurs when new information conflicts with existing information already in the prompt. Contradictory instructions produce unpredictable behavior. The fix is establishing a hierarchy of instructions with clear precedence rules and testing for contradictions when updating context.</p>
+
+          <p>My own agent has a context clash I caught during an audit. The system prompt says: "When READING information you already have in the family context above, use it directly, do not re-fetch with <code>get_family_profile</code>." But <code>get_family_profile</code> is still available as a callable tool. The instruction and the tool list contradict each other. The agent sometimes calls the tool anyway, wasting a round-trip to fetch data that's already in the prompt. The fix is straightforward (remove the tool), but the clash is easy to miss because the instruction is in the <code>&lt;tools&gt;</code> section and the tool definition is in Python code, and nobody reviews them side by side.</p>
 
           <p>I think of these four modes as debugging categories: when an agent misbehaves, the first question I ask is which failure mode is active, because the mitigations are completely different.</p>
 
@@ -183,6 +428,50 @@
           <h2>A Real Token Budget</h2>
 
           <p>I built an ADHD coaching assistant as a ReAct agent with LangGraph, and looking at its token budget is probably the most concrete way to see context engineering in action. The system prompt ranges from ~2,000 to ~4,050 tokens depending on session maturity, assembled dynamically from several blocks.</p>
+
+          <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#fafafa; overflow-x:auto;">
+            <div style="display:flex; align-items:center; gap:0; min-width:700px; justify-content:center; flex-wrap:nowrap;">
+              <div style="background:white; border:2px solid var(--border); border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
+                <div style="font-weight:600; font-size:13px;">Parent</div>
+                <div style="font-size:10px; color:var(--muted);">message</div>
+              </div>
+              <div style="color:#bbb; font-size:18px; padding:0 6px;">&rarr;</div>
+              <div style="background:#e8e5de; border:2px solid #c5c2b8; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
+                <div style="font-weight:600; font-size:13px;">Input Gate</div>
+                <div style="font-size:10px; color:var(--muted);">safety check</div>
+              </div>
+              <div style="color:#bbb; font-size:18px; padding:0 6px;">&rarr;</div>
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <div style="background:white; border:2px solid #c5c2b8; border-radius:8px; padding:6px 12px; text-align:center;">
+                  <div style="font-weight:600; font-size:13px;">Pro Agent</div>
+                  <div style="font-size:10px; color:var(--muted);">complex + thinking</div>
+                </div>
+                <div style="background:white; border:2px solid var(--border); border-radius:8px; padding:6px 12px; text-align:center;">
+                  <div style="font-weight:600; font-size:13px;">Flash Agent</div>
+                  <div style="font-size:10px; color:var(--muted);">simple queries</div>
+                </div>
+              </div>
+              <div style="color:#bbb; font-size:18px; padding:0 6px;">&rarr;</div>
+              <div style="background:#e8e5de; border:2px solid #c5c2b8; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
+                <div style="font-weight:600; font-size:13px;">Output Gate</div>
+                <div style="font-size:10px; color:var(--muted);">scope check</div>
+              </div>
+              <div style="color:#bbb; font-size:18px; padding:0 6px;">&rarr;</div>
+              <div style="background:white; border:2px solid var(--border); border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
+                <div style="font-weight:600; font-size:13px;">Response</div>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:center; margin-top:12px;">
+              <div style="border:1px dashed #c5c2b8; border-radius:8px; padding:8px 16px; display:flex; gap:16px; font-size:11px; color:var(--muted);">
+                <span>Background: rolling summary</span>
+                <span style="color:#ddd;">|</span>
+                <span>profile updates</span>
+                <span style="color:#ddd;">|</span>
+                <span>outcome tracking</span>
+              </div>
+            </div>
+            <div style="text-align:center; margin-top:8px; font-size:12px; color:var(--muted);">Each node runs in its own isolated LLM call with its own context window</div>
+          </div>
 
           <table>
             <thead>
@@ -204,11 +493,130 @@
 
           <p>The conversation window holds 6 turns max, char-budgeted at 120,000 characters. Messages from turns already covered by the rolling summary are excluded.</p>
 
-          <p>What I find interesting is how many context engineering patterns end up in a single system. This agent uses XML-tagged sections for structure, rolling summaries (every 5 turns via Gemini Flash) for compression, history trimming with a 6-turn window, on-demand hybrid RAG (dense + sparse + RRF fusion + cross-encoder reranking), semantic memory via a structured family profile, episodic memory via outcome events, and isolated guardrail contexts so input/output safety gates don't contaminate the main conversation.</p>
+          <p>Everything gets assembled in a single <code>prepare_context</code> hook that runs before every LLM call in the ReAct loop:</p>
 
-          <p>But even with all that, there are gaps. The system has no procedural memory: the system prompt never evolves based on what works. There's no consolidation from episodic to semantic memory, so five positive outcomes for the same strategy stay as five separate records instead of becoming one fact. Memories are retrieved by recency only, with no importance scoring. Old data never expires. And the volatile conversation state block sits at the start of the prompt, breaking the KV-cache prefix on every turn (a 10x cost difference according to <a href="#ref-manus">Manus</a>).</p>
+<pre><code>async def prepare_context(state: CoachingState):
+    session_id = state.get("session_id", "default")
+    session_state = await session_store.get(session_id)
+    turn_count = session_state.turn_count
+    cache_key = (session_id, turn_count)
 
-          <p>This analysis taught me that context engineering is deeply iterative: you build something, observe the failure modes, add techniques, and repeat the whole cycle a few more times before things start to stabilize.</p>
+    # Skip rebuild if nothing mutated since last call
+    has_mutation = _has_mutating_tool(state["messages"])
+    if cache_key in _prompt_cache and not has_mutation:
+        system_prompt = _prompt_cache[cache_key]
+    else:
+        summary = await session_store.get_latest_summary(session_id)
+        episodes = await session_store.get_recent_episodes(session_id, limit=5)
+        tool_results = await session_store.get_recent_tool_results(session_id, limit=3)
+
+        system_prompt = build_system_prompt(
+            profile=session_state.family_profile,
+            active_strategies=session_state.active_strategies,
+            goals=session_state.goals, outcomes=session_state.outcomes,
+            session_summary=summary_text,
+        )
+
+        state_block = build_conversation_state(turn_count, phase, recent_tool_names, ...)
+        system_prompt = state_block + "\n\n" + system_prompt  # &lt;-- problematic ordering
+
+    # Trim conversation to fit budget
+    max_messages = CONTEXT_WINDOW_TURNS * 2
+    conversation = [m for m in messages if not isinstance(m, SystemMessage)]
+    conversation = conversation[-max_messages:]
+    while estimate_chars(conversation) &gt; remaining_budget and len(conversation) &gt; 2:
+        conversation = conversation[1:]
+
+    return {"llm_input_messages": [SystemMessage(system_prompt)] + conversation}</code></pre>
+
+          <p>This function is the entire context engineering pipeline in one place: load state, build the prompt from components, prepend the conversation state block, cache the result, and trim the conversation window. Every technique I described in the earlier sections (XML structure, rolling summaries, trimming, isolation) converges here. The <code># &lt;-- problematic ordering</code> comment is foreshadowing; I'll come back to it.</p>
+
+          <div class="algorithm-box">
+            <h4>Context Engineering Techniques Used</h4>
+            <table>
+              <thead><tr><th>Category</th><th>Technique</th><th>Implementation</th></tr></thead>
+              <tbody>
+                <tr><td>Structure</td><td>XML-tagged sections</td><td><code>&lt;identity&gt;</code>, <code>&lt;boundaries&gt;</code>, <code>&lt;family-context&gt;</code>, etc.</td></tr>
+                <tr><td>Compression</td><td>Rolling summary</td><td>Every 5 turns via Gemini Flash</td></tr>
+                <tr><td>Compression</td><td>History trimming</td><td>6-turn window + 120K char budget</td></tr>
+                <tr><td>Memory</td><td>Semantic (family profile)</td><td>Structured schema, tool-driven updates</td></tr>
+                <tr><td>Memory</td><td>Episodic (outcomes)</td><td>Created on <code>track_outcome</code>, stored with emotion</td></tr>
+                <tr><td>RAG</td><td>Hybrid search</td><td>Dense + sparse + RRF + cross-encoder reranking</td></tr>
+                <tr><td>RAG</td><td>Query rewriting</td><td>Pronoun resolution + profile context injection</td></tr>
+                <tr><td>Routing</td><td>Dual-model</td><td>Flash for simple messages, Pro with thinking for complex</td></tr>
+                <tr><td>Safety</td><td>Isolated gates</td><td>Input + output classifiers in separate LLM calls</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>What I Got Wrong</h3>
+
+          <p>When I audited this agent against the best practices I'd just finished researching for this post, it was humbling. I found violations of principles I had literally just written about. Five specific problems stood out.</p>
+
+          <p>The most expensive mistake is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above: the volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn: new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix: if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference ($0.30/MTok cached vs $3/MTok uncached on Claude Sonnet). The fix is one line: move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns.</p>
+
+          <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#fafafa;">
+            <div style="margin-bottom:16px;">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <span style="font-size:14px; font-weight:600; color:#b45555;">Before</span>
+                <span style="font-size:12px; color:var(--muted);">Cache breaks on every turn</span>
+              </div>
+              <div style="display:flex; gap:2px; font-size:11px; border-radius:6px; overflow:hidden;">
+                <div style="background:#f2d4d4; border:1px solid #d4a0a0; padding:8px 10px; min-width:100px; text-align:center; position:relative;">
+                  <div style="font-weight:600;">conversation_state</div>
+                  <div style="color:#b45555; font-size:10px;">volatile</div>
+                </div>
+                <div style="background:#eee; border:1px solid #ddd; padding:8px 10px; flex:1; text-align:center;">
+                  <div style="font-weight:500;">identity</div>
+                  <div style="color:var(--muted); font-size:10px;">static</div>
+                </div>
+                <div style="background:#eee; border:1px solid #ddd; padding:8px 10px; flex:1; text-align:center;">
+                  <div style="font-weight:500;">boundaries</div>
+                  <div style="color:var(--muted); font-size:10px;">static</div>
+                </div>
+                <div style="background:#eee; border:1px solid #ddd; padding:8px 10px; flex:1; text-align:center;">
+                  <div style="font-weight:500;">examples</div>
+                  <div style="color:var(--muted); font-size:10px;">static</div>
+                </div>
+                <div style="background:#eee; border:1px solid #ddd; padding:8px 10px; flex:1; text-align:center; color:var(--muted);">...</div>
+              </div>
+              <div style="font-size:10px; color:#b45555; margin-top:4px;">&uarr; Prefix changes every turn. 0% cache hit rate.</div>
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <span style="font-size:14px; font-weight:600; color:#4a8c5c;">After</span>
+                <span style="font-size:12px; color:var(--muted);">Static prefix caches across turns</span>
+              </div>
+              <div style="display:flex; gap:2px; font-size:11px; border-radius:6px; overflow:hidden;">
+                <div style="background:#d4edda; border:1px solid #a3d1ad; padding:8px 10px; flex:1; text-align:center;">
+                  <div style="font-weight:500;">identity</div>
+                  <div style="color:#4a8c5c; font-size:10px;">cached</div>
+                </div>
+                <div style="background:#d4edda; border:1px solid #a3d1ad; padding:8px 10px; flex:1; text-align:center;">
+                  <div style="font-weight:500;">boundaries</div>
+                  <div style="color:#4a8c5c; font-size:10px;">cached</div>
+                </div>
+                <div style="background:#d4edda; border:1px solid #a3d1ad; padding:8px 10px; flex:1; text-align:center;">
+                  <div style="font-weight:500;">examples</div>
+                  <div style="color:#4a8c5c; font-size:10px;">cached</div>
+                </div>
+                <div style="background:#d4edda; border:1px solid #a3d1ad; padding:8px 10px; flex:1; text-align:center; color:#4a8c5c;">...</div>
+                <div style="background:#fff8e5; border:1px solid #e0d5a0; padding:8px 10px; min-width:100px; text-align:center;">
+                  <div style="font-weight:600;">conversation_state</div>
+                  <div style="color:#9a8a3c; font-size:10px;">volatile</div>
+                </div>
+              </div>
+              <div style="font-size:10px; color:#4a8c5c; margin-top:4px;">&uarr; Stable prefix. $0.30/MTok cached vs $3.00/MTok uncached (10x).</div>
+            </div>
+          </div>
+
+          <p>The second problem is <strong>no memory validation</strong>. When the agent calls <code>update_family_profile</code>, the LLM extracts facts from the conversation ("child is 8 years old," "diagnosed last year") and writes them directly to the profile. There's no conflict detection (what if the profile already says the child is 7?), no enum validation (what if the LLM writes "ADHD-ish" instead of one of the valid subtypes?), and no versioning (if the extraction hallucinates, the bad data overwrites the good data with no rollback). This is exactly the "context poisoning" failure mode I described in Section 4: an error enters the persistent context and compounds downstream, with the model treating hallucinated facts as ground truth in every future turn.</p>
+
+          <p>Third, the <strong>redundant <code>get_family_profile</code> tool</strong>. The family profile is already injected into the <code>&lt;family-context&gt;</code> section of the system prompt on every turn. The tool exists to let the agent "check what it knows," but the agent already knows: it's in the prompt. I mentioned this in Section 4 as a context clash, and it is, but it's also context confusion: the tool's existence signals to the model that the profile might not be in context, which makes it less likely to trust the data it already has.</p>
+
+          <p>Fourth, <strong>FIFO trimming is content-blind</strong>. The trimming code drops the oldest message first, regardless of what's in it. A critical "we tried the timer strategy and it made things worse" gets dropped before a filler "thanks!" or "ok sounds good" message, purely because the filler is newer. A smarter approach would score messages by information density (does this contain a fact, a strategy outcome, or a preference?) and preserve high-signal messages even if they're older. The Provence model from the research does exactly this: it trains a pruner to identify which messages contribute least to task performance.</p>
+
+          <p>Fifth, <strong>no importance scoring for episodic memory</strong>. Episodes (tracked outcomes, strategy results) are retrieved by recency alone. A breakthrough moment from 3 weeks ago where a family discovered their child responds to visual timers gets ranked below a routine check-in from yesterday. The Stanford generative agents paper showed that combining recency, importance, and relevance produces much better retrieval than any single factor. My agent uses one of the three.</p>
 
           <div class="theory-only">
             <div class="callout">
@@ -225,15 +633,15 @@
         <section id="what-i-learned">
           <h2>What I Learned</h2>
 
-          <p>After building that agent, reading through the research, and looking at what teams like <a href="#ref-manus">Manus</a>, <a href="#ref-spotify">Spotify</a>, and <a href="#ref-inngest">Inngest</a> have published, I've converged on a mental model I'll try to articulate.</p>
+          <p>After building that agent, auditing it against the research, and finding violations of my own best practices in my own code, I've converged on four hard-won lessons.</p>
 
-          <p>The instinct when building an LLM system is to give the model everything: all the context, all the tools, all the history. My agent started that way, and <a href="#ref-flowhunt">FlowHunt's</a> finding explains why that fails: 300 focused tokens beat 113,000 unfocused ones. Both <a href="#ref-anthropic">Anthropic</a> and <a href="#ref-spotify">Spotify</a> converge on the same prescription: start minimal and add instructions only when you observe a specific failure mode. I now treat my system prompt as code (versioned, reviewed, tested), following Spotify's finding that static, versioned prompts are more reliable than dynamic ones. Structure it with XML tags, Markdown headers, or clear delimiters, since LLMs respond measurably better to structured input than unstructured dumps.</p>
+          <p><strong>Static before dynamic.</strong> The KV-cache lesson applies far beyond my agent. Any time you're assembling a system prompt, put the content that doesn't change (identity, rules, examples, tool definitions) at the beginning, and append the content that changes every turn (conversation state, recent tool results, dynamic context) at the end. The stable prefix caches across calls; the dynamic suffix doesn't need to. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference, and the fix is often a single line of code. I had this backwards in my own system and didn't notice until I read their post, because the ordering had zero effect on output quality. The cost difference is invisible unless you're watching your API bill.</p>
 
-          <p>The same minimalism applies to tools. Removing tools used less than 10% of the time consistently improved my agent's reliability, which matches what <a href="#ref-inngest">Inngest</a> published and what <a href="#ref-spotify">Spotify</a> found when they deliberately restricted tool access. Fewer dimensions of unpredictability means more predictable behavior.</p>
+          <p><strong>Validate at memory boundaries.</strong> Every write to persistent memory should be treated like a database write: check constraints before committing. If the LLM extracts "child age: 8" from the conversation, verify it against what you already have. If the profile says 7 and the new extraction says 8, that might be correct (birthdays happen) or it might be a hallucination, and you need a resolution strategy either way. My agent skips this entirely, which means a single bad extraction poisons every future turn. Structured schemas with enum fields, conflict detection, and versioned writes aren't over-engineering; they're the minimum for memory systems that don't degrade over time.</p>
 
-          <p>On the infrastructure side, two things caught me off guard. First, cache economics dominate at scale: <a href="#ref-manus">Manus</a> reports that cached tokens on Claude Sonnet cost <code>$0.30/MTok</code> vs <code>$3/MTok</code> uncached, so keeping prompt prefixes stable and append-only matters because any mutation invalidates the cache. Second, keeping failure traces in the context (rather than clearing errors) actually helps: Manus found that models seeing their own errors implicitly update beliefs and reduce mistake repetition.</p>
+          <p><strong>Fewer tools, less confusion.</strong> <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time, and <a href="#ref-spotify">Spotify</a> found that deliberately restricting tool access improved reliability. My own <code>get_family_profile</code> tool is exhibit A: it duplicates information already in the system prompt, creates a context clash between the prompt instruction and the tool list, and signals to the model that the profile might not be in context (which makes it less likely to trust the data it already has). Removing it would fix three problems at once.</p>
 
-          <p>For anything beyond a single-turn task, I've found that isolating work across sub-agents with clean context windows beats one massive shared context. And building observability from day one (logging every tool call with inputs, outputs, and timing) isn't optional; it's how you generate the failure data that drives the next round of iteration.</p>
+          <p><strong>Audit your own system against your own framework.</strong> The four failure modes from Section 4 (poisoning, distraction, confusion, clash) weren't meant to be abstract theory. When I turned them on my own agent, I found all four: context poisoning via unvalidated memory writes, potential distraction from content-blind FIFO trimming, confusion from the redundant tool signaling, and a direct clash between a prompt instruction and a tool definition. The framework works as a diagnostic tool, not just a taxonomy. If you're building an agent, run your own system through those four categories before shipping.</p>
 
           <p>One caveat that's easy to forget: context strategy isn't portable across providers. Different models have different attention patterns, different context window behaviors, and different sensitivities to prompt structure. What works for Claude might fail on GPT-4 might fail on Gemini. Test before assuming your architecture generalizes.</p>
 

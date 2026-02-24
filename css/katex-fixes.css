@@ -4,6 +4,15 @@
 .katex {
   line-height: 1 !important;
   font-size: 1em !important;
+  font-family: "Century Expanded", "KaTeX_Main", serif !important;
+}
+
+.katex .mathnormal {
+  font-family: "Century Expanded", "KaTeX_Math", serif !important;
+}
+
+.katex .mathit {
+  font-family: "Century Expanded", "KaTeX_Main", serif !important;
 }
 
 .katex-display {

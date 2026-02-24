@@ -1,7 +1,15 @@
 /* Minimal, clean blog styles */
-/* Typeface: Cormorant Garamond body + headings, Goudy Initialen drop caps */
+/* Typeface: Century Expanded body + headings, Goudy Initialen drop caps */
 
 @import url('https://fonts.cdnfonts.com/css/goudy-initialen');
+
+@font-face {
+  font-family: "Century Expanded";
+  src: url("../Century Expanded Regular/Century Expanded Regular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root{
   --bg: #faf8f4;
@@ -14,7 +22,7 @@
   --vermillion: #8b2500;
   --gold: #c9a84c;
   --manuscript-blue: #1a3a5c;
-  --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-serif: "Century Expanded", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-drop-cap: "Goudy Initialen", serif;
 }

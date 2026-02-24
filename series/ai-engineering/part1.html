@@ -101,10 +101,6 @@
         <section id="seven-components">
           <h2>The Seven Components</h2>
 
-          <div class="tldr-only">
-            <p>Seven components fill every context window: system prompt, user prompt, state/conversation history, long-term memory, retrieved information (RAG), tool definitions, and structured output. Version system prompts like code. Use pull-based RAG (model requests via tools) over front-loading. Full conversation dumps hurt performance; trim aggressively. Tool definitions consume tokens whether used or not.</p>
-          </div>
-
           <div class="deep-dive-only">
           <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-schmid">Philipp Schmid</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, Google), and I've found seven components to be the right granularity. I'll walk through each one with code from my diabetes coaching agent, but what I want to emphasize is how unevenly they matter in practice.</p>
           </div>
@@ -145,6 +141,15 @@
                 <span style="color:var(--muted); font-size:12px;">50-500</span>
               </div>
             </div>
+          </div>
+
+          <div class="tldr-only">
+            <ul class="list-tight">
+              <li>Version system prompts like code</li>
+              <li>Use pull-based RAG (model requests via tools) over front-loading</li>
+              <li>Full conversation dumps hurt performance; trim aggressively</li>
+              <li>Tool definitions consume tokens whether used or not</li>
+            </ul>
           </div>
 
           <div class="deep-dive-only">
@@ -281,7 +286,13 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <h2>Write / Select / Compress / Isolate</h2>
 
           <div class="tldr-only">
-            <p><strong>Write:</strong> move information out of the window into external storage. <strong>Select:</strong> retrieve relevant information back via RAG or memory queries. <strong>Compress:</strong> use a tiered approach (raw context → compact by stripping filler → summarize only when needed), compress proactively at ~75% capacity (the "pre-rot threshold"), and trim in atomic turn groups to avoid orphaning tool results. Never compress instructions and data together. <strong>Isolate:</strong> split work across separate LLM calls so each gets focused context. Most teams over-invest in writing and selecting; the real gains are in compression and isolation.</p>
+            <ul class="list-tight">
+              <li><strong>Write:</strong> move information out of the window into external storage</li>
+              <li><strong>Select:</strong> retrieve relevant information back via RAG or memory queries</li>
+              <li><strong>Compress:</strong> tiered approach (raw context → compact by stripping filler → summarize only when needed), compress proactively at ~75% capacity, trim in atomic turn groups. Never compress instructions and data together</li>
+              <li><strong>Isolate:</strong> split work across separate LLM calls so each gets focused context</li>
+            </ul>
+            <p>Most teams over-invest in writing and selecting; the real gains are in compression and isolation.</p>
           </div>
 
           <div class="deep-dive-only">
@@ -407,7 +418,6 @@ graph.add_edge("output_gate", END)</code></pre>
           <h2>How Context Fails</h2>
 
           <div class="tldr-only">
-            <p><strong>Poisoning:</strong> hallucination enters context, compounds downstream. <strong>Distraction:</strong> context too long, model neglects training. <strong>Confusion:</strong> noise treated as signal. <strong>Clash:</strong> contradictory instructions. Classify the failure first; mitigations are completely different.</p>
           </div>
 
           <div class="deep-dive-only">
@@ -456,7 +466,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <h2>A Real Token Budget</h2>
 
           <div class="tldr-only">
-            <p>Concrete token budget from a LangGraph diabetes coaching agent: ~2,000-4,050 token system prompt, 6-turn conversation window (120K char budget), on-demand RAG up to 10,000 tokens, safety gates isolated into separate LLM calls.</p>
+            <p>Token budget from the diabetes coaching agent I built with LangGraph:</p>
           </div>
 
           <div class="deep-dive-only">

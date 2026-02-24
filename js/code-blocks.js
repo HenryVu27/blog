@@ -71,6 +71,14 @@
       // Insert header at top
       block.insertBefore(header, body);
 
+      // Start collapsed in TLDR mode (no deep-dive-mode class on body/html)
+      var isDeepDive = document.body.classList.contains("deep-dive-mode") ||
+                       document.documentElement.classList.contains("deep-dive-mode");
+      if (!isDeepDive) {
+        block.classList.add("collapsed");
+        header.setAttribute("aria-expanded", "false");
+      }
+
       // Collapse / expand handler
       function toggle() {
         var collapsed = block.classList.toggle("collapsed");

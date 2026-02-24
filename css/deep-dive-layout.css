@@ -101,7 +101,7 @@
   line-height: 1.5;
 }
 .toc li a:hover{
-  color: #c47a2a;
+  color: var(--vermillion);
 }
 .toc-section-number{
   color: var(--text);

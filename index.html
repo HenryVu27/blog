@@ -3,31 +3,101 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Henry Vu</title>
+  <title>Henry Vu | AI Engineering &amp; ML Systems Blog</title>
+  <meta name="description" content="Deep-dive technical blog about AI engineering, context engineering for LLMs, ML systems, and decision-making algorithms. Written by Henry Vu.">
+  <meta name="author" content="Henry Vu">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <link rel="canonical" href="https://www.henryvu.blog/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Henry Vu | AI Engineering &amp; ML Systems Blog">
+  <meta property="og:description" content="Deep-dive technical blog about AI engineering, context engineering for LLMs, ML systems, and decision-making algorithms.">
+  <meta property="og:url" content="https://www.henryvu.blog/">
+  <meta property="og:site_name" content="Henry Vu's Blog">
+  <meta property="og:image" content="https://www.henryvu.blog/series/ai-engineering/OG.jpg">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@HenryVu27">
+  <meta name="twitter:creator" content="@HenryVu27">
+  <meta name="twitter:title" content="Henry Vu | AI Engineering &amp; ML Systems Blog">
+  <meta name="twitter:description" content="Deep-dive technical blog about AI engineering, context engineering for LLMs, ML systems, and decision-making algorithms.">
+  <meta name="twitter:image" content="https://www.henryvu.blog/series/ai-engineering/OG.jpg">
+
+  <!-- RSS Feed -->
+  <link rel="alternate" type="application/rss+xml" title="Henry Vu's Blog" href="https://www.henryvu.blog/feed.xml">
+
+  <!-- Fonts & Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3CJTJES82Q"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3CJTJES82Q');
+  </script>
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://www.henryvu.blog/#website",
+        "url": "https://www.henryvu.blog/",
+        "name": "Henry Vu's Technical Blog",
+        "description": "Deep-dive technical content about AI engineering, ML systems, and decision-making algorithms",
+        "publisher": { "@id": "https://www.henryvu.blog/#author" }
+      },
+      {
+        "@type": "Person",
+        "@id": "https://www.henryvu.blog/#author",
+        "name": "Henry Vu",
+        "url": "https://www.henryvu.blog",
+        "sameAs": [
+          "https://x.com/HenryVu27",
+          "https://www.linkedin.com/in/henry-vu27/",
+          "https://github.com/HenryVu27",
+          "https://henryvu27.github.io/"
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <main class="page">
-      <header>
-        <h1 class="title">Henry Vu</h1>
-      </header>
+    <header>
+      <h1 class="title">Henry Vu</h1>
+      <p class="meta">AI/ML Engineer. I write deep-dive technical content about building with LLMs, context engineering, ML systems, and decision-making algorithms.</p>
+    </header>
 
     <section>
       <h2>Writing</h2>
 
       <p><strong>AI Engineering</strong></p>
       <ul class="list-tight">
-        <li><a href="series/ai-engineering/part1.html">Part 1: What Fills the Context Window</a></li>
+        <li>
+          <a href="series/ai-engineering/part1.html">Part 1: What Fills the Context Window</a>
+          <br><small class="meta"><time datetime="2026-02-24">2026-02-24</time> · A practitioner's guide to context engineering: the seven components, four strategies, failure modes, and token budgets.</small>
+        </li>
       </ul>
 
       <hr>
 
       <p><strong>Multi-Armed Bandits</strong></p>
       <ul class="list-tight">
-        <li><a href="series/bandits/part1.html">Part 1: Foundations</a></li>
+        <li>
+          <a href="series/bandits/part1.html">Part 1: Foundations</a>
+          <br><small class="meta"><time datetime="2026-02-24">2026-02-24</time> · Regret, concentration inequalities, Explore-then-Commit, and Upper Confidence Bound with interactive visualizations.</small>
+        </li>
         <li>Part 2: Advanced Algorithms (coming soon)</li>
         <li>Part 3: Modern Theory (coming soon)</li>
       </ul>
@@ -35,8 +105,8 @@
 
     <footer class="footer">
       <hr>
-      <p><a href="https://x.com">X</a> · <a href="https://linkedin.com">LinkedIn</a> · <a href="https://github.com">GitHub</a> · <a href="https://henryvu27.github.io/">Portfolio</a></p>
-      <p>© Henry Vu</p>
+      <p><a href="https://x.com/HenryVu27">X</a> · <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a> · <a href="https://github.com/HenryVu27">GitHub</a> · <a href="https://henryvu27.github.io/">Portfolio</a></p>
+      <p>&copy; Henry Vu</p>
     </footer>
   </main>
 </body>

@@ -3,7 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>What Fills the Context Window · Technical Blog</title>
+  <title>What Fills the Context Window: A Guide to Context Engineering | Henry Vu</title>
+  <meta name="description" content="A practitioner's guide to context engineering for LLMs. Covers the seven components of a context window, four strategies (write, select, compress, isolate), failure modes, token budgets, and measuring context quality.">
+  <meta name="author" content="Henry Vu">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <link rel="canonical" href="https://www.henryvu.blog/series/ai-engineering/part1.html">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="What Fills the Context Window: A Guide to Context Engineering">
+  <meta property="og:description" content="The seven components of a context window, four strategies for managing them, failure modes, token budgets, and measuring context quality. A practitioner's deep dive.">
+  <meta property="og:url" content="https://www.henryvu.blog/series/ai-engineering/part1.html">
+  <meta property="og:site_name" content="Henry Vu's Blog">
+  <meta property="og:image" content="https://www.henryvu.blog/series/ai-engineering/OG.jpg">
+  <meta property="article:published_time" content="2026-02-24T00:00:00Z">
+  <meta property="article:author" content="https://www.henryvu.blog/">
+  <meta property="article:section" content="AI Engineering">
+  <meta property="article:tag" content="context engineering">
+  <meta property="article:tag" content="LLM">
+  <meta property="article:tag" content="AI engineering">
+  <meta property="article:tag" content="context window">
+  <meta property="article:tag" content="RAG">
+  <meta property="article:tag" content="token budget">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@HenryVu27">
+  <meta name="twitter:creator" content="@HenryVu27">
+  <meta name="twitter:title" content="What Fills the Context Window: A Guide to Context Engineering">
+  <meta name="twitter:description" content="The seven components of a context window, four strategies for managing them, failure modes, and token budgets.">
+  <meta name="twitter:image" content="https://www.henryvu.blog/series/ai-engineering/OG.jpg">
+
+  <!-- RSS Feed -->
+  <link rel="alternate" type="application/rss+xml" title="Henry Vu's Blog" href="https://www.henryvu.blog/feed.xml">
+
+  <!-- Fonts & Styles (EXISTING - do not change) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
@@ -19,6 +53,75 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3CJTJES82Q"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3CJTJES82Q');
+  </script>
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "What Fills the Context Window: A Guide to Context Engineering",
+    "description": "A practitioner's guide to context engineering for LLMs. Covers the seven components of a context window, four strategies (write, select, compress, isolate), failure modes, token budgets, and measuring context quality.",
+    "image": "https://www.henryvu.blog/series/ai-engineering/OG.jpg",
+    "datePublished": "2026-02-24",
+    "dateModified": "2026-02-24",
+    "author": {
+      "@type": "Person",
+      "@id": "https://www.henryvu.blog/#author",
+      "name": "Henry Vu",
+      "url": "https://www.henryvu.blog",
+      "sameAs": [
+        "https://x.com/HenryVu27",
+        "https://www.linkedin.com/in/henry-vu27/",
+        "https://github.com/HenryVu27"
+      ]
+    },
+    "publisher": {
+      "@type": "Person",
+      "name": "Henry Vu",
+      "url": "https://www.henryvu.blog"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://www.henryvu.blog/series/ai-engineering/part1.html"
+    },
+    "isPartOf": {
+      "@type": "CreativeWorkSeries",
+      "name": "AI Engineering Series",
+      "url": "https://www.henryvu.blog/"
+    },
+    "keywords": ["context engineering", "AI engineering", "LLM", "context window", "token budget", "RAG", "prompt engineering", "AI agents"],
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["#seven-components", "#four-strategies", "#failure-modes"]
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.henryvu.blog/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "AI Engineering",
+          "item": "https://www.henryvu.blog/series/ai-engineering/part1.html"
+        }
+      ]
+    }
+  }
+  </script>
 </head>
 <body>
   <main class="page">
@@ -90,7 +193,7 @@
 
           <div class="theory-only">
             <div class="callout">
-              <p><a href="#ref-mei">Mei et al.'s 166-page survey</a> (arXiv:2507.13334, analyzing 1,411 papers) provides the first mathematical formalization. They model context as a structured assembly of six typed components:</p>
+              <p><a href="#ref-mei">Mei et al.'s 166-page survey</a> (arXiv:2507.13334, analyzing 1,411 papers) provides the first mathematical formalization for context engineering. They model context as a structured assembly of six typed components:</p>
               <p>$$C = A(c_\text{instr},\; c_\text{know},\; c_\text{tools},\; c_\text{mem},\; c_\text{state},\; c_\text{query})$$</p>
               <p>Context engineering then becomes a constrained optimization problem, where you find the assembly function $F$ that maximizes expected reward across tasks, subject to a hard window size limit:</p>
               <p>$$F^* = \arg\max_F \; \mathbb{E}_{\tau \sim \mathcal{T}} \left[\text{Reward}\!\left(P_\theta(Y \mid C_{F}(\tau)),\; Y^*_\tau\right)\right] \quad \text{s.t.} \;\; |C| \leq L_\text{max}$$</p>
@@ -141,7 +244,7 @@
                 <span style="color:var(--muted); font-size:12px;">500-3,000</span>
               </div>
               <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:5%; min-width:80px; background:#d1c4ac; border-radius:3px; padding:6px 10px; color:#6d6355; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Structured output</div>
+                <div style="width:5%; min-width:80px; background:#d1c4ac; border-radius:3px; padding:6px 10px; color:#6d6355; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Schema</div>
                 <span style="color:var(--muted); font-size:12px;">50-500</span>
               </div>
             </div>
@@ -201,11 +304,11 @@
 
           <p>I spend the least time worrying about the <strong>user prompt</strong> because it's the one thing I don't control. The immediate message from the human can be anything, from well-structured to incoherent, concise to rambling. The rest of your context engineering has to be robust enough to handle whatever arrives.</p>
 
-          <p>Where I've seen the most waste is <strong>state and short-term history</strong>, the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations just dump the raw history in verbatim, greetings, acknowledgments, off-topic tangents. The <a href="#ref-longmemeval">LongMemEval benchmark</a> (Wu et al., ICLR 2025) showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
+          <p>Where I've seen the most waste is <strong>state and short-term history</strong>, or memory for short, the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations just dump the raw history in verbatim, greetings, acknowledgments, off-topic tangents. The <a href="#ref-longmemeval">LongMemEval benchmark</a> (Wu et al., ICLR 2025) showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
 
           <p>A design principle that took me longer than it should have to internalize: in mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
 
-          <p>My agent injects a compact state block that gives the model temporal awareness and continuity across the ReAct loop:</p>
+          <p>A simple block with state information is injected to give the model temporal awareness and continuity across the ReAct loop:</p>
           </div>
 
 <div class="code-block" data-filename="state.py" data-lang="python">
@@ -223,9 +326,9 @@
 </div>
 
           <div class="deep-dive-only">
-          <p>This 50-100 token block tells the model what turn it's on, what phase the conversation is in, what time of day it is, and which tools it already called. Without it, the agent re-calls tools it used two turns ago or asks "how can I help you today?" on turn 8.</p>
+          <p>This 50-100 token block tells the model what turn it's on, what phase the conversation is in, what time of day it is, and which tools it already called.</p>
 
-          <p>I'm dedicating Part 3 entirely to <strong>long-term memory</strong> (persistent knowledge across conversations, things like user preferences, facts, summaries, learned patterns) because it's complex enough to need its own treatment.</p>
+          <p>I'm dedicating Part 3 entirely to <strong>long-term memory</strong> (persistent knowledge across conversations, things like user preferences, facts, summaries, learned patterns) due to the complexity.</p>
           </div>
 
           <div class="deep-dive-only">
@@ -254,7 +357,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
 
           <p>I don't think there's a clean answer here yet. I'm currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you're at Manus's scale with dozens of tools, the cache math probably dominates.</p>
 
-          <p>The broader principle from <a href="#ref-manus">Manus's engineering blog</a> is worth internalizing regardless of tool count: never reorder or mutate tokens already in the KV-cache prefix. Treat your prompt prefix as append-only. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. The major providers now offer explicit cache control: Anthropic supports up to 4 cache breakpoints per request with minimum cacheable lengths of 1,024 tokens for Sonnet and 4,096 for Opus, a default 5-minute TTL (refreshed on each hit), and a cache hierarchy where changes at any level (<code>tools</code> → <code>system</code> → <code>messages</code>) invalidate that level and everything after it. OpenAI offers automatic caching with a 50% discount on cached tokens. The gotchas are subtle: JSON key ordering instability in some languages (Swift, Go) breaks caches silently, toggling features like web search invalidates the system cache, and changing <code>tool_choice</code> invalidates the message cache.</p>
+          <p>The broader principle from <a href="#ref-manus">Manus's engineering blog</a> is worth internalizing regardless of tool count: never reorder or mutate tokens already in the KV-cache prefix. Treat your prompt prefix as append-only. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Both Anthropic and OpenAI now offer explicit cache control with up to 90% discounts on cached input tokens, but the gotchas are subtle: JSON key ordering instability in some languages (Swift, Go) breaks caches silently, toggling features like web search invalidates the system cache, and the cache follows a strict hierarchy (<code>tools</code> → <code>system</code> → <code>messages</code>) where changes at any level invalidate everything after it.</p>
 
           <p><strong>Structured output</strong> specifications (JSON schemas, type definitions, output constraints) are easy to overlook in a token budget because they feel like "free" structure. They're not. At scale they add up, and I've seen schemas that consume 300+ tokens before the model even starts generating.</p>
           </div>
@@ -282,7 +385,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
               <p>$$\text{Retrieve}^* = \arg\max_{\text{Retrieve}} \; I(Y^*;\; c_\text{know} \mid c_\text{query})$$</p>
               <p>And context assembly can be framed as Bayesian posterior inference, combining the likelihood of the query given a context with the prior over contexts given interaction history:</p>
               <p>$$P(C \mid c_\text{query}, \ldots) \propto P(c_\text{query} \mid C) \cdot P(C \mid \text{History}, \text{World})$$</p>
-              <p>Again, more math than most practitioners will ever need day-to-day. But I found the mutual information framing genuinely clarifying for one specific question: when two retrieval approaches return different documents, the one that tells the model more *new* information (higher mutual information with the answer, conditional on the query) is the better one. That helped me reason about why hybrid retrieval beats pure semantic search in my own system.</p>
+              <p>Again, more math than most practitioners will ever need day-to-day. But I found the mutual information framing helpful for answering one specific question: when two retrieval approaches return different documents, the one that tells the model more *new* information (higher mutual information with the answer, conditional on the query) is the better one. This provides some intuition as to why hybrid retrieval beats pure semantic search.</p>
             </div>
           </div>
         </section>
@@ -308,7 +411,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
 
           <p><strong>Writing</strong> means getting information out of the context window and into external storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team has a concrete version of this that I really like: their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent. (Though Manus later found that roughly a third of all agent actions were spent updating the todo list, and shifted to a dedicated planner agent instead. Even clever patterns have costs.)</p>
 
-          <p>My first version wrote a rolling summary every 5 turns and called it a day. That's fine for a prototype, but production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under. I think of it as three tiers:</p>
+          <p>My first version wrote a rolling summary every 5 turns and called it a day. That's fine for a prototype, but production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under (imagine Claude Code running on million-line codebase). I think of it as three tiers:</p>
 
           <ol>
             <li><strong>Raw context</strong> when below ~75% capacity. If the window has room, don't compress at all. Raw turns carry more signal than any summary.</li>
@@ -344,7 +447,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
 
           <p>One finding I keep coming back to from the <a href="#ref-rcc">recurrent context compression</a> research: compressing instructions and context simultaneously degrades responses. You need to compress the data but preserve the instructions separately. I was summarizing entire turns including the system-injected guidance in my first attempt, and the model started ignoring its own rules.</p>
 
-          <p><strong>Selecting</strong> is the complement, retrieving relevant information back when needed. This includes reading back scratchpad notes from earlier steps, querying stored memories using embeddings or keyword search, and full RAG pipelines over documents or code. One pattern worth calling out specifically: if you have many tools, you can use RAG over tool descriptions to select the right one. The <a href="#ref-rag-mcp">RAG-MCP paper</a> (Writer.com) measured a 3x improvement in selection accuracy compared to exposing all tools at once (from 13.6% to 43.1%), which I find somewhat funny because it means the agent needs a search engine just to find its own capabilities.</p>
+          <p><strong>Selecting</strong> is the complement, retrieving relevant information back when needed. This includes reading back scratchpad notes from earlier steps, querying stored memories using embeddings or keyword search, and full RAG pipelines over documents or code. One pattern worth calling out specifically: if you have many tools, you can use RAG over tool descriptions to select the right one. The <a href="#ref-rag-mcp">RAG-MCP paper</a> (Writer.com) measured a 3x improvement in selection accuracy compared to exposing all tools at once (from 13.6% to 43.1%)l; the agent needs a search engine just to find its own capabilities.</p>
 
           <p>Selection quality depends heavily on query quality. My agent rewrites the user's message into a self-contained retrieval query before searching:</p>
           </div>

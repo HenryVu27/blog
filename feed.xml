@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Henry Vu's Technical Blog</title>
+    <link>https://www.henryvu.blog</link>
+    <description>Deep-dive technical content about AI engineering, ML systems, and decision-making algorithms.</description>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 24 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <atom:link href="https://www.henryvu.blog/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>What Fills the Context Window</title>
+      <link>https://www.henryvu.blog/series/ai-engineering/part1.html</link>
+      <guid>https://www.henryvu.blog/series/ai-engineering/part1.html</guid>
+      <pubDate>Mon, 24 Feb 2026 00:00:00 GMT</pubDate>
+      <description>A practitioner's guide to context engineering for LLMs. What actually fills the context window, how to manage token budgets, the four strategies (write, select, compress, isolate), failure modes, and measuring context quality.</description>
+    </item>
+    <item>
+      <title>Multi-Armed Bandits: Foundations</title>
+      <link>https://www.henryvu.blog/series/bandits/part1.html</link>
+      <guid>https://www.henryvu.blog/series/bandits/part1.html</guid>
+      <pubDate>Mon, 24 Feb 2026 00:00:00 GMT</pubDate>
+      <description>Deep dive into the exploration-exploitation tradeoff. Covers regret, finite-armed stochastic bandits, concentration inequalities, Explore-then-Commit, and Upper Confidence Bound (UCB) with interactive visualizations.</description>
+    </item>
+  </channel>
+</rss>

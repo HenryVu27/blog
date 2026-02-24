@@ -1,0 +1,33 @@
+# Henry Vu's Technical Blog
+
+> Deep-dive technical content about AI engineering, ML systems, and decision-making algorithms. Written by a practitioner who builds real systems.
+
+## About This Site
+
+This blog publishes long-form, citation-dense technical articles about AI/ML engineering. The focus is on demystifying complex systems through patient, layered explanation with evidence backing every claim.
+
+## Author
+
+Henry Vu - AI/ML Engineer
+- Website: https://www.henryvu.blog
+- LinkedIn: https://www.linkedin.com/in/henry-vu27/
+- GitHub: https://github.com/HenryVu27
+- X/Twitter: https://x.com/HenryVu27
+
+## Content
+
+### AI Engineering Series
+- [Part 1: What Fills the Context Window](https://www.henryvu.blog/series/ai-engineering/part1.html): Comprehensive guide to context engineering for LLMs. Covers the seven components of a context window, four strategies (write, select, compress, isolate), failure modes, token budgets, and measuring context quality. 25 min deep dive.
+
+### Multi-Armed Bandits Series
+- [Part 1: Foundations](https://www.henryvu.blog/series/bandits/part1.html): Deep dive into the exploration-exploitation tradeoff. Covers regret, stochastic bandits, concentration inequalities, Explore-then-Commit, and Upper Confidence Bound (UCB) algorithms. Includes interactive visualizations.
+
+## Topics Covered
+- Context engineering for large language models
+- AI engineering and building with LLMs
+- Context window composition and token budgets
+- RAG (Retrieval-Augmented Generation)
+- Multi-armed bandit algorithms
+- Exploration-exploitation tradeoffs
+- Upper Confidence Bound (UCB)
+- ML systems and inference optimization

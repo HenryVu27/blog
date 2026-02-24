@@ -1,10 +1,9 @@
 /* Builder / Deep Dive mode toggle — inline with meta */
 
 .mode-toggle {
-  display: inline-flex;
+  display: flex;
   gap: 0;
-  margin-left: 16px;
-  vertical-align: baseline;
+  margin-top: 8px;
 }
 
 .mode-toggle button {

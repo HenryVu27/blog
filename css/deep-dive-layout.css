@@ -51,7 +51,6 @@
   max-width: 1600px;
   margin: 0 auto;
   padding: 0 16px;
-  align-items: start;
 }
 
 @media(min-width: 1200px){
@@ -62,17 +61,18 @@
 }
 
 .toc{
-  position: sticky;
-  top: 32px;
-  max-height: calc(100vh - 64px);
-  overflow-y: auto;
-  height: fit-content;
   border: none;
   border-right: 1px solid var(--border);
   border-radius: 0;
   padding: 0 16px 0 0;
   margin: 0;
   background: transparent;
+}
+.toc-sticky{
+  position: sticky;
+  top: 32px;
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
 }
 @media(min-width: 1800px){
   .toc{

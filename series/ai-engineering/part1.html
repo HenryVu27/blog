@@ -9,6 +9,9 @@
   <link rel="stylesheet" href="../../css/deep-dive-layout.css">
   <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="../../css/mode-toggle.css">
+  <link rel="stylesheet" href="../../css/prism-blog.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+  <link rel="stylesheet" href="../../css/code-blocks.css">
   <script>try{if(localStorage.getItem('blog-reading-mode')==='deep-dive')document.documentElement.classList.add('deep-dive-mode')}catch(e){}</script>
   <!-- KaTeX for Deep Dive math -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
@@ -152,6 +155,7 @@
           <p>My agent's system prompt is broken into XML-tagged sections, each responsible for a distinct behavioral concern:</p>
           </div>
 
+<div class="code-block" data-filename="system_prompt.xml" data-lang="xml">
 <pre><code>&lt;identity&gt;
   Personality, voice, coach name
 &lt;/identity&gt;
@@ -181,6 +185,7 @@
 &lt;examples&gt;
   6 few-shot patient coaching conversations
 &lt;/examples&gt;</code></pre>
+</div>
 
           <div class="deep-dive-only">
           <p>I started using XML tags mostly for my own sanity (it's easier to review a prompt when you can collapse sections), but it turns out LLMs respond measurably better to structured input than unstructured dumps. Both <a href="#ref-anthropic">Anthropic</a> and Google recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which matters more than you'd think once your prompt is 2,000+ tokens and three people are editing it.</p>
@@ -189,9 +194,12 @@
 
           <p>Where I've seen the most waste is <strong>state and short-term history</strong>, the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations (my first version included) just dump the raw history in verbatim, greetings, acknowledgments, off-topic tangents, all of it. The <a href="#ref-longmemeval">LongMemEval benchmark</a> (Wu et al., ICLR 2025) showed that models given the full ~113K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
 
+          <p>A design principle that took me longer than it should have to internalize: in mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
+
           <p>My agent injects a compact state block that gives the model temporal awareness and continuity across the ReAct loop:</p>
           </div>
 
+<div class="code-block" data-filename="state.py" data-lang="python">
 <pre><code>def build_conversation_state(turn, phase, recent_tool_calls, active_topic, current_datetime):
     lines = [f"  &lt;turn&gt;{turn}&lt;/turn&gt;", f"  &lt;phase&gt;{phase}&lt;/phase&gt;"]
     if current_datetime:
@@ -203,6 +211,7 @@
     if active_topic:
         lines.append(f"  &lt;focus&gt;{active_topic}&lt;/focus&gt;")
     return "&lt;conversation_state&gt;\n" + "\n".join(lines) + "\n&lt;/conversation_state&gt;"</code></pre>
+</div>
 
           <div class="deep-dive-only">
           <p>This 50-100 token block tells the model what turn it's on, what phase the conversation is in, what time of day it is, and which tools it already called. Without it, the agent re-calls tools it used two turns ago or asks "how can I help you today?" on turn 8.</p>
@@ -216,6 +225,7 @@
           <p>In my agent, the retrieval tool automatically enriches queries with what it already knows about the patient:</p>
           </div>
 
+<div class="code-block" data-filename="tools.py" data-lang="python">
 <pre><code>@tool
 async def search_knowledge_base(query, document_type=None, tags=None, condition_type=None):
     state = await session_store.get(session_id)
@@ -226,11 +236,14 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
 
     filters = RetrievalFilters(document_type=document_type, tags=tags, condition_type=condition_type)
     response = await retriever.retrieve(query=query, filters=filters, state=state)</code></pre>
+</div>
 
           <div class="deep-dive-only">
           <p>The agent decides when to search (pull, not push), and the tool enriches the query behind the scenes. The condition filter means a Type 2 patient never sees Type 1 insulin pump troubleshooting guides, without the patient or the model needing to specify that constraint explicitly.</p>
 
-          <p><strong>Tool definitions</strong> are the sneaky budget item. Function signatures the system can invoke consume context tokens whether they're used or not, and there's a genuine tension in how to manage them. <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking, where tools stay in context but get suppressed at the decoding level through a state machine. I don't think there's a clean answer here yet. I'm currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you're at Manus's scale with dozens of tools, the cache math probably dominates. Worth noting separately: Anthropic and OpenAI both offer explicit cache control headers that let you pin specific prefix segments in the KV-cache, complementing the implicit prefix caching that Manus optimizes for. If you're making repeated calls with stable tool definitions, these APIs can cut your per-call cost significantly even without restructuring your prompt.</p>
+          <p><strong>Tool definitions</strong> are the sneaky budget item. Function signatures the system can invoke consume context tokens whether they're used or not, and there's a genuine tension in how to manage them. <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking, where tools stay in context but get suppressed at the decoding level through a state machine. I don't think there's a clean answer here yet. I'm currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you're at Manus's scale with dozens of tools, the cache math probably dominates.</p>
+
+          <p>The broader principle from <a href="#ref-schmid-manus">Schmid's analysis of Manus</a> is worth internalizing regardless of tool count: never reorder or mutate tokens already in the KV-cache prefix. Treat your prompt prefix as append-only. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Anthropic and OpenAI both offer explicit cache control headers that let you pin specific prefix segments, complementing the implicit prefix caching that Manus optimizes for.</p>
 
           <p><strong>Structured output</strong> specifications (JSON schemas, type definitions, output constraints) are easy to overlook in a token budget because they feel like "free" structure. They're not. At scale they add up, and I've seen schemas that consume 300+ tokens before the model even starts generating.</p>
           </div>
@@ -279,37 +292,48 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
 
           <p><strong>Writing</strong> means getting information out of the context window and into external storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team has a concrete version of this that I really like: their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent.</p>
 
-          <p>My agent writes rolling summaries every 5 turns, using a cheap Gemini Flash call to compress the conversation into 2-4 sentences:</p>
+          <p>My first version wrote a rolling summary every 5 turns and called it a day. That's fine for a prototype, but production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under. I think of it as three tiers:</p>
+
+          <ol>
+            <li><strong>Raw context</strong> when below ~75% capacity. If the window has room, don't compress at all. Raw turns carry more signal than any summary.</li>
+            <li><strong>Compact first</strong> when approaching the budget. Strip low-signal content (greetings, filler acknowledgments, tool call boilerplate) while keeping messages structurally intact. No LLM call needed.</li>
+            <li><strong>Summarize</strong> only when compaction isn't enough. Replace older turns with a generated summary, preserving the recent window verbatim.</li>
+          </ol>
+
+          <p>The 75% threshold matters more than it might seem. I call it the <strong>pre-rot threshold</strong>: compress proactively at ~75% capacity, not reactively at 95%. By the time you're near the wall, attention quality has already degraded across the last 20% of growth (this connects directly to the distraction failure mode in Section 4). Compressing early keeps the model in its high-performance zone.</p>
           </div>
 
-<pre><code>async def _update_summary(self, session_id, current_turn):
-    existing = await self._store.get_latest_summary(session_id)
-    start_turn = (existing.covers_through_turn + 1) if existing else 1
-    messages = await self._store.get_messages_range(session_id, start_turn, current_turn)
+<div class="code-block" data-filename="context_manager.py" data-lang="python">
+<pre><code>async def manage_context(self, session_id, current_turn, window_budget):
+    messages = await self._store.get_messages(session_id)
+    current_usage = estimate_tokens(messages)
 
-    conversation_text = "\n".join(f"{m['role'].upper()}: {m['content']}" for m in messages)
+    # Tier 1: Raw context fits — do nothing
+    if current_usage < window_budget * 0.75:
+        return messages
 
-    prompt = f"""Summarize this coaching conversation concisely. Focus on:
-    - Key patient health data shared (readings, symptoms, adherence)
-    - Strategies discussed or recommended
-    - Patient's concerns and motivation level
-    Omit: greetings, small talk, generic acknowledgments.
+    # Tier 2: Compact — strip low-signal content, keep messages intact
+    compacted = self._compact(messages)
+    if estimate_tokens(compacted) < window_budget * 0.85:
+        return compacted
 
-    Previous summary: {existing.summary if existing else ""}
-    New conversation: {conversation_text}
-
-    Write a concise summary (2-4 sentences)."""
-
-    summary = await self._gemini.generate(prompt, temperature=0.0)</code></pre>
+    # Tier 3: Summarize — replace old turns with generated summary
+    cutoff = self._find_summary_boundary(compacted)
+    summary = await self._summarize(compacted[:cutoff])
+    return [summary_message(summary)] + compacted[cutoff:]</code></pre>
+</div>
 
           <div class="deep-dive-only">
-          <p>The summary replaces the turns it covers, so the context window never accumulates unbounded history. On turn 20, the model sees a summary covering turns 1-15 plus the raw last 5 turns, rather than all 20 turns verbatim.</p>
+          <p>The <code>_compact</code> step does straightforward string surgery: it strips "thanks!", "ok sounds good", empty assistant acknowledgments, and tool call metadata that the model doesn't need to see on future turns. No LLM call, just pattern matching. The summarization tier only fires when compaction alone can't get below 85% capacity, which in practice means conversations beyond ~15 turns.</p>
+
+          <p>One finding I keep coming back to from the <a href="#ref-rcc">recurrent context compression</a> research: compressing instructions and context simultaneously degrades responses. You need to compress the data but preserve the instructions separately. I was summarizing entire turns including the system-injected guidance in my first attempt, and the model started ignoring its own rules.</p>
 
           <p><strong>Selecting</strong> is the complement, retrieving relevant information back when needed. This includes reading back scratchpad notes from earlier steps, querying stored memories using embeddings or keyword search, and full RAG pipelines over documents or code. One pattern worth calling out specifically: if you have many tools, you can use RAG over tool descriptions to select the right one. This improves selection accuracy 3x compared to exposing all tools at once, which I find somewhat funny because it means the agent needs a search engine just to find its own capabilities.</p>
 
           <p>Selection quality depends heavily on query quality. My agent rewrites the user's message into a self-contained retrieval query before searching:</p>
           </div>
 
+<div class="code-block" data-filename="query_rewriter.py" data-lang="python">
 <pre><code># "My numbers have been all over the place lately"
 # -&gt; "blood sugar management strategies Type 2 patient on metformin irregular post-meal readings"
 
@@ -323,32 +347,36 @@ async def rewrite(self, query, conversation_history, patient_profile):
     - Keep it concise (under 30 words)
     - Resolve pronouns ("it" -&gt; the patient's condition)
     - Strip emotional language, focus on the information need"""</code></pre>
+</div>
 
           <div class="deep-dive-only">
           <p>The comment at the top shows why this matters. "My numbers have been all over the place lately" has almost zero retrieval value as-is: no condition type, no medication context, no timeframe. The rewriter infers "post-meal readings" from the last 3 turns, adds the patient's diagnosis and medication context, and produces a query that actually hits relevant documents.</p>
 
-          <p><strong>Compression</strong> reduces tokens while maintaining task performance. Summarization replaces older conversation history with a condensed version (Claude Code applies auto-compact when approaching context limits, though the exact threshold has shifted across releases). Trimming removes older messages using heuristics (drop oldest N) or trained pruners like the Provence model, which identifies which messages contribute least to task performance. One finding I keep coming back to from the recurrent context compression research, because I violated it in my first attempt: compressing instructions and context simultaneously degrades responses. You need to compress the data but preserve the instructions separately. I was summarizing entire turns including the system-injected guidance, and the model started ignoring its own rules.</p>
-
-          <p>My agent uses a two-pass trimming strategy. First a hard message count cap, then a character budget that accounts for the system prompt size.</p>
+          <p><strong>Compression</strong> reduces tokens while maintaining task performance. Summarization replaces older conversation history with a condensed version (Claude Code applies auto-compact when approaching context limits). Trimming removes older messages, and the critical detail is how you trim. Per-message FIFO (drop the oldest message) is the naive approach, and it breaks things in subtle ways. Dropping an individual assistant message can orphan a tool result from its tool call, producing a conversation that the API rejects or the model misinterprets. Production SDKs from both <a href="#ref-openai-agents">OpenAI</a> and Anthropic trim in <strong>atomic turn groups</strong>: a user message plus all assistant messages and tool results that follow it, removed as a unit.</p>
           </div>
 
-<pre><code># Pass 1: Message count cap (6 turns = 12 messages)
-max_messages = CONTEXT_WINDOW_TURNS * 2  # 6 * 2 = 12
-conversation = conversation[-max_messages:]
-
-# Pass 2: Character budget (subtract system prompt from 120K char limit)
-remaining = CONTEXT_MAX_CHARS - len(system_prompt)
-while estimate_chars(conversation) &gt; remaining and len(conversation) &gt; 2:
-    conversation = conversation[1:]  # Drop oldest</code></pre>
+<div class="code-block" data-filename="trimming.py" data-lang="python">
+<pre><code>def trim_oldest_turn(messages):
+    """Remove the oldest complete turn group atomically."""
+    if not messages:
+        return messages
+    i = 0
+    while i < len(messages):
+        if i > 0 and messages[i].role == "user":
+            break
+        i += 1
+    return messages[i:]</code></pre>
+</div>
 
           <div class="deep-dive-only">
-          <p>The two-pass approach handles two different problems. The message cap prevents the model from getting distracted by old turns, and the character budget prevents the total context from overflowing, accounting for the fact that system prompts vary in size depending on how much patient context has been accumulated.</p>
+          <p>The function walks forward from the start until it hits the next user message, then slices off everything before it. One complete turn (user message, assistant response, any tool calls and results in between) gets removed as an atomic unit. My agent calls this in a loop until the conversation fits within the character budget, which handles the same two problems as a message cap plus character budget but without the risk of orphaned tool results.</p>
 
           <p><strong>Isolation</strong> means splitting information across separate processing units so each one gets a clean, focused context window. Multi-agent systems give each sub-agent its own window focused on a specific subtask, returning a condensed summary (1,000-2,000 tokens) to the lead agent. HuggingFace's CodeAgent isolates token-heavy objects in sandbox environments, keeping only references in the main context. You can also separate LLM-exposed fields from auxiliary context storage in your state schema, because not everything the system knows needs to be in the window.</p>
 
           <p>My agent isolates safety classification into separate LLM calls so the guardrail context never contaminates the main patient conversation:</p>
           </div>
 
+<div class="code-block" data-filename="graph.py" data-lang="python">
 <pre><code># Each node runs in its own isolated LLM call with its own context
 graph = StateGraph(CoachingState)
 
@@ -366,6 +394,7 @@ graph.add_conditional_edges("input_gate", route_after_input_gate, {
 graph.add_edge("pro_react_agent", "output_gate")
 graph.add_edge("flash_react_agent", "output_gate")
 graph.add_edge("output_gate", END)</code></pre>
+</div>
 
           <div class="deep-dive-only">
           <p>The input gate sees only the latest user message and a short classification prompt. The output gate sees only the agent's response and a scope-checking prompt. Neither gate's context (safety rules, classification examples) appears in the main agent's window, keeping the patient conversation clean and focused.</p>
@@ -504,6 +533,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <p>Everything gets assembled in a single <code>prepare_context</code> hook that runs before every LLM call in the ReAct loop:</p>
           </div>
 
+<div class="code-block" data-filename="context.py" data-lang="python">
 <pre><code>async def prepare_context(state: CoachingState):
     session_id = state.get("session_id", "default")
     session_state = await session_store.get(session_id)
@@ -537,6 +567,7 @@ graph.add_edge("output_gate", END)</code></pre>
         conversation = conversation[1:]
 
     return {"llm_input_messages": [SystemMessage(system_prompt)] + conversation}</code></pre>
+</div>
 
           <div class="deep-dive-only">
           <p>This function is where all the context engineering actually happens. Load state, build the prompt from components, prepend the conversation state block, cache the result, and trim the conversation window. Every technique I described in the earlier sections (XML structure, rolling summaries, trimming, isolation) converges in this one function. And if you noticed the <code># &lt;-- problematic ordering</code> comment, good. I'll come back to it.</p>
@@ -710,5 +741,10 @@ graph.add_edge("output_gate", END)</code></pre>
 
   <script src="../../js/katex-init.js"></script>
   <script src="../../js/mode-toggle.js"></script>
+  <!-- Prism.js: syntax highlighting -->
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+  <script src="../../js/code-blocks.js"></script>
 </body>
 </html>

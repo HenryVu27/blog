@@ -1,0 +1,169 @@
+/* IDE-style code blocks with title bar and collapse */
+
+.code-block {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 16px 0;
+  overflow: hidden;
+  background: #f8f8f8;
+}
+
+/* Title bar */
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #eceae6;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: background 150ms ease;
+}
+
+.code-header:hover {
+  background: #e4e1dc;
+}
+
+.code-filename {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "Liberation Mono", monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+  letter-spacing: 0.01em;
+}
+
+.code-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 120ms ease;
+}
+
+.code-toggle:hover {
+  background: rgba(0,0,0,0.08);
+}
+
+.code-toggle svg {
+  width: 16px;
+  height: 16px;
+  color: #777;
+  transition: transform 250ms ease;
+}
+
+/* Collapsed state */
+.code-block.collapsed .code-header {
+  border-bottom-color: transparent;
+}
+
+.code-block.collapsed .code-toggle svg {
+  transform: rotate(-90deg);
+}
+
+.code-block.collapsed .code-body {
+  display: none;
+}
+
+/* Code body */
+.code-body {
+  overflow: auto;
+}
+
+/* Override global pre styles when inside .code-block */
+.code-block pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.code-block pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 14px;
+}
+
+/* Line numbers via Prism plugin */
+.code-block pre.line-numbers {
+  padding-left: 56px;
+  position: relative;
+}
+
+.code-block .line-numbers-rows {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  width: 40px;
+  padding: 0;
+  border-right: 1px solid var(--border);
+  pointer-events: none;
+  user-select: none;
+}
+
+.code-block .line-numbers-rows > span {
+  display: block;
+  padding-right: 10px;
+  text-align: right;
+  color: #b0b0b0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.code-block .line-numbers-rows > span::before {
+  content: counter(linenumber);
+  counter-increment: linenumber;
+}
+
+/* Horizontal scrollbar styling */
+.code-body::-webkit-scrollbar {
+  height: 6px;
+}
+
+.code-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-body::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+/* Responsive: smaller padding on mobile */
+@media (max-width: 768px) {
+  .code-block pre {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .code-block pre.line-numbers {
+    padding-left: 48px;
+  }
+
+  .code-block .line-numbers-rows {
+    width: 34px;
+    top: 12px;
+  }
+
+  .code-block .line-numbers-rows > span {
+    font-size: 12px;
+  }
+
+  .code-header {
+    padding: 6px 12px;
+  }
+
+  .code-filename {
+    font-size: 12px;
+  }
+}

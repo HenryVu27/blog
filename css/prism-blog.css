@@ -1,0 +1,103 @@
+/* Custom Prism.js theme for henryvu.blog
+   Light IDE aesthetic with muted, tasteful syntax colors.
+   Designed to complement the warm minimal blog palette. */
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: #383a42;
+  text-shadow: none;
+  direction: ltr;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  tab-size: 4;
+  hyphens: none;
+}
+
+/* Token colors — muted One Light-inspired palette */
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #a0a1a7;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #383a42;
+}
+
+.token.namespace {
+  opacity: 0.8;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #c05533;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #50820a;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #7b6a40;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #a626a4;
+}
+
+.token.function,
+.token.class-name {
+  color: #3d6cb3;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #986801;
+}
+
+.token.important,
+.token.bold {
+  font-weight: 500;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+/* Decorator support (Python @decorators) */
+.token.decorator,
+.token.annotation {
+  color: #986801;
+}
+
+/* Override Prism's default background/border for pre and code */
+pre[class*="language-"],
+code[class*="language-"] {
+  background: none;
+}

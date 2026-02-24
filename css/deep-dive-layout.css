@@ -89,7 +89,7 @@
   line-height: 1.5;
 }
 .toc li a:hover{
-  text-decoration: underline;
+  color: #c47a2a;
 }
 .toc-section-number{
   color: var(--text);

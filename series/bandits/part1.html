@@ -4,238 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Multi-Armed Bandits Part 1: Foundations · Technical Blog</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="post-styles.css">
+  <link rel="stylesheet" href="../../css/styles.css">
+  <link rel="stylesheet" href="../../css/post-styles.css">
+  <link rel="stylesheet" href="../../css/deep-dive-layout.css">
+  <link rel="stylesheet" href="../../css/katex-fixes.css">
+  <link rel="stylesheet" href="../../css/proof-popover.css">
+  <link rel="stylesheet" href="../../css/components.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
   <style>
-    /* Safari-specific KaTeX fixes */
-    .katex {
-      line-height: 1 !important;
-    }
+    /* Part 1 specific: algorithm-box background override */
+    .algorithm-box { background: #f5f4f0; }
 
-    .katex-display {
-      line-height: 1 !important;
-      margin: 1em 0 !important;
-    }
-
-    /* Fix for sigma and other large operators in Safari */
-    .katex .mop {
-      vertical-align: baseline !important;
-    }
-
-    /* Ensure proper alignment of subscripts and superscripts */
-    .katex .msubsup {
-      vertical-align: baseline !important;
-    }
-    
-    /* Override global page styles for mixed layout */
-    .page{
-      max-width: none;
-      margin: 80px 0 64px 0;
-      padding: 0;
-    }
-    
-    .page-header {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 0 16px;
-    }
-    
-    @media (max-width: 768px) {
-      .page {
-        margin: 40px 0 32px 0;
-      }
-      .page-header {
-        padding: 0 16px;
-      }
-      .layout {
-        display: block;
-        max-width: 800px;
-        padding: 0 16px;
-      }
-      .toc {
-        position: static;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding: 0 0 16px 0;
-        margin-bottom: 16px;
-      }
-      .toc ul {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-      .toc li a {
-        font-size: 16px;
-        line-height: 1.4;
-        white-space: nowrap;
-      }
-    }
-    
-    .layout{
-      display: grid;
-      grid-template-columns: 300px minmax(720px, 1000px) 1fr;
-      gap: 32px;
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 0 16px;
-      align-items: start;
-    }
-    
-    @media(min-width: 1200px){
-      .layout{
-        grid-template-columns: 320px minmax(800px, 1200px) 1fr;
-        max-width: 1800px;
-      }
-    }
-    .toc{
-      position: static; 
-      height:fit-content;
-      border: none;
-      border-right: 1px solid var(--border);
-      border-radius: 0;
-      padding: 0 16px 0 0;
-      margin: 0;
-      background: transparent;
-    }
-    @media(min-width: 1800px){
-      .toc{
-        padding: 0 24px 0 0;
-        margin-right: 24px;
-      }
-    }
-    .toc ul{list-style:none; padding-left:0}
-    .toc li{margin:8px 0}
-    .toc li a{
-      display: flex;
-      align-items: baseline;
-      text-decoration: none;
-      color: var(--text);
-      font-size: 22px;
-      line-height: 1.5;
-    }
-    .toc li a:hover{
-      text-decoration: underline;
-    }
-    .toc-section-number{
-      color: var(--text);
-      font-weight: 400;
-      margin-right: 8px;
-      min-width: 20px;
-      font-size: 22px;
-    }
-    @media(min-width: 1800px){
-      .toc-section-number{
-        margin-right: 16px;
-        min-width: 28px;
-      }
-    }
-    .toc-section-title{
-      color: var(--text);
-      font-weight: 400;
-    }
-    
-    .toc h2{
-      font-size: 29px;
-      margin: 0 0 16px 0;
-      font-weight: 600;
-    }
-    .post {
-      margin-top: 0;
-    }
-    .post section:first-child h2:first-child {
-      margin-top: 0;
-    }
-    .series-nav {
-      background: transparent;
-      border: none;
-      border-radius: 0;
-      padding: 0;
-      margin: 24px 0 0 0;
-    }
-    .series-nav h3 {
-      margin: 0 0 12px 0;
-      font-size: 22px;
-    }
-    .series-nav ul {
-      margin: 0;
-      padding-left: 20px;
-    }
-    .algorithm-box {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      margin: 16px 0;
-      background: #f5f4f0;
-    }
-    .algorithm-box h4 {
-      margin: 0 0 12px 0;
-      font-size: 19px;
-      font-weight: 700;
-    }
-    .edit-green { background: #e6ffed; border-radius: 3px; padding: 0 2px; }
-    
-    .content-divider {
-      height: 1px;
-      background-color: var(--border);
-      /* Robust full-bleed divider */
-      box-shadow: 0 0 0 100vmax var(--border);
-      clip-path: inset(0 -100vmax);
-      margin: 64px 0; /* equal spacing above and below */
-    }
-
-    /* Make the header's hr full-bleed as well */
-    .page-header hr{
-      border: 0;
-      border-top: 1px solid var(--border);
-      /* Full-bleed */
-      box-shadow: 0 0 0 100vmax var(--border);
-      clip-path: inset(0 -100vmax);
-      margin: 32px 0; /* keeps header spacing tidy */
-    }
-
-    /* Proof popover system */
-    .proof-popover-trigger{
-      display: inline-block;
-      background: #d4d1c4;
-      border: 1px solid #6b6a61;
-      border-radius: 8px;
-      padding: 2px 8px;
-      cursor: pointer;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.4);
-      transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
-    }
-    .proof-popover-trigger:hover{
-      background: #c7c3b5;
-      border-color: #56554d;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
-    }
-    .proof-popover{
-      position: absolute;
-      z-index: 2000;
-      display: none;
-      width: 720px;
-      max-width: min(98vw, 900px);
-      max-height: 480px;
-      overflow: auto;
-      background: #ffffff;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-      padding: 12px 14px;
-      /* Safari compatibility */
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-    }
-    .proof-popover.visible{ display: block; }
-    .proof-popover h4{ margin: 4px 0 8px 0; font-size: 18px; }
-    .proof-popover .meta{ font-size: 13px; color: var(--muted, #666); margin-bottom: 8px; }
-    .proof-center{ text-align: center; margin: 12px 0; }
-
-    /* Visualization styles */
+    /* Visualization styles (specific to this post) */
     .viz-container {
       background: #f5f4f0;
       border: 1px solid var(--border);
@@ -308,8 +90,6 @@
       height: 18px;
       fill: currentColor;
     }
-
-    /* Settings Modal */
     .settings-modal {
       display: none;
       position: fixed;
@@ -485,7 +265,7 @@
   <main class="page">
     <div class="page-header">
       <nav class="nav">
-        <a href="index.html" class="back-btn">← Back</a>
+        <a href="../../index.html" class="back-btn">← Back</a>
       </nav>
 
       <header>
@@ -543,7 +323,7 @@
           <h2>A Classic Dilemma</h2>
 
           <figure>
-            <img src="MAB.jpg" alt="Choosing among uncertain options in a multi-armed bandit" style="max-width:100%; height:auto;" />
+            <img src="images/MAB.jpg" alt="Choosing among uncertain options in a multi-armed bandit" style="max-width:100%; height:auto;" />
           </figure>
 
           <p>Imagine you're playing a three-armed bandit machine. You've already pulled each lever several times and observed these payoffs (in dollars):</p>
@@ -765,7 +545,7 @@
           </div>
 
           <figure>
-            <img src="ETC.png" alt="Explore-then-Commit strategy visualization" style="max-width:100%; height:auto;" />
+            <img src="images/ETC.png" alt="Explore-then-Commit strategy visualization" style="max-width:100%; height:auto;" />
           </figure>
 
           <p>To analyze the regret of ETC, recall that $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$ from the regret decomposition above. Let's denote $i^* = \arg\max_i \mu_i$ as the optimal arm.</p>
@@ -1076,221 +856,10 @@
     <div id="proof-popover-content"></div>
   </div>
 
+  <script src="../../js/katex-init.js"></script>
+  <script src="../../js/proof-popover.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
-      renderMathInElement(document.body, {
-        delimiters: [
-          {left: "$$", right: "$$", display: true},
-          {left: "$", right: "$", display: false}
-        ],
-        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
-      });
-
-      // Hover-based proof popover controller
-      const popover = document.getElementById('proof-popover');
-      const contentEl = document.getElementById('proof-popover-content');
-      let activeTrigger = null;
-      let hideTimer = null;
-      let isPopoverHovered = false;
-
-      function clearHideTimer(){
-        if(hideTimer){
-          clearTimeout(hideTimer);
-          hideTimer = null;
-        }
-      }
-
-      function scheduleHide(delay = 300){
-        clearHideTimer();
-        hideTimer = setTimeout(() => {
-          if (!isPopoverHovered) {
-            hidePopover();
-          }
-        }, delay);
-      }
-
-      function showPopoverFor(trigger){
-        clearHideTimer();
-        activeTrigger = trigger;
-        const proofId = trigger.getAttribute('data-proof-id');
-        const hidden = document.getElementById(proofId);
-        if(!hidden){ return; }
-
-        contentEl.innerHTML = hidden.innerHTML;
-
-        // Render KaTeX inside the popover content
-        try {
-          renderMathInElement(contentEl, {
-            delimiters: [
-              {left: "$$", right: "$$", display: true},
-              {left: "$", right: "$", display: false}
-            ],
-            ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
-          });
-        } catch(e) {
-          console.warn('KaTeX render failed in popup:', e);
-        }
-
-        // Show and position with Safari-compatible method
-        popover.classList.add('visible');
-        popover.style.visibility = 'hidden';
-
-        // Force layout reflow for Safari
-        popover.offsetHeight;
-
-        positionPopover(trigger);
-
-        popover.style.visibility = '';
-        popover.setAttribute('aria-hidden', 'false');
-      }
-
-      function positionPopover(trigger){
-        // Get fresh coordinates after KaTeX rendering
-        const triggerRect = trigger.getBoundingClientRect();
-        const popoverRect = popover.getBoundingClientRect();
-        const spacing = 8;
-
-        // Detect Safari vs Chrome/Chromium
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-        console.log('Browser detection - isSafari:', isSafari);
-        console.log('Positioning popup - Trigger rect:', triggerRect);
-        console.log('Positioning popup - Popover rect:', popoverRect);
-
-        let left, top;
-
-        if (isSafari) {
-          // Safari: Use absolute positioning with scroll offset
-          const scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
-          const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
-
-          console.log('Safari positioning - Scroll offset:', { scrollX, scrollY });
-
-          // Set to absolute positioning for Safari
-          popover.style.position = 'absolute';
-
-          // Calculate absolute position (viewport coordinates + scroll offset)
-          left = triggerRect.left + scrollX;
-          top = triggerRect.bottom + scrollY + spacing;
-
-          // Adjust for right edge overflow
-          if (left + popoverRect.width > window.innerWidth + scrollX - 12) {
-            left = window.innerWidth + scrollX - popoverRect.width - 12;
-          }
-          left = Math.max(12 + scrollX, left);
-
-          // Adjust for bottom edge overflow (position above if needed)
-          if (top + popoverRect.height > window.innerHeight + scrollY - 12) {
-            top = triggerRect.top + scrollY - popoverRect.height - spacing;
-          }
-          top = Math.max(12 + scrollY, top);
-
-        } else {
-          // Chrome/Chromium: Use fixed positioning (original method)
-          console.log('Chrome positioning - Viewport:', {
-            width: window.innerWidth,
-            height: window.innerHeight
-          });
-
-          // Set to fixed positioning for Chrome
-          popover.style.position = 'fixed';
-
-          // Calculate fixed position (viewport coordinates only)
-          left = triggerRect.left;
-          top = triggerRect.bottom + spacing;
-
-          // Adjust for right edge overflow
-          if (left + popoverRect.width > window.innerWidth - 12) {
-            left = window.innerWidth - popoverRect.width - 12;
-          }
-          left = Math.max(12, left);
-
-          // Adjust for bottom edge overflow (position above if needed)
-          if (top + popoverRect.height > window.innerHeight - 12) {
-            top = triggerRect.top - popoverRect.height - spacing;
-          }
-          top = Math.max(12, top);
-        }
-
-        console.log('Final position:', { left, top });
-
-        // Apply positioning
-        popover.style.left = left + 'px';
-        popover.style.top = top + 'px';
-        popover.style.transform = 'none';
-
-        // Verify position was applied
-        setTimeout(() => {
-          const finalRect = popover.getBoundingClientRect();
-          console.log('Actual final position:', {
-            left: finalRect.left,
-            top: finalRect.top
-          });
-          console.log('Style applied - left:', popover.style.left, 'top:', popover.style.top);
-        }, 0);
-      }
-
-      function hidePopover(){
-        popover.classList.remove('visible');
-        popover.setAttribute('aria-hidden', 'true');
-        activeTrigger = null;
-      }
-
-      // Setup hover-based triggers
-      const triggers = document.querySelectorAll('.proof-popover-trigger');
-
-      triggers.forEach(trigger => {
-        // Show on hover
-        trigger.addEventListener('mouseenter', () => {
-          showPopoverFor(trigger);
-        });
-
-        // Schedule hide on mouse leave
-        trigger.addEventListener('mouseleave', () => {
-          scheduleHide(300);
-        });
-
-        // Optional: still allow click for touch devices
-        trigger.addEventListener('click', (e) => {
-          e.preventDefault();
-          if (popover.classList.contains('visible') && activeTrigger === trigger) {
-            hidePopover();
-          } else {
-            showPopoverFor(trigger);
-          }
-        });
-      });
-
-      // Popup hover persistence
-      popover.addEventListener('mouseenter', () => {
-        isPopoverHovered = true;
-        clearHideTimer();
-      });
-
-      popover.addEventListener('mouseleave', () => {
-        isPopoverHovered = false;
-        scheduleHide(100);
-      });
-
-      // Close on Escape key
-      document.addEventListener('keydown', (e) => {
-        if(e.key === 'Escape') hidePopover();
-      });
-
-      // Handle window resize
-      window.addEventListener('resize', () => {
-        if (activeTrigger && popover.classList.contains('visible')) {
-          positionPopover(activeTrigger);
-        }
-      });
-
-      // Safari-specific: handle page visibility changes
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          hidePopover();
-        }
-      });
-
       // ===== INTERACTIVE VISUALIZATION =====
 
       // Configuration

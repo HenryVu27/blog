@@ -1,0 +1,139 @@
+/* Deep-dive post layout: TOC sidebar + content grid */
+/* Include this for any long-form post with a table of contents */
+
+.page{
+  max-width: none;
+  margin: 80px 0 64px 0;
+  padding: 0;
+}
+
+.page-header {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (max-width: 768px) {
+  .page {
+    margin: 40px 0 32px 0;
+  }
+  .page-header {
+    padding: 0 16px;
+  }
+  .layout {
+    display: block;
+    max-width: 800px;
+    padding: 0 16px;
+  }
+  .toc {
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 0 0 16px 0;
+    margin-bottom: 16px;
+  }
+  .toc ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .toc li a {
+    font-size: 16px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+}
+
+.layout{
+  display: grid;
+  grid-template-columns: 300px minmax(720px, 1000px) 1fr;
+  gap: 32px;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 16px;
+  align-items: start;
+}
+
+@media(min-width: 1200px){
+  .layout{
+    grid-template-columns: 320px minmax(800px, 1200px) 1fr;
+    max-width: 1800px;
+  }
+}
+
+.toc{
+  position: static;
+  height: fit-content;
+  border: none;
+  border-right: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0 16px 0 0;
+  margin: 0;
+  background: transparent;
+}
+@media(min-width: 1800px){
+  .toc{
+    padding: 0 24px 0 0;
+    margin-right: 24px;
+  }
+}
+.toc ul{ list-style: none; padding-left: 0 }
+.toc li{ margin: 8px 0 }
+.toc li a{
+  display: flex;
+  align-items: baseline;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1.5;
+}
+.toc li a:hover{
+  text-decoration: underline;
+}
+.toc-section-number{
+  color: var(--text);
+  font-weight: 400;
+  margin-right: 8px;
+  min-width: 20px;
+  font-size: 22px;
+}
+@media(min-width: 1800px){
+  .toc-section-number{
+    margin-right: 16px;
+    min-width: 28px;
+  }
+}
+.toc-section-title{
+  color: var(--text);
+  font-weight: 400;
+}
+
+.toc h2{
+  font-size: 29px;
+  margin: 0 0 16px 0;
+  font-weight: 600;
+}
+
+.post {
+  margin-top: 0;
+}
+.post section:first-child h2:first-child {
+  margin-top: 0;
+}
+
+/* Full-bleed content divider between header and body */
+.content-divider {
+  height: 1px;
+  background-color: var(--border);
+  box-shadow: 0 0 0 100vmax var(--border);
+  clip-path: inset(0 -100vmax);
+  margin: 64px 0;
+}
+
+.page-header hr{
+  border: 0;
+  border-top: 1px solid var(--border);
+  box-shadow: 0 0 0 100vmax var(--border);
+  clip-path: inset(0 -100vmax);
+  margin: 32px 0;
+}

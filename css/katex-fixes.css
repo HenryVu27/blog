@@ -1,0 +1,19 @@
+/* Safari-specific KaTeX rendering fixes */
+/* Include this on any page that uses KaTeX math rendering */
+
+.katex {
+  line-height: 1 !important;
+}
+
+.katex-display {
+  line-height: 1 !important;
+  margin: 1em 0 !important;
+}
+
+.katex .mop {
+  vertical-align: baseline !important;
+}
+
+.katex .msubsup {
+  vertical-align: baseline !important;
+}

@@ -1,0 +1,40 @@
+/* Proof popover system */
+/* Requires: a .proof-popover div in the HTML and proof-popover.js */
+
+.proof-popover-trigger{
+  display: inline-block;
+  background: #d4d1c4;
+  border: 1px solid #6b6a61;
+  border-radius: 8px;
+  padding: 2px 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.4);
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+.proof-popover-trigger:hover{
+  background: #c7c3b5;
+  border-color: #56554d;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
+}
+
+.proof-popover{
+  position: absolute;
+  z-index: 2000;
+  display: none;
+  width: 720px;
+  max-width: min(98vw, 900px);
+  max-height: 480px;
+  overflow: auto;
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  padding: 12px 14px;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+.proof-popover.visible{ display: block; }
+.proof-popover h4{ margin: 4px 0 8px 0; font-size: 18px; }
+.proof-popover .meta{ font-size: 13px; color: var(--muted, #666); margin-bottom: 8px; }
+.proof-center{ text-align: center; margin: 12px 0; }

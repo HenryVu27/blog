@@ -4,66 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Deep Dive Title · Your Blog</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="post-styles.css">
-  <style>
-    /* Override global page styles for centered layout */
-    .page{
-      max-width: 1000px;
-      margin: 80px auto 64px;
-      padding: 0 32px;
-    }
-    
-    @media (max-width: 768px) {
-      .page {
-        margin: 40px auto 32px;
-        padding: 0 16px;
-      }
-    }
-    
-    .layout{display:grid;grid-template-columns:1fr;gap:24px}
-    @media(min-width: 980px){.layout{grid-template-columns: 380px 1fr}}
-    .toc{
-      position:sticky; 
-      top:24px; 
-      height:fit-content;
-      border: none;
-      border-right: 1px solid var(--border);
-      border-radius: 0;
-      padding: 0 24px 0 0;
-      margin-right: 24px;
-      background: transparent;
-    }
-    .toc ul{list-style:none; padding-left:0}
-    .toc li{margin:8px 0}
-    .toc li a{
-      display: flex;
-      align-items: baseline;
-      text-decoration: none;
-      color: var(--text);
-      font-size: 16px;
-      line-height: 1.4;
-    }
-    .toc li a:hover{
-      text-decoration: underline;
-    }
-    .toc-section-number{
-      color: var(--text);
-      font-weight: 400;
-      margin-right: 12px;
-      min-width: 24px;
-      font-size: 16px;
-    }
-    .toc-section-title{
-      color: var(--text);
-      font-weight: 400;
-    }
-  </style>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/post-styles.css">
+  <link rel="stylesheet" href="../css/deep-dive-layout.css">
+  <link rel="stylesheet" href="../css/components.css">
 </head>
 <body>
   <main class="page">
     <nav class="nav">
-      <a href="index.html" class="back-btn">← Back</a>
+      <a href="../index.html" class="back-btn">← Back</a>
     </nav>
 
     <header>

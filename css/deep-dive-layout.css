@@ -51,7 +51,6 @@
   max-width: 1600px;
   margin: 0 auto;
   padding: 0 16px;
-  position: relative;
 }
 
 @media(min-width: 1200px){
@@ -68,19 +67,7 @@
   padding: 0 16px 0 0;
   margin: 0;
   background: transparent;
-}
-.toc.is-sticky{
-  position: fixed;
-  top: 32px;
-  max-height: calc(100vh - 64px);
-  overflow-y: auto;
-}
-.toc.is-bottom{
-  position: absolute;
-  bottom: 0;
-  top: auto;
-  max-height: calc(100vh - 64px);
-  overflow-y: auto;
+  align-self: start;
 }
 @media(min-width: 1800px){
   .toc{

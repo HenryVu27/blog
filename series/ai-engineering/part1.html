@@ -59,6 +59,60 @@
   <link rel="stylesheet" href="../../css/prism-blog.css" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="../../css/code-blocks.css" media="print" onload="this.media='all'">
   <script>try{if(localStorage.getItem('blog-reading-mode')==='deep-dive')document.documentElement.classList.add('deep-dive-mode')}catch(e){}</script>
+  <style>
+    .hero-header {
+      position: relative;
+    }
+    .hero-header::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      bottom: -64px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100vw;
+      background: url('OG.jpg') center / cover no-repeat;
+      opacity: 1;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .hero-header::after {
+      content: '';
+      position: absolute;
+      top: -80px;
+      bottom: -64px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100vw;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .hero-header > * {
+      position: relative;
+      z-index: 1;
+    }
+    .hero-header .title,
+    .hero-header .meta,
+    .hero-header .back-btn,
+    .hero-header .series-nav h3,
+    .hero-header .series-nav li,
+    .hero-header .mode-toggle button {
+      color: #fff;
+    }
+    .hero-header .back-btn:hover {
+      color: #ddd;
+    }
+    .hero-header hr {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .hero-header::before {
+        top: -40px;
+        bottom: -32px;
+      }
+    }
+  </style>
   <!-- KaTeX for Deep Dive math -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" media="print" onload="this.media='all'">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
@@ -136,7 +190,7 @@
 </head>
 <body>
   <main class="page">
-    <div class="page-header">
+    <div class="page-header hero-header">
       <nav class="nav">
         <a href="../../index.html" class="back-btn">←</a>
       </nav>

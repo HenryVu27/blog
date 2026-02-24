@@ -42,9 +42,6 @@
         pre.className = "language-" + lang;
       }
 
-      // Add line-numbers class for the plugin
-      pre.classList.add("line-numbers");
-
       // Build header
       var header = document.createElement("div");
       header.className = "code-header";

@@ -94,37 +94,6 @@
   font-size: 14px;
 }
 
-/* Line numbers via Prism plugin */
-.code-block pre.line-numbers {
-  padding-left: 56px;
-  position: relative;
-}
-
-.code-block .line-numbers-rows {
-  position: absolute;
-  top: 16px;
-  left: 0;
-  width: 40px;
-  padding: 0;
-  border-right: 1px solid var(--border);
-  pointer-events: none;
-  user-select: none;
-}
-
-.code-block .line-numbers-rows > span {
-  display: block;
-  padding-right: 10px;
-  text-align: right;
-  color: #b0b0b0;
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-.code-block .line-numbers-rows > span::before {
-  content: counter(linenumber);
-  counter-increment: linenumber;
-}
-
 /* Horizontal scrollbar styling */
 .code-body::-webkit-scrollbar {
   height: 6px;
@@ -144,19 +113,6 @@
   .code-block pre {
     padding: 12px;
     font-size: 13px;
-  }
-
-  .code-block pre.line-numbers {
-    padding-left: 48px;
-  }
-
-  .code-block .line-numbers-rows {
-    width: 34px;
-    top: 12px;
-  }
-
-  .code-block .line-numbers-rows > span {
-    font-size: 12px;
   }
 
   .code-header {

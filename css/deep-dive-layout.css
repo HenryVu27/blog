@@ -116,7 +116,7 @@
   }
 }
 .toc ul{ list-style: none; padding-left: 0 }
-.toc li{ margin: 8px 0 }
+.toc li{ margin: 14px 0 }
 .toc li a{
   display: flex;
   align-items: baseline;

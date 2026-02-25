@@ -65,12 +65,24 @@
   <style>
     .hero-header {
       position: relative;
+      padding-top: 24px;
+      padding-bottom: 64px;
+    }
+    .toc ul {
+      margin-top: 0;
+    }
+    .hero-header .meta {
+      margin-bottom: 20px;
+    }
+    .hero-header .mode-toggle {
+      margin-top: 0;
+      margin-bottom: 12px;
     }
     .hero-header::before {
       content: '';
       position: absolute;
       top: -80px;
-      bottom: -64px;
+      bottom: -140px;
       left: 50%;
       transform: translateX(-50%);
       width: 100vw;
@@ -83,7 +95,7 @@
       content: '';
       position: absolute;
       top: -80px;
-      bottom: -64px;
+      bottom: -140px;
       left: 50%;
       transform: translateX(-50%);
       width: 100vw;
@@ -110,9 +122,14 @@
       display: none;
     }
     @media (max-width: 768px) {
-      .hero-header::before {
+      .hero-header {
+        padding-top: 12px;
+        padding-bottom: 12px;
+      }
+      .hero-header::before,
+      .hero-header::after {
         top: -40px;
-        bottom: -32px;
+        bottom: -44px;
       }
     }
   </style>
@@ -281,9 +298,9 @@
       </div>
     </div>
 
-    <div class="content-divider"></div>
 
-    <div class="layout">
+
+    <div class="layout" style="margin-top: 240px;">
       <aside class="toc deep-dive-only">
         <div class="toc-sticky">
           <h2>Contents</h2>
@@ -427,13 +444,26 @@
           <div class="deep-dive-only">
           <p>I started using XML tags mostly for my own sanity (it's easier to review a prompt when you can collapse sections), but it turns out LLMs respond measurably better to structured input than unstructured dumps. Both <a href="#ref-anthropic">Anthropic</a> and Google recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which matters more than you'd think once your prompt is 2,000+ tokens and three people are editing it.</p>
 
+          <p>Once your prompt gets complex enough, you start wanting to break individual sections out into their own files and load them on demand. Agent frameworks like Claude Code already do this with skills (workflow instructions like "debug systematically" or "do TDD") and plugins (third-party extensions) that only enter the context window when the current task calls for them. I used Claude Code to research this post, with agents spawning subagents and 70+ tools to synthesize points from research papers and technical posts. Here's how the context budget split mid-session:</p>
+
+          <div style="display:flex; gap:24px; align-items:flex-start; margin:24px 0;">
+            <figure style="margin:0; flex:0 0 55%;">
+              <img src="claude-code-context-usage.png" alt="Claude Code context usage breakdown: system prompt 3.4k tokens (1.7%), system tools 17.8k (8.9%), custom agents 399 (0.2%), memory files 9.8k (4.9%), skills 766 (0.4%), messages 51.6k (25.8%), free space 83k (41.6%), autocompact buffer 33k (16.5%), out of 200k total" style="max-width:100%; height:auto;" />
+            </figure>
+            <div style="flex:1; font-size:14px; line-height:1.7; color:var(--text);">
+              <p style="margin:0 0 20px 0;"><strong>Autocompact buffer (33k)</strong><br>The compress strategy baked into infrastructure. The system reserves 16.5% of the window for summarizing older messages as the conversation grows.</p>
+              <p style="margin:0 0 20px 0;"><strong>Subagent isolation</strong><br>Each subagent gets its own 200k window rather than sharing the orchestrator's. That's the isolate strategy, splitting work across multiple context windows instead of cramming everything into one.</p>
+              <p style="margin:0;"><strong>Composable modules</strong><br>Skills, plugins, memory files, and agent definitions each managed independently. Instead of one monolithic prompt, assemble each agent's context from only the pieces it needs.</p>
+            </div>
+          </div>
+
           <p>One surprisingly high-leverage system prompt technique comes from <a href="#ref-openai-prompting">OpenAI's GPT-4.1 prompting guide</a>: three specific instructions that increased their SWE-bench score by ~20%. (1) Persistence: "keep going until the user's query is completely resolved." (2) Tool-calling: "use your tools to answer questions rather than relying on memory." (3) Planning: explicitly asking the model to plan before acting. Three sentences transformed the model "from a chatbot-like state into a much more eager agent," which says something about how sensitive agent behavior is to system prompt phrasing even in 2025.</p>
 
           <p>I spend the least time worrying about the <strong>user prompt</strong> because it's the one thing I don't control. The immediate message from the human can be anything, from well-structured to incoherent, concise to rambling. The rest of your context engineering has to be robust enough to handle whatever arrives.</p>
 
           <p>Where I've seen the most waste is <strong>state and short-term history</strong>, or memory for short, the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations just dump the raw history in verbatim, greetings, acknowledgments, off-topic tangents. The <a href="#ref-longmemeval">LongMemEval benchmark</a> (Wu et al., ICLR 2025) showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
 
-          <p>A design principle that took me longer than it should have to internalize is that in mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
+          <p>The underlying design principle here is that in mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
 
           <p>A simple block with state information is injected to give the model temporal awareness and continuity across the ReAct loop:</p>
           </div>
@@ -461,7 +491,6 @@
           <div class="deep-dive-only">
           <p>I spend the most engineering time on <strong>retrieved information</strong>, the RAG layer. External knowledge from documents, databases, and APIs gets injected on-demand, and the design decision I keep coming back to is to let the model pull what it needs via tool calls rather than front-loading everything. The tricky part is evaluating retrieval quality, because the model's output can fail for reasons that have nothing to do with what you retrieved, and standard metrics like recall@k don't capture whether the retrieved context actually helped the model reason correctly. Part 2 goes deep on retrieval and evaluation.</p>
 
-          <p>In my agent, the retrieval tool automatically enriches queries with what it already knows about the patient:</p>
           </div>
 
 <div class="code-block" data-filename="tools.py" data-lang="python">
@@ -512,7 +541,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
               <p>$$\text{Retrieve}^* = \arg\max_{\text{Retrieve}} \; I(Y^*;\; c_\text{know} \mid c_\text{query})$$</p>
               <p>And context assembly can be framed as Bayesian posterior inference, combining the likelihood of the query given a context with the prior over contexts given interaction history:</p>
               <p>$$P(C \mid c_\text{query}, \ldots) \propto P(c_\text{query} \mid C) \cdot P(C \mid \text{History}, \text{World})$$</p>
-              <p>Again, more math than most practitioners will ever need day-to-day. But I found the mutual information framing helpful for one thing in particular. When two retrieval approaches return different documents, the one that tells the model more *new* information (higher mutual information with the answer, conditional on the query) is the better one. This provides some intuition as to why hybrid retrieval beats pure semantic search.</p>
+              <p>Again, more math than most will ever need. But I found the mutual information framing helpful for one thing in particular. When two retrieval approaches return different documents, the one that tells the model more *new* information (higher mutual information with the answer, conditional on the query) is the better one. This provides some intuition as to why hybrid retrieval beats pure semantic search.</p>
             </div>
           </div>
         </section>
@@ -534,7 +563,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           </div>
 
           <div class="deep-dive-only">
-          <p>Every production context system I've seen uses some combination of four strategies, and <a href="#ref-langchain">LangChain's framework</a> gives them clean names. I find the vocabulary useful not because the categories are surprising, but because asking "which of these four am I underinvesting in?" is usually the fastest way to improve a system.</p>
+          <p>Every production context system I've seen uses some combination of four strategies, and <a href="#ref-langchain">LangChain's framework</a> gives them clean names.</p>
 
           <p><strong>Writing</strong> means getting information out of the context window and into external storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team has a concrete version of this that I really like: their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent. (Though Manus later found that roughly a third of all agent actions were spent updating the todo list, and shifted to a dedicated planner agent instead. Even clever patterns have costs.)</p>
 

@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAG: From Retrieval to Reasoning | Henry Vu</title>
+  <meta name="description" content="A practitioner's guide to RAG pipeline engineering. Covers diagnosing retrieval failures, hybrid search, query understanding, GraphRAG, self-correcting retrieval loops, evaluation strategies, and when not to use RAG.">
+  <meta name="author" content="Henry Vu">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <link rel="canonical" href="https://www.henryvu.blog/series/ai-engineering/part2.html">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="RAG: From Retrieval to Reasoning">
+  <meta property="og:description" content="A practitioner's guide to RAG pipeline engineering. Covers diagnosing retrieval failures, hybrid search, query understanding, GraphRAG, self-correcting retrieval loops, evaluation strategies, and when not to use RAG.">
+  <meta property="og:url" content="https://www.henryvu.blog/series/ai-engineering/part2.html">
+  <meta property="og:site_name" content="Henry Vu's Blog">
+  <meta property="og:image" content="https://www.henryvu.blog/series/ai-engineering/OG.jpg">
+  <meta property="article:published_time" content="2026-02-24T00:00:00Z">
+  <meta property="article:author" content="https://www.henryvu.blog/">
+  <meta property="article:section" content="AI Engineering">
+  <meta property="article:tag" content="RAG">
+  <meta property="article:tag" content="retrieval augmented generation">
+  <meta property="article:tag" content="hybrid search">
+  <meta property="article:tag" content="GraphRAG">
+  <meta property="article:tag" content="self-correcting RAG">
+  <meta property="article:tag" content="evaluation">
+  <meta property="article:tag" content="retrieval">
+  <meta property="article:tag" content="AI engineering">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@HenryVu27">
+  <meta name="twitter:creator" content="@HenryVu27">
+  <meta name="twitter:title" content="RAG: From Retrieval to Reasoning">
+  <meta name="twitter:description" content="A practitioner's guide to RAG pipeline engineering. Hybrid search, GraphRAG, self-correcting retrieval, evaluation, and when not to use RAG.">
+  <meta name="twitter:image" content="https://www.henryvu.blog/series/ai-engineering/OG.jpg">
+
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  <!-- Series Pagination -->
+  <link rel="prev" href="https://www.henryvu.blog/series/ai-engineering/part1.html">
+  <link rel="next" href="https://www.henryvu.blog/series/ai-engineering/part3.html">
+
+  <!-- RSS Feed -->
+  <link rel="alternate" type="application/rss+xml" title="Henry Vu's Blog" href="https://www.henryvu.blog/feed.xml">
+
+  <!-- Fonts & Styles (EXISTING - do not change) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/styles.css">
+  <link rel="stylesheet" href="../../css/post-styles.css">
+  <link rel="stylesheet" href="../../css/deep-dive-layout.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/mode-toggle.css">
+  <link rel="stylesheet" href="../../css/prism-blog.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="../../css/code-blocks.css" media="print" onload="this.media='all'">
+  <script>try{if(localStorage.getItem('blog-reading-mode')==='deep-dive')document.documentElement.classList.add('deep-dive-mode')}catch(e){}</script>
+  <style>
+    .hero-header {
+      position: relative;
+      padding-top: 24px;
+      padding-bottom: 64px;
+    }
+    .toc ul {
+      margin-top: 0;
+    }
+    .hero-header .meta {
+      margin-bottom: 20px;
+    }
+    .hero-header .mode-toggle {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+    .hero-header::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      bottom: -140px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100vw;
+      background: url('OG2.jpg') center / cover no-repeat;
+      opacity: 1;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .hero-header::after {
+      content: '';
+      position: absolute;
+      top: -80px;
+      bottom: -140px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100vw;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .hero-header > * {
+      position: relative;
+      z-index: 1;
+    }
+    .hero-header .title,
+    .hero-header .meta,
+    .hero-header .back-btn,
+    .hero-header .series-nav h3,
+    .hero-header .series-nav li,
+    .hero-header .series-nav a,
+    .hero-header .mode-toggle button {
+      color: #fff;
+    }
+    .hero-header .back-btn:hover {
+      color: #ddd;
+    }
+    .hero-header hr {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .hero-header {
+        padding-top: 12px;
+        padding-bottom: 12px;
+      }
+      .hero-header::before,
+      .hero-header::after {
+        top: -40px;
+        bottom: -44px;
+      }
+    }
+  </style>
+  <!-- KaTeX for Deep Dive math -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" media="print" onload="this.media='all'">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3CJTJES82Q"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-3CJTJES82Q');
+  </script>
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "RAG: From Retrieval to Reasoning",
+    "description": "A practitioner's guide to RAG pipeline engineering. Covers diagnosing retrieval failures, hybrid search, query understanding, GraphRAG, self-correcting retrieval loops, evaluation strategies, and when not to use RAG.",
+    "image": "https://www.henryvu.blog/series/ai-engineering/OG.jpg",
+    "datePublished": "2026-02-24",
+    "dateModified": "2026-02-24",
+    "author": {
+      "@type": "Person",
+      "@id": "https://www.henryvu.blog/#author",
+      "name": "Henry Vu",
+      "url": "https://www.henryvu.blog",
+      "sameAs": [
+        "https://x.com/HenryVu27",
+        "https://www.linkedin.com/in/henry-vu27/",
+        "https://github.com/HenryVu27"
+      ]
+    },
+    "publisher": {
+      "@type": "Person",
+      "name": "Henry Vu",
+      "url": "https://www.henryvu.blog"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://www.henryvu.blog/series/ai-engineering/part2.html"
+    },
+    "isPartOf": {
+      "@type": "CreativeWorkSeries",
+      "name": "AI Engineering Series",
+      "url": "https://www.henryvu.blog/"
+    },
+    "timeRequired": "PT25M",
+    "keywords": ["RAG", "retrieval augmented generation", "hybrid search", "GraphRAG", "self-correcting RAG", "evaluation", "AI engineering", "retrieval"],
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://www.henryvu.blog/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "AI Engineering",
+          "item": "https://www.henryvu.blog/series/ai-engineering/part2.html"
+        }
+      ]
+    }
+  }
+  </script>
+
+  <!-- FAQ Schema (invisible structured data for rich results) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you diagnose RAG failures?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "RAG failures fall into two categories: retrieval failures (the system didn't find the right documents) and generation failures (the model had the right documents but produced a wrong answer). Diagnosing them requires inspecting the retrieved chunks before they reach the LLM. Log every retrieval call with the query, returned chunks, and relevance scores. If the correct information isn't in the retrieved set, it's a retrieval problem -- fix your chunking, embedding model, or search strategy. If the correct information is present but the model ignores or misinterprets it, it's a generation problem -- fix your prompt, context ordering, or model choice."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is hybrid retrieval?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hybrid retrieval combines dense vector search (semantic similarity via embeddings) with sparse keyword search (BM25 or TF-IDF) to get the best of both approaches. Dense retrieval excels at finding semantically related passages even when exact keywords don't match, while sparse retrieval is better for exact term matching, acronyms, product codes, and proper nouns. Most production RAG systems use a hybrid approach with reciprocal rank fusion (RRF) to merge the ranked results from both methods. The typical weighting is 0.5-0.7 for dense and 0.3-0.5 for sparse, though optimal weights depend on your corpus and query patterns."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "When should you use GraphRAG?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "GraphRAG is most valuable when your queries require reasoning over relationships between entities rather than retrieving isolated passages. Use cases include questions like 'what projects does person X work on with person Y,' multi-hop reasoning where the answer spans multiple documents connected by shared entities, and domains with rich relational structure like organizational knowledge bases, legal case law, or biomedical literature. GraphRAG adds significant indexing complexity and cost, so it's not worth it for simple factual lookup or when your corpus is small enough that standard vector search retrieves sufficient context."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is self-correcting RAG?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Self-correcting RAG (also called corrective RAG or CRAG) adds a verification step after retrieval where an LLM evaluates whether the retrieved documents actually answer the query. If the retrieved context is insufficient or irrelevant, the system can reformulate the query, try a different retrieval strategy, fall back to web search, or abstain from answering rather than hallucinating. This creates a retrieval loop: retrieve, grade, optionally re-retrieve with a refined query, then generate. The tradeoff is added latency and cost from the grading step, but it significantly reduces hallucination rates in production systems."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do you evaluate a RAG system?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "RAG evaluation requires measuring both retrieval quality and generation quality separately. For retrieval: measure recall@k (did the correct chunks appear in the top k results), precision@k (what fraction of retrieved chunks were relevant), and mean reciprocal rank (how high did the first relevant chunk rank). For generation: measure faithfulness (does the answer stick to the retrieved context without hallucinating), answer relevance (does the answer address the question), and correctness (does the answer match the ground truth). Frameworks like RAGAS automate these metrics using LLM-as-judge evaluation. The most important single metric is retrieval recall -- if the right information never enters the context window, no amount of generation optimization can fix it."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "When should you NOT use RAG?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "RAG adds complexity and latency that isn't always justified. Skip RAG when: (1) the knowledge fits entirely in the model's context window and doesn't change frequently -- just put it in the system prompt, (2) the task requires reasoning or creativity rather than factual recall from a corpus, (3) the corpus is small enough (under ~50 pages) to include directly in context, (4) latency requirements are tight and the retrieval step would push you over budget, or (5) the model's parametric knowledge is already sufficient and up-to-date for your use case. Fine-tuning is sometimes a better alternative when the knowledge is stable and the query patterns are predictable."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <main class="page">
+    <div class="page-header hero-header">
+      <nav class="nav">
+        <a href="../../index.html" class="back-btn">←</a>
+      </nav>
+
+      <header>
+        <h1 class="title">RAG: From Retrieval to Reasoning</h1>
+        <div class="meta">
+          2026-02-24 · <span class="deep-dive-only">25 min read</span><span class="tldr-only">5 min read</span>
+        </div>
+        <div class="mode-toggle">
+          <button data-mode="deep-dive">Deep Dive</button>
+          <button data-mode="tldr" class="active">TLDR</button>
+        </div>
+        <hr>
+      </header>
+
+      <div class="series-nav">
+        <h3>AI Engineering Series</h3>
+        <ul>
+          <li><a href="part1.html">Part 1: What Fills the Context Window</a></li>
+          <li>Part 2: RAG, From Retrieval to Reasoning (current)</li>
+          <li>Part 3: Memory Engineering (coming soon)</li>
+          <li>Part 4: Building AI Agents (coming soon)</li>
+          <li>Part 5: Multi-Agent Systems (coming soon)</li>
+        </ul>
+      </div>
+    </div>
+
+
+
+    <div class="layout" style="margin-top: 240px;">
+      <aside class="toc deep-dive-only">
+        <div class="toc-sticky">
+          <h2>Contents</h2>
+          <ul>
+            <li class="deep-dive-only"><a href="#diagnosing-failures"><span class="toc-section-number">1</span><span class="toc-section-title">Diagnosing RAG Failures</span></a></li>
+            <li><a href="#query-understanding"><span class="toc-section-number">2</span><span class="toc-section-title">Query Understanding</span></a></li>
+            <li><a href="#retrieval-pipeline"><span class="toc-section-number">3</span><span class="toc-section-title">Building the Retrieval Pipeline</span></a></li>
+            <li><a href="#graphs-vs-vectors"><span class="toc-section-number">4</span><span class="toc-section-title">When Graphs Beat Vectors</span></a></li>
+            <li><a href="#self-correcting"><span class="toc-section-number">5</span><span class="toc-section-title">Self-Correcting Retrieval</span></a></li>
+            <li><a href="#rag-flywheel"><span class="toc-section-number">6</span><span class="toc-section-title">The RAG Flywheel</span></a></li>
+            <li><a href="#when-not-to-rag"><span class="toc-section-number">7</span><span class="toc-section-title">When Not to Use RAG</span></a></li>
+            <li class="deep-dive-only"><a href="#references"><span class="toc-section-number">8</span><span class="toc-section-title">References</span></a></li>
+          </ul>
+        </div>
+      </aside>
+
+      <article class="post">
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: Diagnosing RAG Failures                           -->
+        <!-- ============================================================ -->
+        <section id="diagnosing-failures">
+          <h2>Diagnosing RAG Failures</h2>
+
+          <div class="tldr-only">
+            <ul class="list-tight">
+              <li>Every RAG failure is either a <strong>topic gap</strong> (the content doesn't exist in your corpus) or a <strong>capability gap</strong> (the system can't process what's there) -- Jason Liu's framework</li>
+              <li>Take your last 20 failed queries, sort them into those two buckets -- you'll find patterns that point to specific fixes</li>
+              <li>Silent failures (corpus shrinkage from encoding bugs, stale embeddings, ingestion errors) are the deadliest because nothing looks broken</li>
+              <li>Evaluate what you <em>didn't</em> retrieve, not just what you did -- false negatives are harder to spot than bad answers</li>
+            </ul>
+          </div>
+
+          <div class="deep-dive-only">
+
+          <p><a href="part1.html">Part 1</a> showed a one-line tool call that did hybrid retrieval with condition-aware filtering, and it looked clean -- a tool fires, documents come back, the model generates an answer. This post is about what's inside that call, and more importantly, how to know when it's broken. Because the retrieval layer fails quietly in ways that the generation layer never does: a bad generation is obviously wrong, but a bad retrieval just looks like a plausible answer built on the wrong evidence.</p>
+
+          <p>I want to start with diagnosis rather than architecture for a specific reason. Most RAG tutorials open with "here's how to build the pipeline" and add evaluation as an afterthought. But if you can't tell <em>why</em> your system is failing, you can't tell which architectural improvement will actually help. A better embedding model won't fix a corpus that's missing the content users are asking about. A fancier reranker won't help if your chunks were garbled during ingestion. The guiding principle for this entire post is that retrieval quality is the ceiling on everything downstream -- you can have the best prompt engineering in the world and the most capable model on the market, and none of it matters if the right documents never make it into the context window.</p>
+
+          <h3>Topics vs. Capabilities</h3>
+
+          <p><a href="https://jxnl.co/writing/2024/11/18/decomposing-rag-systems-to-identify-bottlenecks/">Jason Liu's diagnostic framework</a> gives you a clean way to sort failures into two buckets. A <strong>topic gap</strong> means the content your users need simply doesn't exist in the corpus. No amount of retrieval engineering can find a document that was never indexed. A <strong>capability gap</strong> means the content exists but the system can't surface it correctly -- maybe the chunking splits a critical table across two fragments, maybe the embedding model doesn't understand domain-specific abbreviations, maybe the query was too vague for semantic search to latch onto.</p>
+
+          <p>The distinction matters because the fixes are completely different. Topic gaps are content problems; you solve them by expanding and curating the corpus. Capability gaps are engineering problems; you solve them by improving chunking, retrieval strategies, query understanding, or the model itself. I've watched teams spend weeks fine-tuning embedding models when the real issue was that nobody had ever ingested the product documentation from the last three releases. Knowing which bucket a failure lives in saves you from optimizing the wrong thing.</p>
+
+          <div class="algorithm-box">
+            <h4>Case Study: Construction Blueprint QA</h4>
+            <p>Liu describes a construction company whose RAG-based assistant handled questions about building blueprints. When they sorted their failure logs, a clear pattern emerged -- roughly <strong>20% of all queries</strong> were some variant of "how many windows are on the north elevation?" or "count the fire exits on floor 3." These object-counting questions were a topic gap disguised as a capability gap -- the team initially assumed their retrieval was failing, but the real problem was that their corpus contained blueprint PDFs with no extracted count data. The blueprints had the visual information, but the text extraction pipeline didn't produce anything a text-based retrieval system could match against.</p>
+            <p>Once they identified the pattern, the fix was targeted: they added a vision model to the ingestion pipeline that extracted object counts and spatial relationships from blueprint images, then indexed those as structured annotations alongside the original documents. User satisfaction on those query types went from <strong>~50% to 87% in one week</strong> -- not because the retrieval got smarter, but because the content finally existed in a retrievable form.</p>
+          </div>
+
+          <p>That case also illustrates something I find consistently true about RAG debugging: the failure taxonomy tends to be lumpy, not evenly distributed. You don't usually have 50 different failure modes each accounting for 2% of errors. You have two or three dominant patterns that together explain the majority of bad retrievals. Find those and you get outsized returns from fixing them.</p>
+
+          <h3>The Silent Failure Problem</h3>
+
+          <p>The scariest RAG failures are the ones where everything appears to work fine. Liu describes a medical chatbot where the ingestion pipeline was processing documents encoded as UTF-8, but a subset of the corpus -- older clinical reference PDFs -- used Latin-1 encoding. The system didn't throw errors; it just silently garbled special characters, diacritics, and certain punctuation marks during text extraction, which degraded the embedding quality for those chunks enough that they effectively vanished from retrieval results. The team discovered the issue during a routine audit and found that <strong>21% of the corpus</strong> had been functionally invisible since launch. For weeks, users asking questions that required those documents got confidently wrong answers built from the remaining 79% -- and nobody noticed because the system never returned empty results, it just returned the wrong ones.</p>
+
+          <p>This is the <strong>false negative blind spot</strong> that makes RAG evaluation fundamentally harder than generation evaluation. When a model hallucinates, someone eventually notices -- the output is wrong in a visible way. But when retrieval misses the right document and substitutes a plausible alternative, the answer can look perfectly reasonable while being subtly incorrect. You have to evaluate what <em>didn't</em> show up in the retrieval set, which requires knowing what <em>should</em> have shown up, and most teams don't have that ground truth readily available. (I'll cover how to build it systematically in <a href="#rag-flywheel">Section 6</a>.)</p>
+
+          <h3>Applying the Framework</h3>
+
+          <p>When I looked at the early failure patterns in my own diabetes coaching agent, this two-bucket framing made the problems legible almost immediately. The most common failure class was topic gaps. I had users asking about insulin pump troubleshooting -- how to recalibrate after a site change, what to do when the CGM readings diverge from finger sticks by more than 20% -- and the corpus simply didn't have pump-specific articles. It had plenty of general Type 2 diabetes management content, so the retriever dutifully returned those documents, and the model generated answers that were technically about diabetes but useless for someone wearing an Omnipod. The <a href="part1.html#seven-components">condition filter from Part 1</a> helped route Type 1 vs. Type 2 content correctly, but it couldn't conjure documents that didn't exist.</p>
+
+          <p>The capability gap showed up in drug interaction queries. A user would ask something like "can I take metformin with lisinopril?" and the system needed to cross-reference medication data with condition-specific contraindication information. Both halves of that information existed in the corpus -- we had medication fact sheets and we had clinical guideline documents -- but they lived in separate document collections with different schemas, and the retrieval layer had no mechanism for joining across them. The content was there; the system just couldn't compose it into a coherent answer. That's a capability gap, and the fix wasn't more content but better retrieval architecture (which I'll dig into in <a href="#retrieval-pipeline">Section 3</a>).</p>
+
+          <p>If you take one practical step from this section, make it Liu's exercise: pull your last 20 failed queries (or your last 20 thumbs-down ratings, or your last 20 cases where the model hedged with "I don't have enough information"), and sort them into topic gaps vs. capability gaps. You'll probably find that one bucket is much larger than the other, and that within each bucket, two or three specific patterns account for most of the failures. That's your roadmap -- not a general-purpose "improve retrieval quality" initiative, but a ranked list of concrete problems with concrete fixes. And once you've shipped those fixes, do it again in two weeks, because the distribution shifts as your corpus and user base evolve.</p>
+
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: Query Understanding                               -->
+        <!-- ============================================================ -->
+        <section id="query-understanding">
+          <h2>Query Understanding</h2>
+
+          <div class="tldr-only">
+            <ul class="list-tight">
+              <li><strong>Structured extraction</strong> -- parse user questions into typed fields (date ranges, filters, keywords) before hitting any search backend</li>
+              <li>Query transformation techniques (HyDE, decomposition, RAG-Fusion) can boost retrieval accuracy 8-10% and comprehensiveness 30-40%</li>
+              <li>Better queries beat better embeddings almost every time -- a well-structured query with a mediocre embedding model will outperform a raw query with a state-of-the-art one</li>
+              <li>Adds 500-700ms latency per query, but enables temporal reasoning, filter routing, and multi-backend dispatch that you can't get any other way</li>
+            </ul>
+          </div>
+
+          <div class="deep-dive-only">
+          <p>The single highest-ROI improvement I've made to any RAG system wasn't a better embedding model, a fancier reranker, or a smarter chunking strategy. It was spending an LLM call to actually understand the query before sending it to retrieval. <a href="https://jxnl.co/writing/2024/11/18/decomposing-rag-systems-to-identify-bottlenecks/">Jason Liu</a> makes this argument forcefully, and I think he's right -- structured query extraction matters more than moving from one embedding model to another, because it addresses the fundamental mismatch between how users ask questions and how documents are stored.</p>
+
+          <p>What Liu calls "dumb RAG" -- the pattern where you embed the user's raw question and do a nearest-neighbor lookup -- is that it breaks in at least four ways. First, there's a <strong>query-document mismatch</strong>: the user asks "what should I eat before a morning run?" but the corpus stores content titled "pre-exercise nutrition guidelines for Type 2 diabetes," and the semantic gap between those two phrasings is wider than most embedding models can bridge reliably. Second, you're stuck with a <strong>monolithic search backend</strong> that treats every query the same way, when some questions need keyword matching ("metformin side effects") and others need conceptual search ("how to manage blood sugar spikes after meals"). Third, <strong>text search alone</strong> can't handle queries with implicit temporal or structural constraints -- "recent guidelines" means the user cares about publication date, but raw embedding search has no concept of recency. And fourth, there's the <strong>missing user context</strong> problem: "what should I eat?" means something completely different for a patient with Type 1 diabetes on an insulin pump versus someone managing prediabetes through diet alone, and that context needs to inform the query before retrieval happens, not after.</p>
+          </div>
+
+<div class="code-block" data-filename="search_query.py" data-lang="python">
+<pre><code>class SearchQuery(BaseModel):
+    """Structured query extracted from natural language."""
+    rewritten_query: str
+    date_range: Optional[tuple[date, date]] = None
+    source_filters: list[str] = []
+    keywords: list[str] = []
+    document_type: Optional[str] = None</code></pre>
+</div>
+
+          <div class="deep-dive-only">
+          <p>That <code>SearchQuery</code> model is the interface between the LLM's understanding of the user's intent and the retrieval layer's filtering capabilities. An LLM call parses the raw user question into those typed fields, and now you can route a query like "any new ADA guidelines on insulin dosing from the last year?" to a date-filtered search over clinical guideline documents specifically, instead of embedding the entire sentence and hoping cosine similarity does the right thing. The extraction cost is one additional LLM call per user query -- typically 200-400ms with a fast model -- and it pays for itself immediately.</p>
+
+          <p>In <a href="part1.html#seven-components">Part 1</a>, I showed the <code>search_knowledge_base</code> tool with its <code>condition_type</code>, <code>tags</code>, and <code>document_type</code> parameters. What I didn't show was the query enrichment logic that runs <em>before</em> that tool fires. The LLM doesn't just pass through the user's raw question; it builds a structured query that takes advantage of what we know about the patient's profile and the shape of our corpus.</p>
+          </div>
+
+<div class="code-block" data-filename="tools.py" data-lang="python">
+<pre><code>async def enrich_query(raw_query: str, patient: PatientProfile) -&gt; SearchQuery:
+    """Transform raw user question into a structured retrieval query."""
+
+    # Auto-detect condition type from patient profile
+    condition_type = patient.diagnosis  # e.g., "type_2", "type_1", "prediabetes"
+
+    # Route document_type based on query intent
+    doc_type = None
+    if any(kw in raw_query.lower() for kw in ["dose", "medication", "drug", "side effect"]):
+        doc_type = "medication_reference"
+    elif any(kw in raw_query.lower() for kw in ["guideline", "recommendation", "standard"]):
+        doc_type = "clinical_guideline"
+    elif any(kw in raw_query.lower() for kw in ["recipe", "meal", "eat", "food", "diet"]):
+        doc_type = "nutrition"
+
+    # Tag routing: map query topics to corpus tag taxonomy
+    tag_map = {
+        "insulin": ["insulin", "injection", "basal", "bolus"],
+        "exercise": ["physical_activity", "exercise", "fitness"],
+        "monitoring": ["cgm", "blood_glucose", "a1c", "monitoring"],
+    }
+    matched_tags = []
+    for topic, tags in tag_map.items():
+        if topic in raw_query.lower():
+            matched_tags.extend(tags)
+
+    # Build the structured query
+    return SearchQuery(
+        rewritten_query=await rewrite_with_llm(raw_query, patient),
+        source_filters=[condition_type] if condition_type else [],
+        keywords=extract_medical_terms(raw_query),
+        document_type=doc_type,
+    )</code></pre>
+</div>
+
+          <div class="deep-dive-only">
+          <p>The keyword-based routing here is deliberately simple -- pattern matching on known terms rather than a classifier. I tried a fine-tuned intent classifier early on and found that it added 150ms of latency for a marginal accuracy improvement over keyword matching, because the diabetes domain has a compact enough vocabulary that simple string matching catches 90%+ of cases correctly. The <code>rewrite_with_llm</code> call handles the harder part, rephrasing the query to match corpus terminology and injecting patient-specific context that the user left implicit. When a patient with Type 2 diabetes asks "what should I eat before exercise?", the rewriter produces something like "pre-exercise nutrition recommendations for Type 2 diabetes, oral medication management" -- because the retriever needs that specificity to pull the right documents, even though the user would never phrase it that way.</p>
+
+          <h3>Query Transformation Techniques</h3>
+
+          <p>Structured extraction handles the "what do you mean?" problem, but there's a second class of techniques that handle the "how do I find it?" problem -- transforming the query itself to improve retrieval recall. I've tested four of these in production, and each solves a different failure mode.</p>
+
+          <p><strong>HyDE (Hypothetical Document Embeddings)</strong> is the one that surprised me most. The idea is counterintuitive -- you ask the LLM to generate a hypothetical answer to the user's question, then embed <em>that answer</em> instead of the question. Even if the generated answer is factually wrong (and it often is), it captures the vocabulary, phrasing patterns, and topical neighborhood of a real answer far better than the original question does. A question lives in "question space" and a document lives in "answer space," and those two regions of the embedding manifold don't always overlap well. HyDE bridges that gap by converting the question into something that looks like a document. I found it helps most when the query is short or abstract ("managing fatigue") and the corpus contains detailed clinical prose -- the hypothetical answer expands the sparse query into something rich enough for meaningful similarity matching. It doesn't help much when the query is already specific and technical, because the original embedding is already close to the target region.</p>
+
+          <p><strong>Query decomposition</strong> handles multi-hop questions that require information from multiple documents. When a user asks "how does metformin interact with the ketogenic diet for someone with kidney concerns?", that's actually three sub-questions packed into one: metformin's mechanism and dietary considerations, the metabolic effects of a ketogenic diet on blood glucose, and renal function monitoring with metformin. No single document in the corpus is likely to answer all three. By decomposing the query into focused sub-questions and retrieving for each, you pull from three different regions of the corpus and assemble a more complete answer. The trick is knowing when to decompose -- I use a simple heuristic where queries containing two or more distinct medical concepts (detected via the keyword extraction from the structured query step) get automatically decomposed.</p>
+
+          <p><strong>Step-back prompting</strong> works in the opposite direction. Instead of making the query more specific, you make it more conceptual. A user asking "why did my blood sugar spike to 280 after eating white rice?" is really asking about glycemic index, postprandial glucose response, and carbohydrate metabolism. The step-back reframes the question to its conceptual core, which retrieves broader, more foundational documents that provide the explanatory framework rather than just a narrow factual answer. I use this selectively -- it's most useful for "why" questions where the user needs understanding, not just facts.</p>
+
+          <p><strong>RAG-Fusion</strong> is the brute-force option, and honestly the most consistently effective. You generate 3-5 variations of the original query via an LLM call, retrieve separately for each variation, then fuse the results using <strong>Reciprocal Rank Fusion (RRF)</strong>. The variations capture different phrasings and angles that a single query would miss. The research numbers are solid -- <a href="https://arxiv.org/abs/2402.03367">Rackauckas (2024)</a> reports +8-10% accuracy improvement and +30-40% on comprehensiveness metrics. But there's a practical ceiling: I cap at 5 sub-queries because beyond that, the retrieved sets start drifting off-topic, and the fusion step surfaces documents that are only tangentially related. The latency cost scales linearly with the number of variations (since you're doing N separate retrieval calls), so 3 variations is my default and 5 is reserved for complex queries that trigger decomposition.</p>
+
+          <h3>Shifting Work from Runtime to Ingestion</h3>
+
+          <p>One of Liu's observations that I think deserves more attention is that you can shift much of the query understanding cost to ingestion time. Instead of embedding raw text chunks, you run an LLM over each chunk at ingestion to generate the questions that chunk would answer, then embed the question-answer pairs. When a user's question comes in at runtime, it's now being compared against other questions in embedding space rather than against document prose -- a much tighter semantic match. This is essentially HyDE in reverse. Instead of transforming the query to look like a document at query time, you transform the documents to look like queries at ingestion time. The computation is the same, but you pay it once during indexing rather than on every request. For a corpus that changes weekly but gets queried thousands of times a day, the math is obvious.</p>
+
+          <p>All of these techniques share a tradeoff. Query understanding adds 500-700ms of latency to the retrieval path -- the structured extraction call, the optional query transformation, and potentially multiple retrieval passes for fusion or decomposition. In my diabetes agent, the median query path with enrichment runs about 600ms before the first retrieval call even fires. But the alternative is sending raw queries to a dumb similarity search and hoping for the best, which is faster but wrong more often in ways that are expensive to debug later. And the structured query unlocks capabilities you simply can't get without it: temporal reasoning (filtering by publication date), filter routing (sending medication queries to the drug reference collection and nutrition queries to the recipe corpus), and multi-backend dispatch (keyword search for drug names, semantic search for conceptual questions). For every production RAG system I've worked on, the 600ms has been worth it.</p>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: Building the Retrieval Pipeline                   -->
+        <!-- ============================================================ -->
+        <section id="retrieval-pipeline">
+          <h2>Building the Retrieval Pipeline</h2>
+
+          <div class="tldr-only">
+            <ul class="list-tight">
+              <li><strong>Chunking</strong> -- start with 400-512 tokens, 10-20% overlap; Anthropic's contextual chunking (prepend LLM-generated context per chunk) cuts retrieval failures by 49%, 67% with reranking on top; embedding models silently truncate oversized inputs, so chunking matters even with 200K context windows</li>
+              <li><strong>Hybrid retrieval</strong> -- combine dense embeddings + sparse BM25 via Reciprocal Rank Fusion; 18% improvement over dense-only, and BM25 is 10x faster on keyword-heavy queries</li>
+              <li><strong>Reranking</strong> -- cross-encoder rerankers add +33-40% accuracy for ~120ms latency; over-fetch 20-50 candidates, rerank down to 5-10</li>
+              <li>Keep everything in one database (full-text search + vector embeddings + SQL filters) rather than maintaining separate indices per collection</li>
+              <li>Put your most relevant chunks first and last in the context window -- the <a href="part1.html#four-strategies">lost-in-the-middle effect</a> shapes ordering strategy</li>
+            </ul>
+          </div>
+
+          <div class="deep-dive-only">
+
+          <p>With query understanding handling the "what does the user actually want?" question, we can turn to the retrieval pipeline itself -- the machinery that takes a structured query and returns ranked, relevant chunks. I'll walk through the four stages in order -- chunking the corpus, retrieving candidates via hybrid search, reranking the results with cross-encoders, and ordering the final set for the context window. Each stage has a surprisingly large impact on end-to-end answer quality, and most of the gains come from getting the fundamentals right rather than chasing exotic techniques.</p>
+
+          <h3>Chunking</h3>
+
+          <p>Start boring. I mean this seriously -- the temptation to build a sophisticated semantic chunker on day one is strong, but a <strong>RecursiveCharacterTextSplitter</strong> at 400-512 tokens with 10-20% overlap will get you surprisingly far. That's roughly a paragraph and a half of prose, which tends to be a natural unit of coherent thought in most technical documents. The overlap ensures you don't lose context at chunk boundaries, where a key sentence might straddle two pieces. I spent a week building a custom markdown-aware splitter for the diabetes agent before discovering that the recursive character splitter with slightly tuned parameters performed within 2% on retrieval recall. Sometimes the boring solution is the right one.</p>
+
+          <p>But there's a silent failure mode that catches people off guard, and it's worth flagging before we go further. <strong>Embedding models truncate inputs that exceed their maximum sequence length</strong>, and they do this without raising an error or warning. If your model supports 512 tokens and you hand it a 900-token chunk, it embeds the first 512 tokens and ignores the rest. The embedded representation doesn't reflect the full content of the chunk, which means similarity search is working with a degraded signal for every oversized input. This is why chunking still matters even in a world of 200K context windows -- the context window limit affects the generation model, but the embedding model's sequence length limit is what constrains your retrieval quality, and those limits are typically much smaller (512-8192 tokens depending on the model). Always check your embedding model's max sequence length and ensure your chunks fit within it.</p>
+
+          <p>Once the basics are solid and you've identified chunking as a genuine bottleneck through the diagnostic framework from <a href="#diagnosing-failures">Section 1</a>, there are three techniques worth investing in.</p>
+
+          <p><strong>Anthropic's contextual chunking</strong> was the biggest single improvement I found when I tested it on the diabetes corpus. The idea is elegant. For each chunk, you give the full source document to an LLM along with that specific chunk, and ask it to generate 50-100 tokens of context that situates the chunk within the larger document. That context gets prepended to the chunk before embedding. So a chunk that originally read "Reduce dosage by 25% if eGFR falls below 30 mL/min" becomes "This excerpt is from the ADA 2024 clinical guidelines on metformin use in patients with chronic kidney disease. It discusses dosage adjustments based on renal function. Reduce dosage by 25% if eGFR falls below 30 mL/min." The embedding now captures what the chunk is <em>about</em>, not just what it literally says. <a href="https://www.anthropic.com/news/contextual-retrieval">Anthropic's benchmarks</a> show contextual embeddings alone reduce retrieval failure rates by 35%. Combine them with contextual BM25 (where the same prepended context improves keyword matching) and failures drop by 49%. Stack reranking on top and you're at 67% reduction. The cost is $1.02 per million document tokens with prompt caching, which for most corpora is a rounding error compared to the retrieval quality gains.</p>
+
+          <p><strong>Late chunking</strong>, from <a href="https://jina.ai/news/late-chunking-in-long-context-embedding-models/">Jina AI</a>, takes a different approach. Instead of adding context text to each chunk, you process the entire document through the transformer model first -- letting self-attention propagate information across the full document -- and then split the final-layer embeddings into chunks. Each chunk's embedding inherits document-wide context through the attention mechanism rather than through prepended text. The reported improvement is a 3.5% relative gain on nDCG, with gains scaling as document length increases (because longer documents benefit more from full-document attention). It's a cleaner solution architecturally than contextual chunking, but it requires embedding models that support long sequences and a different ingestion pipeline.</p>
+
+          <p><strong>Proposition-based chunking</strong> decomposes documents into self-contained atomic propositions -- each chunk is a single factual claim with enough context to stand on its own. The EntityQuestions benchmark shows 17-25% improvement on Recall@5, which sounds impressive. But I want to add a strong caveat here, because the benchmarks don't tell the whole story. When researchers tested proposition-based chunking on clinical decision support tasks -- closer to what I'm building with the diabetes agent -- it was among the <em>worst</em> performers. The problem is that fragmenting clinical guidelines into atomic propositions strips away the surrounding qualifications, dosage ranges, and conditional logic that make the information actually useful. A proposition like "Metformin should be discontinued" is technically self-contained, but without "when eGFR drops below 30 mL/min in patients with Stage 4 CKD," it's dangerous. Smaller fragments diluted accuracy rather than improving it. This technique is highly domain-dependent, working well for factoid QA over encyclopedic content and poorly for anything where context and qualification carry clinical or legal weight.</p>
+
+          <p>For the diabetes agent, I settled on contextual chunking with a 400-token base size. The contextual prefix adds 50-80 tokens per chunk (well within the embedding model's 512-token budget), and the retrieval recall improvement over bare chunks was immediately visible in evaluation -- we went from roughly 72% Recall@10 to 84% on our test set, primarily because medication chunks that previously lacked disease-context now matched properly against condition-specific queries. The ADA guideline chunks were the biggest winners, since they're dense with abbreviations and implicit context that the contextual prefix made explicit.</p>
+
+          <h3>Hybrid Retrieval</h3>
+
+          <p>Running dense vector search alone leaves gaps that are embarrassing once you notice them. Try searching for "HbA1c" using only embeddings trained on general text, and you'll find the cosine similarity scores are mediocre because the embedding model hasn't seen enough endocrinology literature to place that abbreviation close to "glycated hemoglobin" or "blood sugar control" in its vector space. Keyword search handles this effortlessly -- if the document contains "HbA1c" and the query contains "HbA1c," BM25 gives you a strong match regardless of semantic understanding. The reverse failure is equally common -- a user asking about "blood sugar management strategies" won't keyword-match a document titled "glycemic control interventions," but dense search bridges that semantic gap easily.</p>
+
+          <p>The standard production pattern is <strong>hybrid retrieval</strong> -- run both dense (embedding) search and sparse (BM25) search in parallel, then fuse the results. The combination consistently outperforms either method alone; I've measured an 18% improvement in Recall@20 over dense-only on the diabetes corpus, and that number aligns with what others report across different domains. BM25 has a practical advantage beyond accuracy, too -- it's roughly 10x faster than embedding search for keyword-heavy queries, because it's just doing inverted index lookups rather than nearest-neighbor search across high-dimensional vectors. On queries where the user types exact medical terms, BM25 returns results in under 5ms while the vector search is still computing distances.</p>
+
+          <div class="algorithm-box">
+            <h4>Reciprocal Rank Fusion (RRF)</h4>
+            <p>Given retrieval results from multiple rankers <em>r</em>, the fused score for document <em>d</em> is:</p>
+            <p style="text-align:center;">$$\text{Score}(d) = \sum_{r} \frac{1}{k + \text{rank}(r, d)}$$</p>
+            <p>where <em>k</em> = 60 (the standard constant from the original Cormack et al. paper).</p>
+            <p><strong>Why this works:</strong> RRF ignores the raw scores from each retriever entirely -- it only cares about rank positions. This is the key property, because you don't need to normalize or calibrate scoring systems that may operate on completely different scales (BM25 scores in the range 0-25, cosine similarity in 0-1). A document ranked #1 by one system and #3 by another gets a higher fused score than a document ranked #2 by both. The formula is parameter-free beyond the constant <em>k</em>, which controls how much weight top-ranked results get relative to lower-ranked ones. In practice, <em>k</em> = 60 works well across domains without tuning.</p>
+          </div>
+
+          <p>One architectural decision that saved me a surprising amount of operational pain: keep everything in a <strong>single database</strong>, and after running separate Pinecone and Elasticsearch instances for three months before consolidating, I agree completely. <a href="https://jxnl.co/writing/2024/11/18/decomposing-rag-systems-to-identify-bottlenecks/">Liu</a> argues for this strongly, and after running separate Pinecone and Elasticsearch instances for three months before consolidating, I agree completely. A database like PostgreSQL with pgvector gives you full-text search (BM25 via <code>tsvector</code>), vector similarity search, and SQL filtering in one system. You can run a single query that finds chunks semantically similar to X, filtered by condition_type and publication date, also ranked by BM25 relevance -- all without orchestrating across multiple services. Fewer moving parts means fewer failure modes, simpler deployment, and the ability to do hybrid retrieval in a single round-trip rather than fanning out to multiple backends and merging the results. The separate-index-per-collection pattern that many tutorials recommend creates operational overhead that isn't justified unless you're operating at a scale where a single database genuinely can't handle the load.</p>
+
+          <h3>Reranking and Authority</h3>
+
+          <p>Retrieval gets you candidates; <strong>reranking</strong> sorts them by actual relevance. The pattern is straightforward -- over-fetch 20-50 candidates from your hybrid retrieval stage, then pass each (query, chunk) pair through a cross-encoder model that scores how well the chunk answers the query. Cross-encoders are more accurate than bi-encoders (the embedding models used in retrieval) because they process the query and document <em>jointly</em> through the transformer, allowing full attention between query tokens and document tokens. The tradeoff is latency, since cross-encoders can't pre-compute document embeddings, so they scale linearly with the number of candidates. Across different benchmarks, reranking adds +33-40% to retrieval accuracy for roughly 120ms of additional latency. That's the best accuracy-per-millisecond trade in the entire pipeline, and the reason I rerank in every production system I build. After reranking, take the top 5-10 and discard the rest.</p>
+
+          <table>
+            <thead><tr><th>Reranker</th><th>ELO</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Zerank-1</td><td>Highest</td><td>Current leaderboard leader; proprietary API</td></tr>
+              <tr><td>Voyage Rerank 2.5</td><td>High</td><td>Best quality-to-latency ratio; good all-rounder</td></tr>
+              <tr><td>Cohere Rerank 4 Pro</td><td>1627</td><td>32K context window; strong on long documents</td></tr>
+              <tr><td>BGE Reranker v2 M3</td><td>1467.6</td><td>Open-source; self-hostable; multilingual</td></tr>
+            </tbody>
+          </table>
+
+          <p>Reranking fixes the ordering problem, but it doesn't fix a deeper issue with embedding-based retrieval: <strong>semantic similarity and authority are not the same thing</strong>. Liu gives an example that stuck with me -- if you search for "how to fix a Python import error" using embedding search, a casual Reddit comment phrased in natural conversational language will often score higher than the official Python documentation, because the Reddit comment is linguistically closer to how the query is phrased. The official docs use precise technical vocabulary; the Reddit comment uses the same colloquial framing as the user's question. Cosine similarity rewards linguistic resemblance, not expertise or reliability. In a medical context, this failure mode is genuinely dangerous -- you don't want a patient's question about metformin dosing answered with a chunk from a diabetes forum when the ADA clinical guideline exists in your corpus and says something more precise.</p>
+
+          <p>The production solution is <strong>learning-to-rank (LTR)</strong>, where you train a model (typically XGBoost or a small neural net) to combine multiple signals into a final relevance score. Those signals include BM25 score, vector cosine similarity, but also <strong>domain authority</strong> (is this from a peer-reviewed guideline or a Reddit post?), <strong>citation count</strong> (how many other documents reference this one?), <strong>freshness</strong> (when was it last updated?), and <strong>user engagement</strong> (click-through rates, upvote counts from previous retrievals). Perplexity.ai uses exactly this approach -- their retrieval isn't just semantic search, it's a trained ranker that weighs authority and freshness alongside similarity. For the diabetes agent, I implemented a simpler version with tiered authority scores where ADA guidelines get a 1.5x boost, peer-reviewed journal articles get 1.2x, curated educational content gets 1.0x, and community-sourced content gets 0.7x. The boosts are applied as multiplicative weights on the RRF scores before final ranking. It's crude compared to a full LTR model, but it solved the most pressing failure mode -- ensuring that an ADA guideline about insulin titration always outranks a patient forum post covering the same topic in casual language.</p>
+
+          <p>In regulated domains, you can go further by maintaining specialized indices. A "high authority" index containing only vetted clinical guidelines, a "recency" index with documents from the past 12 months, and a primary full-text index for everything else. At query time, you retrieve from the appropriate index based on the structured query's metadata (a question about "current ADA recommendations" hits the high-authority index first, a question about "recent research on GLP-1 agonists" hits the recency index). This adds routing complexity but guarantees that critical queries are answered from authoritative sources.</p>
+
+          <h3>Context Window Ordering</h3>
+
+          <p>Once you've chunked, retrieved, and reranked, there's one more decision that affects answer quality more than you'd expect -- the order in which you place chunks in the context window. The <strong>lost-in-the-middle effect</strong> -- which I covered in <a href="part1.html#four-strategies">Part 1</a> -- shows up to 73% performance degradation when critical information sits in the middle of a long context. The practical implication for chunk ordering is straightforward. Put your most relevant chunks first and last, and put supporting or supplementary chunks in the middle. This "bookend" pattern ensures the model's attention mechanism gives maximal weight to your highest-confidence retrievals.</p>
+
+          <p>Anthropic's contextual retrieval experiments found another useful data point here: including the top 20 chunks was more effective than the top 5 or top 10, even though chunks 6-20 are individually less relevant. The additional chunks provide surrounding context that helps the model reason about the answer, and the contextual chunking prefix ensures each chunk carries enough metadata to be useful even when it's not a direct hit. The lesson is that more context is better than less, up to a point -- but only if you order it so that the most relevant pieces don't get lost in the middle of the pack.</p>
+
+          </div>
+
+<div class="code-block" data-filename="retrieval_pipeline.py" data-lang="python">
+<pre><code>async def retrieve(query: SearchQuery, top_k: int = 10) -&gt; list[Chunk]:
+    """Full retrieval pipeline: hybrid search, rerank, order for context."""
+
+    # Stage 1: Hybrid retrieval -- over-fetch candidates
+    fetch_k = top_k * 5  # e.g., fetch 50 for final 10
+
+    dense_results = await vector_search(
+        query.rewritten_query,
+        filters={"condition_type": query.source_filters, "doc_type": query.document_type},
+        top_k=fetch_k,
+    )
+    sparse_results = await bm25_search(
+        query.keywords + [query.rewritten_query],
+        filters={"condition_type": query.source_filters, "doc_type": query.document_type},
+        top_k=fetch_k,
+    )
+
+    # Stage 2: Reciprocal Rank Fusion
+    fused = reciprocal_rank_fusion(
+        [dense_results, sparse_results],
+        k=60,
+    )
+
+    # Stage 3: Apply authority boost before reranking
+    for chunk in fused:
+        chunk.score *= AUTHORITY_WEIGHTS.get(chunk.source_tier, 1.0)
+        # e.g. {"clinical_guideline": 1.5, "journal": 1.2, "educational": 1.0, "community": 0.7}
+
+    # Stage 4: Cross-encoder reranking on top candidates
+    candidates = sorted(fused, key=lambda c: c.score, reverse=True)[:fetch_k]
+    reranked = await cross_encoder_rerank(
+        query=query.rewritten_query,
+        chunks=candidates,
+        top_k=top_k,
+    )
+
+    # Stage 5: Order for context window (bookend pattern)
+    # Most relevant first and last; supporting in the middle
+    ordered = bookend_order(reranked)
+    return ordered
+
+
+def reciprocal_rank_fusion(
+    ranked_lists: list[list[Chunk]], k: int = 60
+) -&gt; list[Chunk]:
+    """Merge multiple ranked lists using RRF. Ignores raw scores, uses rank only."""
+    scores: dict[str, float] = {}
+    chunk_map: dict[str, Chunk] = {}
+
+    for ranked_list in ranked_lists:
+        for rank, chunk in enumerate(ranked_list, start=1):
+            scores[chunk.id] = scores.get(chunk.id, 0) + 1.0 / (k + rank)
+            chunk_map[chunk.id] = chunk
+
+    for chunk_id, score in scores.items():
+        chunk_map[chunk_id].score = score
+
+    return sorted(chunk_map.values(), key=lambda c: c.score, reverse=True)
+
+
+def bookend_order(chunks: list[Chunk]) -&gt; list[Chunk]:
+    """Place most relevant chunks at start and end of context (lost-in-the-middle)."""
+    if len(chunks) <= 2:
+        return chunks
+    # Chunks arrive sorted by relevance (best first).
+    # Put #1 first, #2 last, fill the middle with the rest in descending order.
+    first = [chunks[0]]
+    last = [chunks[1]]
+    middle = chunks[2:]
+    return first + middle + last</code></pre>
+</div>
+
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: When Graphs Beat Vectors                          -->
+        <!-- ============================================================ -->
+        <section id="graphs-vs-vectors">
+          <h2>When Graphs Beat Vectors</h2>
+
+          <div class="tldr-only">
+            <ul class="list-tight">
+              <li>Most teams don't need GraphRAG -- vector RAG with hybrid search handles simple factual lookups well enough, and graph indexing costs roughly 10x more than vector indexing</li>
+              <li>Scale compounds the pain: entity resolution alone hits ~15% error rates, and one team (Particula, 12M nodes) spent 3 months reaching 99.3% accuracy on entity deduplication</li>
+              <li>Where graphs genuinely win: multi-hop reasoning (87% accuracy vs 23% for traditional RAG), corpus-wide thematic queries, and entity-relationship traversal across documents</li>
+              <li>Budget-friendly alternatives exist -- LazyGraphRAG cuts query cost by 700x, KET-RAG reduces indexing cost by 82%, and PathRAG beats full GraphRAG in 60% of head-to-head comparisons</li>
+            </ul>
+          </div>
+
+          <div class="deep-dive-only">
+
+          <p>I'm going to take a position that might be unpopular with the knowledge graph crowd. Most teams building RAG systems today don't need GraphRAG. If your retrieval pipeline from <a href="#retrieval-pipeline">Section 3</a> is working -- hybrid search, reranking, contextual chunking -- you're handling the vast majority of production queries well enough. Don't reach for a graph until you've hit a specific wall that vectors can't solve, because the engineering cost of getting graphs right is significantly higher than most blog posts and conference talks would have you believe.</p>
+
+          <p>That said, there are situations where graphs genuinely earn their keep, and I want to be precise about which ones. The rest of this section is an honest accounting of the costs, the failure modes, and the narrow-but-real cases where graph-based retrieval outperforms everything else.</p>
+
+          <h3>The Scale Problem</h3>
+
+          <p>Let's start with money, because that's what kills most GraphRAG projects before they ship. Vectorizing the full text of <em>The Wizard of Oz</em> costs about $0.006 using a standard embedding API. Building a knowledge graph from the same text -- entity extraction, relationship classification, community detection -- costs about $0.06 with GPT-4o-mini. That's a 10x markup for a children's book. Scale this to a real corpus and the numbers get uncomfortable fast. A 1,000-page PDF runs roughly $120 at GPT-4-Turbo rates for full graph construction, and that's before you've spent a dollar on query-time inference. For most teams, the indexing budget alone is a hard stop.</p>
+
+          <p>But the dollar cost isn't even the biggest problem. <strong>Entity resolution</strong> -- the process of deciding that "Dr. Smith," "J. Smith, MD," "Smith (2024)," and "the lead researcher" all refer to the same person -- is where the real engineering pain lives. LLM-based entity extraction hits roughly a 15% error rate on entity boundaries and coreference, which sounds manageable until you realize those errors compound across every downstream operation. Every duplicated entity spawns incorrect relationships, pollutes community detection, and degrades the traversal results that the whole system depends on. <a href="https://neo4j.com/blog/developer-blog/entity-resolution-in-neo4j-the-particula-case/">Particula</a>, working with a 12-million-node graph, found that entity resolution consumed the majority of their engineering effort. The same customer appeared under four or more different names across their document corpus. It took their team three months of iterative development -- including 2,400 manually verified training matches -- to reach 99.3% accuracy on entity deduplication. And that's a team with Neo4j expertise building on a mature graph platform, not a general ML team bolting GraphRAG onto an existing pipeline.</p>
+
+          <p>Query execution introduces its own class of problems. If you're using Cypher (Neo4j's query language), the natural approach is to have your LLM generate queries from natural language. In practice, <strong>LLM-generated Cypher is only about 77% correct</strong> -- roughly one in four queries either returns wrong results or fails outright. One production team I'm aware of abandoned LLM-generated Cypher entirely and fell back to 30 manually maintained query templates with 96%+ accuracy, adding 2-3 new templates per month as usage patterns emerged. That's a workable approach, but it's fundamentally a hand-crafted system with a graph backend, not the flexible natural-language-to-graph-query dream that the demos show.</p>
+
+          <p>And then there's graph explosion. Queries that seem innocuous -- "find all connections between Company X and the pharmaceutical industry" -- can touch hundreds of thousands of nodes in a densely connected graph. Production systems need traversal budgets (maximum depth, maximum nodes explored) and result caps (Particula used a 500-node limit) to prevent queries from consuming unbounded compute. These constraints are necessary but they mean your graph queries are seeing a <em>sample</em> of the full graph neighborhood, not the complete picture, which somewhat undermines the point of having a graph in the first place.</p>
+
+          <h3>When Graphs Genuinely Win</h3>
+
+          <p>So after all those caveats, where does graph-based retrieval actually outperform vector search by a margin that justifies the cost? I see four cases, and they're more specific than the GraphRAG marketing suggests.</p>
+
+          <p><strong>Multi-hop reasoning</strong> is the clearest win. When answering a question requires connecting information across three or more documents -- "Which drugs interact with the medications prescribed to patients who also have condition X?" -- vector search falls apart because no single chunk contains the full answer. You'd need to retrieve the patient's medication list, cross-reference each medication's interaction profile, and filter by the co-occurring condition. <a href="https://arxiv.org/abs/2306.04136">Benchmark results</a> show graph-based approaches achieving 87% accuracy on multi-hop questions where traditional RAG manages only 23%. That's not a marginal improvement; it's a qualitative difference in capability.</p>
+
+          <p><strong>Corpus-wide thematic queries</strong> are the second case. Questions like "What are the main themes across all customer complaints from Q4?" or "Summarize the key research directions in our patent portfolio" don't have a good answer in vector space, because they require aggregating patterns across the entire corpus rather than finding specific matching chunks. GraphRAG's community detection algorithm (based on Leiden clustering) groups related entities into hierarchical communities and pre-computes summaries at each level, which gives you the ability to answer these synthetic, thematic questions. No amount of clever retrieval over flat chunks will produce a coherent thematic summary -- you need structure.</p>
+
+          <p><strong>Entity-relationship questions</strong> that require traversal are the third case. "Which suppliers share warehouses with our top 3 customers?" needs you to walk a specific path through the graph: customer nodes to warehouse nodes to supplier nodes. Vector similarity between the query and any individual document chunk won't get you there, because the answer lives in the <em>connections</em> between entities, not in any single chunk's content.</p>
+
+          <p>The fourth case is <strong>temporal reasoning across documents</strong>, where you need to track how something evolved over time. "How has the treatment protocol for Type 2 diabetes changed over the past five years?" requires connecting time-stamped entities across multiple guideline versions, identifying what changed between each pair, and synthesizing a coherent narrative. A graph with temporal edges makes this a structured traversal problem; without it, you're hoping the LLM can piece together the evolution from a handful of retrieved chunks that may or may not span the right time period.</p>
+
+          </div>
+
+          <p>If you're trying to decide whether your use case justifies the investment, this is the framework I'd use:</p>
+
+          <table>
+            <thead><tr><th>Your situation</th><th>Use this</th><th>Why</th></tr></thead>
+            <tbody>
+              <tr><td>Simple factual lookups, keyword-rich data</td><td>Vector RAG + BM25</td><td>Cheaper, faster, sufficient</td></tr>
+              <tr><td>Need entity relationships across documents</td><td>GraphRAG or LightRAG</td><td>Traversal required</td></tr>
+              <tr><td>Multi-hop reasoning, connecting 3+ docs</td><td>HippoRAG or PathRAG</td><td>Cheaper graph alternatives</td></tr>
+              <tr><td>Corpus-wide thematic summarization</td><td>GraphRAG Global Search or LazyGraphRAG</td><td>Community detection needed</td></tr>
+              <tr><td>Budget-constrained, &lt;1,000 docs</td><td>Don't use graph</td><td>ROI doesn't justify complexity</td></tr>
+              <tr><td>&gt;10K docs, frequent updates</td><td>LightRAG or KET-RAG</td><td>Full GraphRAG too expensive to re-index</td></tr>
+            </tbody>
+          </table>
+
+          <div class="deep-dive-only">
+
+          <h3>Cheaper Alternatives</h3>
+
+          <p>Full GraphRAG isn't your only option even when you do need graph structure, and the alternatives are evolving fast enough that the cost calculus changes every few months. <strong>LazyGraphRAG</strong> is the most interesting recent development -- it indexes at vector-RAG parity (roughly 0.1% of full GraphRAG's indexing cost) by deferring the expensive entity extraction and community summarization to query time, using a blend of NLP and LLM-based extraction only when a query actually needs it. Query costs come in at 4% of GraphRAG's Global Search, which works out to roughly 700x cheaper per query. The tradeoff is higher query latency on first access, but for corpora that are updated frequently, avoiding the full re-index is worth it.</p>
+
+          <p><strong>KET-RAG</strong> takes a different approach to the indexing cost problem by being selective about which entities matter. Instead of extracting every entity and relationship from the corpus, it uses PageRank (with a selectivity parameter &beta;=0.8) to identify the most structurally important nodes and focuses extraction effort there. The result is 18.3% of competitor indexing cost with superior retrieval coverage -- 81.6% versus 74.6-79.6% for full-extraction approaches. The insight is that most entities in a knowledge graph are low-degree leaf nodes that rarely participate in useful query paths, so you can skip them without losing much.</p>
+
+          <p><strong>PathRAG</strong> achieved a 60% win rate against full GraphRAG and 57% against LightRAG in head-to-head evaluations, focusing on optimizing the graph traversal itself rather than the construction. And <strong>HippoRAG</strong>, which models its retrieval after the hippocampal memory indexing theory, reports 20% improvement on multi-hop tasks while being 10-30x cheaper than iterative retrieval approaches that achieve similar accuracy by running multiple sequential search passes.</p>
+
+          <p>For the diabetes agent, I don't use graph retrieval. The queries are predominantly single-hop factual lookups -- "what's the recommended HbA1c target for elderly patients?" or "metformin dosage adjustment for renal impairment" -- and hybrid vector search with reranking handles these well. But I can see exactly where I'd introduce it: if I were building a broader medical knowledge base that needed to connect treatment protocols across conditions, link drug interactions to clinical trial outcomes, and traverse patient-condition-medication-contraindication paths, that's a graph problem. The structure of the data itself demands traversal, not similarity search. Until I hit that wall, vectors are cheaper, simpler, and good enough.</p>
+
+          <p>I'll close this section with a warning that I think is worth repeating. <a href="https://jxnl.co/writing/2024/11/18/decomposing-rag-systems-to-identify-bottlenecks/">Jason Liu</a> lists "jump to knowledge graphs before trying simpler solutions" as anti-pattern #12 in his guide on how to build a terrible RAG system. I've seen this play out in practice -- teams that adopted GraphRAG because it sounded sophisticated, before they'd even measured whether their vector retrieval was working or diagnosed <em>why</em> it was failing. The graph didn't fix their actual problem (usually bad chunking or missing query understanding), and they ended up maintaining two complex systems instead of one. Diagnose first, reach for graphs only when the diagnosis points specifically at a multi-hop or relationship-traversal failure mode that simpler retrieval genuinely can't solve.</p>
+
+          </div>
+
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: Self-Correcting Retrieval                         -->
+        <!-- ============================================================ -->
+        <section id="self-correcting">
+          <h2>Self-Correcting Retrieval</h2>
+
+          <div class="tldr-only">
+            <ul class="list-tight">
+              <li>Traditional RAG is fire-and-forget -- retrieve once, generate, hope for the best; next-gen systems evaluate retrieval quality <em>during</em> generation and correct course when it's poor</li>
+              <li><strong>CRAG</strong> routes through three corrective paths (correct / incorrect / ambiguous) that refine, replace, or supplement retrievals; +19 points on PopQA when integrated with Self-RAG</li>
+              <li><strong>Self-RAG</strong> trains four reflection tokens (Retrieve, ISREL, ISSUP, ISUSE) that let the model decide when to retrieve, evaluate relevance, and check whether generation is actually supported by evidence</li>
+              <li>RAG paradoxically reduces a model's ability to abstain -- more context means more confidence, which means more hallucination when that context is insufficient; sufficiency checking before generation improves correct answers by 2-10%</li>
+            </ul>
+          </div>
+
+          <div class="deep-dive-only">
+
+          <p>Everything we've built so far -- query understanding, hybrid retrieval, reranking, even graph traversal -- shares a common assumption. You retrieve once, stuff the results into the context window, and let the model generate. If the retrieval was bad, the generation will be bad, and you won't know until a user complains or an eval catches it downstream. I've been calling this "fire-and-forget retrieval," and it's how most production RAG systems work today. The systems in this section break that assumption. They treat retrieval as something that can be evaluated, corrected, and repeated mid-generation -- turning what was a single pass through a search index into something closer to a reasoning loop.</p>
+
+          <p>The shift matters because retrieval failures aren't always obvious at query time. Sometimes the retrieved documents look relevant but contain outdated information. Sometimes they cover the topic but miss the specific angle the query needs. Sometimes the top-ranked chunk is genuinely relevant but the second and third chunks are noise that dilutes the signal. A system that can evaluate "did I get good enough context to answer this?" and take corrective action when the answer is no -- that's a qualitatively different kind of RAG pipeline than one that blindly trusts whatever the retriever returns.</p>
+
+          <h3>CRAG: Corrective Retrieval-Augmented Generation</h3>
+
+          <p><strong>Corrective RAG</strong> (<a href="https://arxiv.org/abs/2401.15884">Yan et al., 2024</a>) introduces a lightweight evaluator that sits between the retriever and the generator and makes a three-way routing decision. Given a query and the retrieved documents, a T5-large classifier scores overall retrieval quality and routes to one of three corrective paths. If the evaluator judges the retrieval as <strong>Correct</strong> (confidence above an upper threshold), it refines the documents -- decomposing each retrieved chunk into smaller knowledge strips, scoring each strip for relevance, and recomposing only the relevant pieces. This sounds simple, but in practice it strips a surprising amount of noise. A chunk that was retrieved because one sentence matched the query might contain five paragraphs of irrelevant context; the decompose-recompose step surgically removes that padding.</p>
+
+          <p>If the evaluator judges the retrieval as <strong>Incorrect</strong> (confidence below a lower threshold), CRAG does something more aggressive -- it discards the retrieved documents entirely and falls back to web search, using the original query to fetch fresh results from the open web. This is the path that handles the failure mode we discussed in <a href="#diagnosing-failures">Section 1</a> -- topic gaps where the corpus simply doesn't contain what the user needs. Rather than generating a confident-sounding answer from irrelevant context, CRAG recognizes the gap and goes looking elsewhere.</p>
+
+          <p>Between those two extremes sits the <strong>Ambiguous</strong> case -- confidence between the two thresholds -- where CRAG combines both strategies. It refines the retrieved documents (keeping the good parts) and supplements them with web search results, giving the generator a richer context set that hedges against both noise in the retrieval and gaps in the corpus. In my experience, this ambiguous middle ground is where most real queries actually land; users rarely ask questions that perfectly match a single chunk, and they rarely ask questions with zero relevant content in the corpus.</p>
+
+          <p>Performance-wise, CRAG improves short-form question answering by +3.6 points on PopQA and +4.3 on PubHealth over vanilla RAG baselines. But the real gains show up when you stack it with other techniques: CRAG integrated with Self-RAG (which I'll cover next) achieves +19 points on PopQA, +14.9 on Biography generation, and +36.6 on PubHealth. The paper positions CRAG as plug-and-play -- you can couple it with any existing RAG pipeline as a post-retrieval correction layer, which makes it one of the more immediately adoptable ideas in this section.</p>
+
+          <h3>Self-RAG: Teaching Models When to Retrieve</h3>
+
+          <p><strong>Self-RAG</strong> (<a href="https://arxiv.org/abs/2310.11511">Asai et al., 2023</a>) takes a fundamentally different approach. Instead of adding an external evaluator on top of the pipeline, it trains the language model itself to emit special reflection tokens that control retrieval behavior and evaluate generation quality. There are four token types, and each one answers a specific question during generation:</p>
+
+          <p><strong>Retrieve</strong> answers "should I search right now?" At each generation step, the model can decide whether the current segment needs external evidence or whether it can continue generating from its own parameters. This is the key capability that separates Self-RAG from standard RAG -- retrieval isn't a one-time event at the beginning of generation but a decision the model makes adaptively as it writes. For factual claims, it retrieves. For connective prose or reasoning it's confident about, it skips retrieval and keeps generating.</p>
+
+          <p><strong>ISREL</strong> answers "is this retrieved passage actually relevant to what I'm trying to say?" After retrieving, the model evaluates each candidate passage before incorporating it. Irrelevant passages get filtered out rather than polluting the generation with off-topic context. <strong>ISSUP</strong> answers the harder question: "is my generation supported by the evidence I retrieved?" This is a faithfulness check -- the model evaluates whether what it just wrote is grounded in the retrieved content or whether it drifted into hallucination. And <strong>ISUSE</strong> provides an overall quality assessment of the complete response.</p>
+
+          <p>The training process works by fine-tuning the model on a corpus where these reflection tokens have been inserted by a critic model (GPT-4 in the paper). At inference time, the model generates reflection tokens naturally as part of its output, and a tree-beam search over multiple retrieval-generation paths selects the final output based on the reflection scores. A 7B Self-RAG model shows roughly 40% relative improvement on PopQA over standard RAG baselines, and on some benchmarks it outperforms ChatGPT despite being dramatically smaller. The catch, of course, is that you need to train (or fine-tune) the model with the reflection tokens -- you can't bolt this onto an existing API-based model the way you can with CRAG.</p>
+
+          </div>
+
+          <div class="theory-only">
+            <div class="callout">
+              <p><strong>Search-R1</strong> (<a href="https://arxiv.org/abs/2503.09516">Jin et al., 2025</a>) pushes self-correcting retrieval further by training search behavior directly through reinforcement learning. The model learns when and what to search during its chain-of-thought reasoning, issuing search queries as actions within the reasoning trace and incorporating results before continuing. The key technical innovation is <strong>retrieved token masking</strong> -- when computing the RL loss, the gradient is applied only over tokens the LLM itself generated, excluding all retrieved content from gradient updates. This prevents the model from being rewarded or penalized for the quality of search results it can't control, focusing the learning signal purely on the model's search decisions and reasoning. With Qwen2.5-7B as the base model, Search-R1 achieves 41% improvement over RAG baselines on multi-hop question answering benchmarks. The approach requires RL training infrastructure (they use GRPO, a variant of PPO), but it points toward a future where retrieval isn't a pipeline stage bolted onto generation but a learned capability integrated into the reasoning process itself.</p>
+            </div>
+          </div>
+
+          <div class="deep-dive-only">
+
+          <h3>FLARE: Uncertainty-Driven Retrieval</h3>
+
+          <p><strong>Forward-Looking Active REtrieval</strong> (<a href="https://arxiv.org/abs/2305.06983">Jiang et al., 2023</a>) takes a more pragmatic approach to the "when should I retrieve?" question. Instead of training special tokens, FLARE monitors the model's own confidence during generation. It works in two steps: the model generates a tentative next sentence, and if any token in that sentence falls below a confidence threshold (measured by token probability), FLARE triggers a retrieval using the tentative sentence as the query, then regenerates with the retrieved context. If all tokens are high-confidence, it keeps the generation as-is and moves forward. The approach is particularly valuable for long-form generation -- articles, reports, multi-paragraph answers -- where the model might be confident about introductory context but uncertain about specific facts or figures deeper in the response. And because it uses the model's own probability distribution as the retrieval trigger, it requires no additional training, just access to token-level logprobs (which most inference APIs now provide).</p>
+
+          <h3>The Context Sufficiency Problem</h3>
+
+          <p>There's a counterintuitive failure mode in all of these systems that I think deserves more attention than it gets. <a href="https://arxiv.org/abs/2411.06037">Google Research (2024)</a> at Google found that RAG actually makes models <em>worse</em> at knowing when they don't know something. Without retrieval, a model that encounters an unfamiliar question will often hedge or abstain -- "I'm not sure about that" or "I don't have enough information." But add a retrieval step, even one that returns marginally relevant or outright irrelevant context, and the model's confidence spikes. It sees documents in its context window and interprets their presence as evidence, even when those documents don't actually contain the answer. More context means more confidence means more hallucination on questions where the retrieved context is insufficient.</p>
+
+          <p>The numbers are striking. Proprietary LLMs in their experiments chose to output incorrect answers rather than abstaining, even when the retrieved documents were clearly off-topic, at rates that would be unacceptable in any production system handling medical or financial queries. Their proposed fix is a <strong>sufficiency check</strong> before generation: a lightweight classifier that evaluates whether the retrieved context actually contains enough information to answer the query, and routes to an "I don't have enough information to answer that" response when it doesn't. Adding this single gate improved the fraction of correctly answered queries by 2-10% across their benchmarks -- not by making the retrieval better, but by preventing the model from generating when retrieval had failed. I think this is one of the most underrated ideas in the RAG literature, because it directly addresses the failure mode that users trust least, a system that sounds confident while being wrong.</p>
+
+          <h3>What's Actually Production-Ready</h3>
+
+          <p>I want to be honest about where these techniques sit on the research-to-production spectrum, because the gap is wider than most papers acknowledge. <strong>CRAG</strong> is the most immediately implementable -- it's an evaluator-plus-routing layer that you can add on top of any existing retrieval pipeline without retraining anything. If you have a reasonably capable classifier (even a prompted LLM works as the evaluator) and a web search fallback, you can build a basic CRAG loop in a weekend. The gains on noisy or incomplete corpora are real, and the plug-and-play architecture means you don't have to rearchitect your stack to try it.</p>
+
+          <p><strong>FLARE</strong> is my pick for the most practical "next step" for teams that want to move beyond fire-and-forget retrieval but aren't ready to retrain models. You need token-level logprobs (available from OpenAI, Anthropic, and most open-source inference servers), a confidence threshold that you'll need to tune per-domain, and a mechanism to re-query and regenerate. The implementation is straightforward, and the uncertainty-based trigger means you only pay the retrieval latency cost when the model actually needs it -- which for many queries is never, since the initial retrieval was sufficient.</p>
+
+          <p><strong>Self-RAG</strong> produces the most impressive benchmark results, but requires fine-tuning with reflection tokens, which puts it out of reach for most teams that are calling model APIs rather than running their own training infrastructure. If you're already fine-tuning models for your domain (and some teams absolutely should be), Self-RAG is worth investigating. If you're building on top of Claude or GPT-4, it's not an option today.</p>
+
+          <p>And <strong>Search-R1</strong> is, to me, the most intellectually exciting direction -- RL-trained retrieval as a learned reasoning capability rather than a pipeline bolt-on -- but it requires both RL infrastructure and the willingness to run your own models. It's a research preview of where production systems might land in a year or two, not something I'd recommend building on today. (Though I keep checking the repo for updates, because the retrieved token masking trick is genuinely clever and I suspect it'll show up in other systems soon.)</p>
+
+          </div>
+
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: The RAG Flywheel                                  -->
+        <!-- ============================================================ -->
+        <section id="rag-flywheel">
+          <h2>The RAG Flywheel</h2>
+
+          <div class="tldr-only">
+            <ul class="list-tight">
+              <li><strong>Q-C-A framework:</strong> every RAG system has a Question, Context, and Answer -- 6 conditional relationships between these three components cover all the evaluation you need</li>
+              <li>Liu's 9-step flywheel takes you from synthetic data generation through production monitoring to continuous iteration -- the loop matters more than any individual step</li>
+              <li>About 90% of teams adding sophisticated retrieval or reranking techniques performed <em>worse</em> when properly evaluated against baselines</li>
+              <li>Build your own eval with ~300 labeled chunks, iterated 4-5 times; MTEB leaderboard rankings don't predict performance on your domain</li>
+              <li>Focus on leading metrics (weekly experiments conducted, eval suite execution time) over lagging metrics (overall quality scores that move too slowly to be actionable)</li>
+            </ul>
+          </div>
+
+          <div class="deep-dive-only">
+
+          <p>I've spent the last five sections showing you techniques that improve retrieval quality -- query transformations, hybrid search, reranking, graph traversal, self-correcting loops. But I've been holding back a dirty secret of RAG engineering, which is that most teams that add these techniques without proper evaluation make their systems <em>worse</em>, not better. The missing piece isn't a fancier retriever or a cleverer chunking strategy. It's knowing whether what you built actually works, and having a systematic process to find out. <a href="https://jxnl.co/writing/2024/02/28/levels-of-complexity-rag-applications/#the-flywheel">Jason Liu's RAG flywheel</a> gives you that process, and it starts with a deceptively simple observation about evaluation structure.</p>
+
+          <h3>The Q-C-A Evaluation Framework</h3>
+
+          <p>Every RAG system has exactly three components that matter for evaluation: a <strong>Question</strong> (what the user asked), a <strong>Context</strong> (what the retriever returned), and an <strong>Answer</strong> (what the model generated). That's it. And between those three components, there are six conditional relationships -- each one measuring something distinct about system behavior. I learned this framing from <a href="https://jxnl.co/writing/2024/02/28/levels-of-complexity-rag-applications/">Liu's work on RAG complexity levels</a>, and it's become the backbone of how I think about evaluation. Once you see it, you can't unsee it, because every RAG metric you've ever encountered maps onto one of these six relationships.</p>
+
+          </div>
+
+          <div class="deep-dive-only">
+
+          <div class="algorithm-box">
+            <h4>The Q-C-A Evaluation Framework</h4>
+            <table>
+              <thead><tr><th>Tier</th><th>Metric</th><th>What it measures</th><th>When to use</th></tr></thead>
+              <tbody>
+                <tr><td>Foundation</td><td>Precision &amp; Recall @K</td><td>Retrieval accuracy</td><td>Daily, no LLM needed</td></tr>
+                <tr><td>Primary</td><td>Context Relevance (C|Q)</td><td>Do retrieved chunks address the question?</td><td>Every eval run</td></tr>
+                <tr><td>Primary</td><td>Faithfulness (A|C)</td><td>Does the answer stay within context? (hallucination)</td><td>Every eval run</td></tr>
+                <tr><td>Primary</td><td>Answer Relevance (A|Q)</td><td>Does the answer address what was asked?</td><td>Every eval run</td></tr>
+                <tr><td>Advanced</td><td>Context Support (C|A)</td><td>Does context contain everything the answer needs?</td><td>Deep analysis</td></tr>
+                <tr><td>Advanced</td><td>Answerability (Q|C)</td><td>Can the question be answered from this context?</td><td>Deep analysis</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>In practice, the three Primary metrics are the ones you should be running on every evaluation cycle. <strong>Context Relevance</strong> (C|Q) tells you whether retrieval is working -- did you pull documents that actually address the user's question? This is the most fundamental metric, because if retrieval fails, everything downstream fails with it. <strong>Faithfulness</strong> (A|C) catches hallucination -- the model generating claims that aren't supported by the retrieved context. And <strong>Answer Relevance</strong> (A|Q) checks the end-to-end result, confirming that the final output actually addresses what was asked. If you only have time to measure three things, measure those three.</p>
+
+          <p>The Foundation tier -- Precision and Recall @K -- is where I recommend starting, because you can compute it without any LLM calls. You need a labeled set of queries paired with their "correct" chunks (I'll explain how to build this cheaply in a moment), and then you just check whether those chunks show up in your retrieval results. It's fast, it's deterministic, and it gives you a tight feedback loop for experimenting with retrieval changes. The Advanced metrics (Context Support and Answerability) are for deeper analysis sessions where you're trying to understand why specific queries fail, not for routine monitoring.</p>
+
+          <h3>Choosing the Right @K</h3>
+
+          <p>One thing that tripped me up early was treating @K as a single number. Different values of K tell you fundamentally different things about your pipeline, and conflating them will mislead you. <strong>Recall@5</strong> is what your users actually experience -- it measures whether the right content shows up in the handful of chunks that make it into the generation context. <strong>Recall@25</strong> tests your reranker, because if the right chunk exists in the top 25 but not the top 5, your reranker is the bottleneck. <strong>Recall@50</strong> is a system quality indicator that tells you whether your embedding model and indexing strategy are in the right ballpark. And <strong>Recall@100</strong> is essentially an existence check -- if the right chunk doesn't appear in the top 100 results, it's either not in the corpus or so badly chunked that no embedding model will ever surface it.</p>
+
+          <p>There's a subtle trap here that I've seen catch multiple teams, and it's a form of <strong>Simpson's Paradox</strong> applied to retrieval metrics. Your overall Recall@5 might look great at 85%, but if you break it down by query category, you might find that simple factoid questions are at 98% and multi-hop reasoning questions are at 40%. The aggregate number hides the fact that you're completely failing on the query types that matter most. Always segment your metrics by query type, topic area, and complexity. The aggregate number is almost always misleading.</p>
+
+          </div>
+
+          <p>The operational process that ties evaluation to continuous improvement is what Liu calls the <strong>RAG flywheel</strong> -- nine steps that cycle from initial baseline through synthetic data, real-world feedback, and targeted fixes:</p>
+
+          <ol>
+            <li><strong>Initial implementation</strong> -- build a baseline system, however simple. You need something running to measure against.</li>
+            <li><strong>Synthetic data generation</strong> -- for each chunk in your corpus, generate plausible questions that chunk should answer. This gives you a labeled evaluation set without manual annotation, and Liu reports it typically achieves ~97% baseline accuracy (since the questions are derived directly from the chunks).</li>
+            <li><strong>Fast evaluations</strong> -- run precision and recall against your synthetic dataset. No LLM calls needed, so this executes in seconds. Speed is the point; if your eval takes 30 minutes, you won't run it after every change.</li>
+            <li><strong>Real-world data collection</strong> -- log production queries. The gap between synthetic questions and what users actually ask is where most of the real improvement opportunity lives.</li>
+            <li><strong>Classification and analysis</strong> -- cluster your real queries by topic, intent type, and capability requirement. This is where the topic-gap vs. capability-gap framework from <a href="#diagnosing-failures">Section 1</a> becomes operational.</li>
+            <li><strong>Targeted improvements</strong> -- fix failures by category, not globally. If medical dosage queries are failing, improve the medical content and chunking strategy, don't retune your entire embedding model.</li>
+            <li><strong>Production monitoring</strong> -- track your Q-C-A metrics continuously, with alerts on regressions. A change that improves one query category can silently degrade another.</li>
+            <li><strong>User feedback integration</strong> -- collect structured feedback (more on what "structured" means in a moment).</li>
+            <li><strong>Iterate</strong> -- go back to step 2. The synthetic dataset grows, the real-world dataset grows, and each cycle through the loop improves your understanding of where the system fails.</li>
+          </ol>
+
+          <div class="deep-dive-only">
+
+          <p>Step 3 deserves emphasis because it's the one most teams get wrong. If your evaluation suite takes 20 minutes to run, you'll run it once a day at best. If it takes 15 seconds, you'll run it after every change -- and that tighter feedback loop is worth more than any individual technique improvement. Build your fast eval path first (precision/recall on synthetic data, no LLM calls), and only layer on the slower LLM-judge metrics for weekly deep dives.</p>
+
+          <h3>The 90% Statistic</h3>
+
+          <p>This is the number that changed how I approach RAG engineering. Liu and <a href="https://www.youtube.com/watch?v=iYM8ioJWIKs">Skylar Payne</a> both report that <strong>roughly 90% of implementations adding sophisticated retrieval or reranking techniques performed worse when properly evaluated against baselines</strong>. Not "didn't help" -- actively performed worse. The teams that added hybrid search, or swapped in a fancier reranker, or implemented query expansion, and then measured with a real eval suite, found that more often than not, the added complexity introduced regressions that outweighed the gains.</p>
+
+          <p>I think the explanation is straightforward, even if it's uncomfortable. Most teams add techniques because they sound good in a blog post or paper (guilty as charged -- I just spent four sections describing them), not because their evaluation told them that specific technique would help. And without measurement, you can't distinguish between "this helped on the queries where I eyeballed it" and "this helped on net across all query types." That Simpson's Paradox issue bites hard: a reranker that improves factoid queries by 10% but degrades multi-hop queries by 25% looks great when you test it on three cherry-picked examples, and terrible when you run it across a real evaluation set. The takeaway isn't "don't add sophisticated techniques" -- it's "measure before and after, across all query categories, or you're probably making things worse."</p>
+
+          <h3>Leading vs. Lagging Metrics</h3>
+
+          <p>Most teams I've talked to obsess over lagging metrics -- overall answer quality, user satisfaction scores, aggregate Recall@5. These numbers move slowly, they're influenced by dozens of variables at once, and by the time they shift meaningfully, you've already shipped multiple changes and can't attribute the improvement to any one of them. I've found it more useful to track <strong>leading metrics</strong> that predict quality improvement rather than measure it after the fact. The ones I pay attention to: how many retrieval experiments did we run this week? Is our eval suite execution time under 30 seconds? How many new labeled query-chunk pairs did we add to the evaluation set? Are we segmenting metrics by query category or just looking at aggregates?</p>
+
+          <p>The weekly experiment count is the one I care about most. A team that runs 10 retrieval experiments a week with fast evaluation will outperform a team that runs one experiment a month with a beautiful dashboard of lagging metrics. The speed of iteration dominates the sophistication of any individual technique, and that speed depends entirely on having an eval loop that's fast enough to not be a bottleneck.</p>
+
+          <h3>The Feedback Problem</h3>
+
+          <p>Most RAG systems collect user feedback through thumbs up/down buttons or 5-star ratings, and most of that data is nearly useless for improving retrieval. A thumbs-down on an answer could mean the retrieval was bad, or the generation hallucinated despite good retrieval, or the answer was correct but the tone was wrong, or the response was too slow, or the user just didn't like the formatting. You can't diagnose what to fix from a one-dimensional signal that conflates five different failure modes.</p>
+
+          <p>Liu's recommendation (and I've adopted this after trying it both ways) is to reframe the feedback question entirely. Instead of "rate this response," ask: <strong>"Did we answer your question correctly? Yes or no."</strong> This single binary question isolates correctness from tone, latency, and presentation, which means a "no" response actually tells you something actionable about retrieval or generation quality. You can supplement it with an optional freeform "what was wrong?" field for users who want to elaborate, but the binary question alone gives you a cleaner signal than a 5-star rating ever will. I've seen teams cut their feedback analysis time by 60-70% after making this switch, because they stopped trying to interpret what a 3-star rating meant and started counting binary correct/incorrect outcomes segmented by query category.</p>
+
+          <h3>The MTEB Trap</h3>
+
+          <p>When I first started building RAG systems, I'd go to the <a href="https://huggingface.co/spaces/mteb/leaderboard">MTEB leaderboard</a> and pick whatever embedding model sat at the top, assuming that the best benchmark performer would be the best performer for my use case. I was wrong, and I wasn't alone. <a href="https://wandb.ai/wandb_fc/rag-eval/reports/RAG-Evaluation-Don-t-Let-Your-RAG-App-Go-to-Production-Without-Doing-These-Checks--VmlldzoxOTQxMzA3">Weights &amp; Biases discovered</a> that their top-ranked MTEB model actually underperformed alternatives on their domain-specific benchmark -- the model that was "best" on averaged academic benchmarks wasn't best on their actual retrieval tasks. MTEB evaluates models across a diverse set of tasks and domains, and the aggregate score washes out domain-specific strengths and weaknesses in exactly the same way that aggregate Recall@5 hides per-category performance.</p>
+
+          <p>The fix is to build your own evaluation benchmark, and it's less work than you'd think. Start with ~300 labeled query-chunk pairs from your actual domain -- queries that real users have asked (or that your synthetic generation step produced), paired with the chunks that correctly answer them. Run your candidate embedding models against this set, measure Recall@5 and Recall@25, and pick the winner. Then iterate on the benchmark itself 4-5 times, adding failure cases you discover in production. After those iterations, you'll have a benchmark that actually predicts how models will perform on your data, which is something MTEB by design cannot do. I'd rather have 300 well-curated domain-specific pairs than 10,000 academic benchmark results when making an embedding model decision.</p>
+
+          </div>
+
+          <div class="theory-only">
+            <div class="callout">
+              <p><strong>Automated evaluation frameworks:</strong> <a href="https://docs.ragas.io/">RAGAS</a> and <a href="https://arxiv.org/abs/2407.11833">BenchmarkQED</a> both provide implementations of the Q-C-A metrics described above, with LLM-as-judge scoring and synthetic test generation. They're useful starting points, especially RAGAS's faithfulness and answer relevance scorers. But I'd still prioritize building your own domain-specific eval suite over relying on a generic framework -- the framework tells you <em>how</em> to measure, but only your labeled data tells you <em>what</em> to measure against. Use the frameworks for the LLM-judge plumbing; supply your own ground truth.</p>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7: When Not to Use RAG (Conclusion)                  -->
+        <!-- ============================================================ -->
+        <section id="when-not-to-rag">
+          <h2>When Not to Use RAG</h2>
+
+          <div class="tldr-only">
+            <ul class="list-tight">
+              <li><strong>Grep beats embeddings for code:</strong> Augment reached the top of SWE-Bench Verified using grep and find, not embedding-based retrieval -- agent persistence compensates for simple tools</li>
+              <li>In agent systems, the model becomes the orchestrator choosing which retrieval tools to invoke, not a passive consumer of a fixed pipeline</li>
+              <li>RAG is shifting from QA (save time) to report generation (inform decisions) -- a $20K system informing a $5M decision is cheap; a free system saving 10 minutes is nearly worthless</li>
+              <li>Embeddings remain essential for unstructured corpora, fuzzy conceptual queries, and non-text media where keyword search genuinely can't reach</li>
+            </ul>
+          </div>
+
+          <div class="deep-dive-only">
+
+          <p>The finding that surprised me most while researching this post had nothing to do with chunking strategies or reranking models. It came from <a href="https://www.augmentcode.com/">Augment Code</a>, which reached the top of <a href="https://www.swebench.com/">SWE-Bench Verified</a> -- the hardest benchmark for autonomous coding agents -- using <code>grep</code> and <code>find</code> as their primary retrieval tools. Not a vector database. Not a hybrid search pipeline. Not any of the embedding-based approaches I've spent the last six sections describing. Plain text search over a codebase, driven by an agent that knew how to formulate good queries and try again when results were bad.</p>
+
+          <p>Once you think about it, the explanation makes sense for code specifically. Source code is highly structured, with distinctive identifiers, function names, class hierarchies, and import paths that act as natural keywords. When you're looking for how a particular function handles edge cases, <code>grep -rn "handleTimeout"</code> gets you there faster than an embedding similarity search that might surface semantically related but textually different code. <a href="https://x.com/nikpash">Nik Pash</a>, who built <a href="https://github.com/cline/cline">Cline</a>, went further and abandoned RAG entirely for coding agents after finding that embedding-based retrieval added latency without improving the results that a persistent search agent could already achieve. Colin Flaherty at Augment described the test they apply to any new retrieval tool: "If I was a human working on this use case, a really persistent human that never got tired, would having this other search tool help me? If yes, it's probably useful for the agent." For structured code, the answer kept coming back no.</p>
+
+          <p>But the deeper lesson isn't about grep versus embeddings -- it's about a <strong>control inversion</strong> in how retrieval works inside agent systems. In a traditional RAG pipeline, retrieval is a fixed stage: query comes in, retriever fetches documents, generator produces an answer. The pipeline is designed once by an engineer, and every query flows through the same path. In an agent system, the model itself decides which tools to invoke, in what order, with what parameters. It might grep for a function name, read the file that contains it, then grep for everywhere that file is imported, then read one of those files to understand the calling context. The model is the orchestrator, not the consumer. And that inversion means simple, composable tools -- grep, find, file read, SQL queries -- become surprisingly effective when the model can chain them intelligently and retry when a search comes back empty.</p>
+
+          <p>This doesn't mean embeddings are dead. They remain essential for the cases where keyword search genuinely can't reach: large unstructured corpora like Slack threads, internal wikis, and email archives where the vocabulary is inconsistent and the same concept gets expressed dozens of different ways; third-party content that falls outside the model's training data, where you can't rely on parametric knowledge to fill gaps; non-text media like images, audio, and diagrams that need to be embedded into a shared vector space for cross-modal retrieval; and fuzzy conceptual queries ("what's our company's approach to incident response?") where the user doesn't know the right keywords and the answer is distributed across multiple documents. If your corpus is messy, your queries are vague, and your content isn't in the training data, you still need the full retrieval pipeline I've been describing. The question is whether you should default to that pipeline, or start simpler and add complexity only when measurement tells you it's needed.</p>
+
+          <p>The shift I find most interesting is one that <a href="https://jxnl.co/writing/2024/02/28/levels-of-complexity-rag-applications/">Liu</a> articulated toward the end of his RAG complexity framework: <strong>RAG is moving from question-answering to report generation</strong>, and the economics of the two are completely different. RAG-as-QA derives its value from time saved -- instead of searching through documents yourself, the system finds the answer for you. That's useful, but it's a one-dimensional value proposition. You save 5 minutes, maybe 10. The ceiling on that value is low. RAG-as-report-generation derives its value from <strong>decision quality</strong>. A system that synthesizes information from hundreds of documents into a coherent analysis -- pulling together financial filings, market research, competitive intelligence, internal performance data -- enables decisions that a human analyst couldn't make in the same timeframe, or at the same level of coverage. A $20K/month RAG system that informs a $5M investment decision is absurdly cheap. A free RAG chatbot that saves someone 10 minutes answering HR interview questions is nearly worthless. The value isn't in the retrieval mechanism; it's in what decisions the retrieved information enables.</p>
+
+          <p>I'm still not sure where exactly the boundary settles between "just use grep and an agent loop" and "you actually need the full embedding-plus-reranking pipeline." My best guess is that it depends on the structure of your corpus and the predictability of your queries more than on the volume of data. Highly structured data with consistent naming conventions (code, SQL databases, API documentation) rewards simple tools and agent persistence. Unstructured data with high vocabulary variance (support tickets, meeting transcripts, research papers across subfields) rewards the semantic generalization that embeddings provide. But I wouldn't bet too heavily on that distinction surviving contact with the next generation of models, which keep getting better at formulating their own search strategies.</p>
+
+          <p>Retrieval handles external knowledge -- documents, databases, APIs, everything outside the model's weights. But what about knowledge the system has learned from <em>this specific user</em> over weeks of interaction? Preferences, past decisions, patterns that worked, things that didn't. That's memory, and memory engineering is where context persistence gets genuinely hard. Part 3 will go there.</p>
+
+          <p>If you spot errors, have war stories about RAG systems that defied the patterns I've described, or found approaches that work better than what I've covered here -- I'd genuinely like to hear about it. Reach out on <a href="https://x.com/HenryVu27">X</a> or <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a>. I treat these posts as living documents, and reader corrections have made every previous piece better.</p>
+
+          </div>
+
+        </section>
+
+        <!-- ============================================================ -->
+        <section id="references" class="deep-dive-only">
+          <h2>References</h2>
+
+          <ol>
+            <!-- Jason Liu -->
+            <li id="ref-liu-embeddings">Liu, J. "RAG is More Than Embeddings." <a href="https://jxnl.co/writing/2023/09/17/rag-is-more-than-embeddings/">jxnl.co</a>, September 2023.</li>
+            <li id="ref-liu-terrible">Liu, J. "How to Build a Terrible RAG System." <a href="https://jxnl.co/writing/2024/01/07/inverted-thinking-rag/">jxnl.co</a>, January 2024.</li>
+            <li id="ref-liu-lgtm">Liu, J. "When to LGTM@K." <a href="https://jxnl.co/writing/2024/02/05/when-to-lgtm-at-k/">jxnl.co</a>, February 2024.</li>
+            <li id="ref-liu-systematic">Liu, J. "Systematically Improving Your RAG." <a href="https://jxnl.co/writing/2024/05/22/systematically-improving-your-rag/">jxnl.co</a>, May 2024.</li>
+            <li id="ref-liu-low-hanging">Liu, J. "Low-Hanging Fruit for RAG Search." <a href="https://jxnl.co/writing/2024/05/11/low-hanging-fruit-for-rag-search/">jxnl.co</a>, May 2024.</li>
+            <li id="ref-liu-predictions">Liu, J. "Predictions for the Future of RAG." <a href="https://jxnl.co/writing/2024/06/05/predictions-for-the-future-of-rag/">jxnl.co</a>, June 2024.</li>
+            <li id="ref-liu-flywheel">Liu, J. "The RAG Flywheel." <a href="https://jxnl.co/writing/2024/08/01/rag-flywheel/">jxnl.co</a>, August 2024.</li>
+            <li id="ref-liu-decomposing">Liu, J. "Decomposing RAG Systems to Identify Bottlenecks." <a href="https://jxnl.co/writing/2024/11/07/decomposing-rag-systems-to-identify-bottlenecks/">jxnl.co</a>, November 2024.</li>
+            <li id="ref-liu-authority">Liu, J. "Authority in RAG Systems." <a href="https://jxnl.co/writing/2025/03/01/authority-in-rag-systems/">jxnl.co</a>, March 2025.</li>
+            <li id="ref-liu-finetuning">Liu, J. "Fine-Tuning Embedding Models for Enterprise RAG." <a href="https://jxnl.co/writing/2025/03/15/fine-tuning-embeddings/">jxnl.co</a>, March 2025.</li>
+            <li id="ref-liu-6evals">Liu, J. "There Are Only 6 RAG Evals." <a href="https://jxnl.co/writing/2025/05/01/there-are-only-6-rag-evals/">jxnl.co</a>, May 2025.</li>
+            <li id="ref-liu-trellis">Liu, J. "Systematically Improving RAG with Raindrop and Oleve." <a href="https://jxnl.co/writing/2025/05/15/systematically-improving-rag-with-raindrop-and-oleve/">jxnl.co</a>, May 2025.</li>
+            <li id="ref-liu-antipatterns">Liu, J. "RAG Anti-Patterns with Skylar Payne." <a href="https://jxnl.co/writing/2025/06/01/rag-anti-patterns-with-skylar-payne/">jxnl.co</a>, June 2025.</li>
+            <li id="ref-liu-facets">Liu, J. "Facets: Context Engineering." <a href="https://jxnl.co/writing/2025/08/01/facets-context-engineering/">jxnl.co</a>, August 2025.</li>
+            <li id="ref-liu-grep">Liu, J. "Why Grep Beat Embeddings." <a href="https://jxnl.co/writing/2025/09/01/why-grep-beat-embeddings/">jxnl.co</a>, September 2025.</li>
+            <li id="ref-liu-coding-agents">Liu, J. "Why I Stopped Using RAG for Coding Agents." <a href="https://jxnl.co/writing/2025/09/10/why-i-stopped-using-rag-for-coding-agents/">jxnl.co</a>, September 2025.</li>
+            <li id="ref-liu-chunking">Liu, J. "Text Chunking Strategies" (with ChromaDB). <a href="https://jxnl.co/writing/2025/09/15/text-chunking-strategies/">jxnl.co</a>, September 2025.</li>
+            <li id="ref-liu-mteb">Liu, J. "Stop Trusting MTEB Rankings" (with Chroma). <a href="https://jxnl.co/writing/2025/09/20/stop-trusting-mteb-rankings/">jxnl.co</a>, September 2025.</li>
+
+            <!-- Retrieval Techniques & Architecture -->
+            <li id="ref-anthropic-contextual">Anthropic. "Introducing Contextual Retrieval." <a href="https://www.anthropic.com/news/contextual-retrieval">anthropic.com</a>, 2024.</li>
+            <li id="ref-jina-late-chunking">Jina AI. "Late Chunking in Long-Context Embedding Models." <a href="https://arxiv.org/abs/2409.04701">arXiv:2409.04701</a>, 2024.</li>
+            <li id="ref-dense-x">Chen et al. "Dense X Retrieval: What Retrieval Granularity Should We Use?" <a href="https://weaviate.io/blog/dense-x-retrieval-critical-analysis">Weaviate</a>.</li>
+            <li id="ref-raptor">Sarthak et al. "RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval." ICLR 2024, <a href="https://arxiv.org/abs/2401.18059">arXiv:2401.18059</a>.</li>
+            <li id="ref-rag-fusion">Rackauckas et al. "RAG-Fusion." <a href="https://arxiv.org/abs/2402.03367">arXiv:2402.03367</a>, 2024.</li>
+            <li id="ref-hyde">Gao et al. "HyDE: Hypothetical Document Embeddings." <a href="https://arxiv.org/abs/2212.10496">arXiv:2212.10496</a>, 2022.</li>
+
+            <!-- Graph RAG -->
+            <li id="ref-graphrag">Microsoft Research. "GraphRAG: A Modular Graph-Based RAG System." <a href="https://github.com/microsoft/graphrag">GitHub</a>, 2024.</li>
+            <li id="ref-lazygraphrag">Microsoft Research. "LazyGraphRAG: Setting a New Standard for Quality and Cost." <a href="https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost-in-local-graph-rag/">Microsoft Research Blog</a>, 2025.</li>
+            <li id="ref-ket-rag">Li et al. "KET-RAG: A Cost-Efficient Multi-Granular Indexing Framework for Graph-RAG." <a href="https://arxiv.org/abs/2502.09304">arXiv:2502.09304</a>, 2025.</li>
+            <li id="ref-hipporag">Yang et al. "HippoRAG: Neurobiologically Inspired Long-Term Memory for LLMs." NeurIPS 2024, <a href="https://arxiv.org/abs/2405.14831">arXiv:2405.14831</a>.</li>
+            <li id="ref-pathrag">Zhang et al. "PathRAG." <a href="https://arxiv.org/abs/2502.14902">arXiv:2502.14902</a>, 2025.</li>
+            <li id="ref-particula">Particula. "GraphRAG Implementation: What 12 Million Nodes Taught Us." <a href="https://particula.tech">particula.tech</a>, 2025.</li>
+            <li id="ref-graphrag-costs">Microsoft Tech Community. "GraphRAG Costs Explained: What You Need to Know." <a href="https://techcommunity.microsoft.com">techcommunity.microsoft.com</a>, August 2024.</li>
+
+            <!-- Self-Correcting RAG -->
+            <li id="ref-crag">Yan et al. "Corrective Retrieval Augmented Generation." <a href="https://arxiv.org/abs/2401.15884">arXiv:2401.15884</a>, 2024.</li>
+            <li id="ref-self-rag">Asai et al. "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection." ICLR 2024, <a href="https://arxiv.org/abs/2310.11511">arXiv:2310.11511</a>.</li>
+            <li id="ref-search-r1">Jin et al. "Search-R1: Training LLMs to Reason and Leverage Search Engines." COLM 2025, <a href="https://arxiv.org/abs/2503.09516">arXiv:2503.09516</a>.</li>
+            <li id="ref-flare">Jiang et al. "FLARE: Active Retrieval Augmented Generation." EMNLP 2023, <a href="https://arxiv.org/abs/2305.06983">arXiv:2305.06983</a>.</li>
+            <li id="ref-sufficient-context">Google Research. "Sufficient Context: Improving Retrieval Augmented Generation." ICLR 2025, <a href="https://arxiv.org/abs/2411.06037">arXiv:2411.06037</a>.</li>
+
+            <!-- Reranking & Evaluation -->
+            <li id="ref-cohere-reranking">Cohere. "Reranking Best Practices." <a href="https://docs.cohere.com/docs/reranking-best-practices">docs.cohere.com</a>.</li>
+            <li id="ref-reranker-leaderboard">Agentset. "Reranker Leaderboard." <a href="https://agentset.ai/rerankers">agentset.ai</a>.</li>
+            <li id="ref-ragas">RAGAS Documentation. <a href="https://docs.ragas.io">docs.ragas.io</a>.</li>
+            <li id="ref-benchmarkqed">Microsoft. "BenchmarkQED." <a href="https://github.com/microsoft/BenchmarkQED">GitHub</a>, 2025.</li>
+
+            <!-- Production Patterns -->
+            <li id="ref-weaviate-hybrid">Weaviate. "Hybrid Search 2.0." <a href="https://weaviate.io/blog/hybrid-search-2">weaviate.io</a>.</li>
+            <li id="ref-assembled-rrf">Assembled. "Better RAG Results with RRF and Hybrid Search." <a href="https://www.assembled.com/blog/better-rag-results-with-reciprocal-rank-fusion-and-hybrid-search">assembled.com</a>.</li>
+          </ol>
+        </section>
+
+      </article>
+    </div>
+
+    <footer class="footer">
+      <a href="https://x.com/HenryVu27">X</a> · <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a> · <a href="#">GitHub</a>
+    </footer>
+  </main>
+
+  <script src="../../js/katex-init.js"></script>
+  <script src="../../js/mode-toggle.js"></script>
+  <!-- Prism.js: syntax highlighting -->
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="../../js/code-blocks.js"></script>
+</body>
+</html>

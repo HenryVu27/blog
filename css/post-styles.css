@@ -100,7 +100,8 @@
 }
 
 /* Drop cap: first letter of opening paragraph, manuscript style */
-.post > section:first-child > p:first-of-type::first-letter {
+.post > section:first-child > p:first-of-type::first-letter,
+.post > section:first-child > .deep-dive-only > p:first-of-type::first-letter {
   font-family: var(--font-drop-cap);
   font-weight: normal;
   float: left;

@@ -44,6 +44,9 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
 
+  <!-- Series Pagination -->
+  <link rel="next" href="https://www.henryvu.blog/series/ai-engineering/part2.html">
+
   <!-- RSS Feed -->
   <link rel="alternate" type="application/rss+xml" title="Henry Vu's Blog" href="https://www.henryvu.blog/feed.xml">
 
@@ -543,7 +546,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
             <li><strong>Summarize</strong> only when compaction isn't enough. Replace older turns with a generated summary, preserving the recent window verbatim.</li>
           </ol>
 
-          <p>The 75% threshold matters more than it might seem. I call it the <strong>pre-rot threshold</strong>: compress proactively at ~75% capacity, not reactively at 95%. By the time you're near the wall, attention quality has already degraded across the last 20% of growth (this connects directly to the distraction failure mode in Section 4). Compressing early keeps the model in its high-performance zone.</p>
+          <p>The 75% threshold matters more than it might seem. I call it the <strong>pre-rot threshold</strong>: compress proactively at ~75% capacity, not reactively at 95%. By the time you're near the wall, attention quality has already degraded across the last 20% of growth (this connects directly to the <a href="#failure-modes">distraction failure mode</a> in Section 4). Compressing early keeps the model in its high-performance zone.</p>
           </div>
 
 <div class="code-block" data-filename="context_manager.py" data-lang="python">
@@ -680,7 +683,7 @@ graph.add_edge("output_gate", END)</code></pre>
 
           <p><strong>Context distraction</strong> is subtler. The context grows so long that the model over-focuses on accumulated history and neglects what it learned during training. Beyond ~100k tokens, I've noticed agents tend toward repeating actions from history rather than synthesizing novel plans. Aggressive trimming and summarization help, along with actively removing completed or irrelevant sections. I suspect most people's context windows are 2-3x larger than they need to be.</p>
 
-          <p>This is why the pre-rot threshold from Section 3 matters so much. If you wait until 95% capacity to compress, attention quality has already degraded across the last 20% of growth. Compressing proactively at ~75% avoids the worst of it.</p>
+          <p>This is why the <a href="#four-strategies">pre-rot threshold from Section 3</a> matters so much. If you wait until 95% capacity to compress, attention quality has already degraded across the last 20% of growth. Compressing proactively at ~75% avoids the worst of it.</p>
 
           <p><strong>Context confusion</strong> is what happens when superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. <a href="#ref-anthropic">Anthropic's</a> guiding principle is the right one here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome." Every token should earn its place, and most don't.</p>
 
@@ -846,7 +849,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <div class="deep-dive-only">
           <p>When I audited this agent against the best practices I'd just finished researching, two problems jumped out that I wouldn't have caught without specifically looking.</p>
 
-          <p>The expensive one is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix, so if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (<span class="nokatex">$0.30/MTok cached vs $3/MTok uncached</span> on Claude Sonnet). The fix is one line, move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns. The broader principle from Section 2 applies here too. Treat the prompt prefix as append-only, sort sections by volatility, and let the stable parts form a cacheable prefix.</p>
+          <p>The expensive one is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix, so if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (<span class="nokatex">$0.30/MTok cached vs $3/MTok uncached</span> on Claude Sonnet). The fix is one line, move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns. The broader principle from <a href="#seven-components">Section 2</a> applies here too. Treat the prompt prefix as append-only, sort sections by volatility, and let the stable parts form a cacheable prefix.</p>
           </div>
 
           <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#f0ead9;">
@@ -905,7 +908,7 @@ graph.add_edge("output_gate", END)</code></pre>
           </div>
 
           <div class="deep-dive-only">
-          <p>The subtler one is a <strong>profile-in-prompt-and-tool clash</strong>. The patient profile is already injected into the <code>&lt;patient-context&gt;</code> section of the system prompt on every turn. But <code>get_patient_profile</code> also exists as a callable tool. The tool exists to let the agent "check what it knows," but the agent already knows; it's right there in the prompt. I mentioned this in Section 4 as a context clash, and it is, but it's also context confusion in a way I didn't appreciate until I watched the agent's behavior. The tool's existence signals to the model that the profile might <em>not</em> be in context, which makes it less likely to trust the data it already has. The instruction says "use the profile in <code>&lt;patient-context&gt;</code> directly," but the tool's mere availability creates an implicit counter-signal. Removing the tool entirely fixed the redundant fetches and, more importantly, made the agent more confident in referencing profile data from the prompt.</p>
+          <p>The subtler one is a <strong>profile-in-prompt-and-tool clash</strong>. The patient profile is already injected into the <code>&lt;patient-context&gt;</code> section of the system prompt on every turn. But <code>get_patient_profile</code> also exists as a callable tool. The tool exists to let the agent "check what it knows," but the agent already knows; it's right there in the prompt. I mentioned this in <a href="#failure-modes">Section 4</a> as a context clash, and it is, but it's also context confusion in a way I didn't appreciate until I watched the agent's behavior. The tool's existence signals to the model that the profile might <em>not</em> be in context, which makes it less likely to trust the data it already has. The instruction says "use the profile in <code>&lt;patient-context&gt;</code> directly," but the tool's mere availability creates an implicit counter-signal. Removing the tool entirely fixed the redundant fetches and, more importantly, made the agent more confident in referencing profile data from the prompt.</p>
           </div>
 
           <div class="theory-only">
@@ -927,11 +930,11 @@ graph.add_edge("output_gate", END)</code></pre>
           </div>
 
           <div class="deep-dive-only">
-          <p>The one metric I track reliably is <strong>cache hit rate</strong>, because Anthropic hands it to you for free. Every API response includes <code>cache_read_input_tokens</code> and <code>cache_creation_input_tokens</code>, and the ratio tells you whether your prefix ordering is stable across turns. After fixing the KV-cache violation from Section 5, my cache hit rate went from ~0% to ~85% on turns 2+, which I could verify directly from the billing dashboard. If your cache hit rate is low, something in your prompt prefix is changing between calls, and the fix is almost always moving volatile content later in the prompt.</p>
+          <p>The one metric I track reliably is <strong>cache hit rate</strong>, because Anthropic hands it to you for free. Every API response includes <code>cache_read_input_tokens</code> and <code>cache_creation_input_tokens</code>, and the ratio tells you whether your prefix ordering is stable across turns. After fixing the <a href="#token-budget">KV-cache violation from Section 5</a>, my cache hit rate went from ~0% to ~85% on turns 2+, which I could verify directly from the billing dashboard. If your cache hit rate is low, something in your prompt prefix is changing between calls, and the fix is almost always moving volatile content later in the prompt.</p>
 
           <p>Beyond that, I keep an eye on <strong>cost per conversation</strong> (total API spend divided by completed sessions) because it rolls up cache efficiency, context size, model routing, and retrieval volume into a single number. <a href="#ref-letta-bench">Letta's Context-Bench</a> reinforces why this matters more than per-token price: <span class="nokatex">Claude Sonnet 4.5 led their benchmark at 74.0% accuracy for $24.58, while GPT-5 reached 72.67% for $43.56</span>, almost double the cost for slightly lower performance. Models with higher unit costs sometimes use far fewer tokens, so the aggregate figure is what counts.</p>
 
-          <p>The metrics I <em>want</em> but haven't built yet are per-component token budgets (logging how much each prompt section actually consumes versus my design-time estimates) and task completion rate bucketed by context size. The second one would tell me whether more context is actually helping or triggering the distraction failure mode from Section 4. I have a strong intuition that completion degrades above ~30K tokens, but intuition without data is just a guess.</p>
+          <p>The metrics I <em>want</em> but haven't built yet are per-component token budgets (logging how much each prompt section actually consumes versus my design-time estimates) and task completion rate bucketed by context size. The second one would tell me whether more context is actually helping or triggering the <a href="#failure-modes">distraction failure mode</a> from Section 4. I have a strong intuition that completion degrades above ~30K tokens, but intuition without data is just a guess.</p>
 
           <p>On the benchmarking side, <a href="#ref-contextbench">ContextBench</a> (February 2025) is worth knowing about. It tests whether coding agents can retrieve the right context from 66 real repositories across 8 languages, and the headline numbers are sobering, as even SOTA models achieve block-level F1 below 0.45 and line-level F1 below 0.35. Higher recall was consistently favored over precision, suggesting it's better to include a few irrelevant chunks than to miss a critical one. Sophisticated scaffolding didn't necessarily lead to better retrieval either, which complicates the "just add more RAG infrastructure" instinct.</p>
 

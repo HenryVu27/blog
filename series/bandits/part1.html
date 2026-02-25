@@ -40,6 +40,9 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
 
+  <!-- Series Pagination -->
+  <link rel="next" href="https://www.henryvu.blog/series/bandits/part2.html">
+
   <!-- RSS Feed -->
   <link rel="alternate" type="application/rss+xml" title="Henry Vu's Blog" href="https://www.henryvu.blog/feed.xml">
 
@@ -418,7 +421,7 @@
         <section id="intro">
           <h2>Multi-Armed Bandits and the Exploration–Exploitation Trade-off</h2>
 
-          <p>If you have been around modern LLMs, you have probably heard of reinforcement learning. At its core, RL is an interaction loop: a learner chooses an action, receives feedback from the environment (reward), updates its rule for acting next time, and repeats. Much of today’s LLM finetuning to align with human preferences can be seen through this lens.</p>
+          <p>If you have been around modern <a href="../../series/ai-engineering/part1.html">LLMs</a>, you have probably heard of reinforcement learning. At its core, RL is an interaction loop: a learner chooses an action, receives feedback from the environment (reward), updates its rule for acting next time, and repeats. Much of today’s LLM finetuning to align with human preferences can be seen through this lens.</p>
 
           <p>Unlike representation learning where the learner tries to "imitate" the data, RL forces the learner to interact with the environment. The central question in this interaction is how to balance <i>exploration</i> and <i>exploitation</i>. Should the learner take advantage of current knowledge and exploit the option that currently looks best to maximize immediate reward? Or should it take some risks to explore, potentially sacrificing short-term gains to improve knowledge and long-term performance? Too much greed misses better options; too much exploration wastes opportunities.</p>
 
@@ -630,7 +633,7 @@
           <p>Inverting the bound: setting $2\exp(-n\varepsilon^2/(2\sigma^2)) = \delta$ and solving for $\varepsilon$, we get that after $n$ samples, with probability at least $1 - \delta$,</p>
           <p class="proof-center">$$\mu \in \left[\hat{\mu}_n - \sqrt{\frac{2\sigma^2\log(2/\delta)}{n}}, \; \hat{\mu}_n + \sqrt{\frac{2\sigma^2\log(2/\delta)}{n}}\right].$$</p>
 
-          <p>This confidence interval is the foundation of the UCB algorithm. The width shrinks as $1/\sqrt{n}$. We will see the powerful implications of this bound in the next section.</p>
+          <p>This confidence interval is the foundation of the <a href="#ucb">UCB algorithm</a>. The width shrinks as $1/\sqrt{n}$. We will see the powerful implications of this bound in the next section.</p>
 
         </section>
 
@@ -662,7 +665,7 @@
             <img src="images/ETC.png" alt="Explore-then-Commit strategy visualization" style="max-width:100%; height:auto;" />
           </figure>
 
-          <p>To analyze the regret of ETC, recall that $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$ from the regret decomposition above. Let's denote $i^* = \arg\max_i \mu_i$ as the optimal arm.</p>
+          <p>To analyze the regret of ETC, recall that $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$ from the <a href="#warmup">regret decomposition</a> above. Let's denote $i^* = \arg\max_i \mu_i$ as the optimal arm.</p>
 
           <div class="algorithm-box">
             <h4>Theorem (ETC Regret Bound)</h4>
@@ -762,7 +765,7 @@
         <section id="ucb">
           <h2>Upper Confidence Bound (UCB)</h2>
 
-          <p>UCB elegantly addresses ETC's limitations by adaptively balancing exploration and exploitation. Instead of rigid phases, UCB constructs confidence intervals around arm means and selects the arm with highest upper confidence bound, a principle which we call <em>optimism under uncertainty</em>.</p>
+          <p>UCB elegantly addresses <a href="#etc">ETC's limitations</a> by adaptively balancing exploration and exploitation. Instead of rigid phases, UCB constructs <a href="#concentration">confidence intervals</a> around arm means and selects the arm with highest upper confidence bound, a principle which we call <em>optimism under uncertainty</em>.</p>
 
           <p>At time $t$, having selected arm $i$ a total of $N_i(t-1)$ times and observed empirical mean $\hat{\mu}_i(t-1)$, UCB selects:</p>
 
@@ -794,7 +797,7 @@
             </ol>
           </div>
 
-          <p>Without loss of generality, let arm 1 be optimal with mean $\mu_1=\mu^*$, analysis for the regret after $n$ rounds can start by writing regret decomposition:</p>
+          <p>Without loss of generality, let arm 1 be optimal with mean $\mu_1=\mu^*$, analysis for the regret after $n$ rounds can start by writing the <a href="#warmup">regret decomposition</a>:</p>
           <p>$$R_n \,=\, \sum_{i=1}^K \Delta_i\,\mathbb{E}[N_i(n)],\qquad \Delta_i = \mu_1 - \mu_i.$$</p>
 
           <p>Then, we can bound $\mathbb{E}[N_i(n)]$ for every suboptimal arm $i\neq 1$. We observe afer the initial period where UCB pulls each arm once, suboptimal arm $i$ can only be selected at time $t$ only if its index exceeds that of the optimal arm. </p>

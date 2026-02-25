@@ -438,7 +438,7 @@
           </div>
 
           <div class="deep-dive-only">
-          <p>One thing that diagram doesn't show is that those advertised window sizes are aspirational. Models claim 200K, 1M, even 2M token windows, but performance degrades well before you hit the ceiling. <a href="#ref-ruler">NVIDIA's RULER benchmark</a> tested 34 models on tasks harder than simple needle-in-a-haystack retrieval, and found that only about half could maintain quality at 32K tokens, despite most claiming support for 128K or more. The effective context length, the range where the model actually reasons reliably rather than just pattern-matching on nearby tokens, tends to be a fraction of the number on the spec sheet. I've seen this consistently across providers. My agent's output quality degrades substantially somewhere around 80-100K tokens even on a 200K model,.</p>
+          <p>One thing that diagram doesn't show is that those advertised window sizes are aspirational. Models claim 200K, 1M, even 2M token windows, but performance degrades well before you hit the ceiling. <a href="#ref-ruler">NVIDIA's RULER benchmark</a> tested 34 models on tasks harder than simple needle-in-a-haystack retrieval, and found that only about half could maintain quality at 32K tokens, despite most claiming support for 128K or more. The effective context length, the range where the model actually reasons reliably rather than just pattern-matching on nearby tokens, tends to be a fraction of the number on the spec sheet. I've seen this consistently across providers where my agent's output quality degrades substantially somewhere around 80-100K tokens, even on a 200K model,.</p>
           </div>
 
           <div class="tldr-only">
@@ -451,9 +451,9 @@
           </div>
 
           <div class="deep-dive-only">
-          <p>Of the seven, the <strong>system prompt</strong> is where most people start, and rightfully so. It sets behavioral guidelines, role definitions, and rules for your agent. What I didn't expect when I started building agents is how much the system prompt wants to grow. Every failure mode you encounter tempts you to add another instruction, and before long you're at 4,000 tokens of rules that sometimes contradict each other. I've learned (the expensive way) to start minimal and iteratively add instructions based on observed failures. <a href="#ref-spotify">Spotify's engineering team</a> went even further and found that larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. I treat my system prompts as code now, versioned, reviewed, and tested.</p>
+          <p>Of the seven, the <strong>system prompt</strong> is where most people start. It sets behavioral guidelines, role definitions, and rules, i.e. the entire personality of your agent. What I didn't expect when I started building agents is how much the system prompt wants to grow. Every failure mode you encounter tempts you to add another instruction, and before long you're at 4,000 tokens of rules that sometimes contradict each other. I've learned (the expensive way) to start minimal and iteratively add instructions based on observed failures. <a href="#ref-spotify">Spotify's engineering team</a> found that larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. I treat my system prompts as code now, versioned, reviewed, and tested.</p>
 
-          <p>My agent's system prompt is broken into XML-tagged sections, each responsible for a distinct behavioral concern:</p>
+          <p>My agent's system prompt is broken into XML-tagged sections:</p>
           </div>
 
 <div class="code-block" data-filename="system_prompt.xml" data-lang="xml">
@@ -504,13 +504,13 @@
             </div>
           </div>
 
-          <p>One surprisingly high-leverage system prompt technique comes from <a href="#ref-openai-prompting">OpenAI's GPT-4.1 prompting guide</a>: three specific instructions that increased their SWE-bench score by ~20%. (1) Persistence: "keep going until the user's query is completely resolved." (2) Tool-calling: "use your tools to answer questions rather than relying on memory." (3) Planning: explicitly asking the model to plan before acting. Three sentences transformed the model "from a chatbot-like state into a much more eager agent," which says something about how sensitive agent behavior is to system prompt phrasing even in 2025.</p>
+          <p>One system prompt tip from <a href="#ref-openai-prompting">OpenAI's GPT-4.1 prompting guide</a> you may find helpful: three specific instructions that increased their SWE-bench score by ~20%. (1) Persistence: "keep going until the user's query is completely resolved." (2) Tool-calling: "use your tools to answer questions rather than relying on memory." (3) Planning: explicitly asking the model to plan before acting. Three sentences transformed the model "from a chatbot-like state into a much more eager agent," which says something about how sensitive agent behavior is to system prompt phrasing even in 2025.</p>
 
-          <p>I spend the least time worrying about the <strong>user prompt</strong> because it's the one thing I don't control. The immediate message from the human can be anything, from well-structured to incoherent, concise to rambling. The rest of your context engineering has to be robust enough to handle whatever arrives.</p>
+          <p>I spend the least time worrying about the <strong>user prompt</strong> because it's the one thing I don't control. The immediate message from the human can be anything, from well-structured to incoherent, concise to rambling, and your context engineering has to be robust enough to handle whatever arrives.</p>
 
-          <p>Where I've seen the most waste is <strong>state and short-term history</strong>, or memory for short, the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations just dump the raw history in verbatim, greetings, acknowledgments, off-topic tangents. The <a href="#ref-longmemeval">LongMemEval benchmark</a> (Wu et al., ICLR 2025) showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
+          <p>Where I've seen the most waste is <strong>state and short-term history</strong>, the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations just dump the raw history in verbatim, greetings, acknowledgments, off-topic tangents. The <a href="#ref-longmemeval">LongMemEval benchmark</a> (Wu et al., ICLR 2025) showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
 
-          <p>The underlying design principle here is that in mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
+          <p>The underlying design principle here is that in mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is but a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
 
           <p>A simple block with state information is injected to give the model temporal awareness and continuity across the ReAct loop:</p>
           </div>
@@ -532,7 +532,6 @@
           <div class="deep-dive-only">
           <p>This 50-100 token block tells the model what turn it's on, what phase the conversation is in, what time of day it is, and which tools it already called.</p>
 
-          <p>I'm dedicating Part 3 entirely to <strong>long-term memory</strong> (persistent knowledge across conversations, things like user preferences, facts, summaries, learned patterns) due to the complexity.</p>
           </div>
 
           <div class="deep-dive-only">

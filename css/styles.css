@@ -12,13 +12,13 @@
 }
 
 :root{
-  --bg: #e8dfd0;
-  --text: #3a332b;
+  --bg: #f2efe8;
+  --text: #2c2926;
   --muted: #6d6355;
-  --accent: #3a332b;
-  --link: #3a332b;
-  --border: #cdc4b4;
-  --code-bg: #f0ead9;
+  --accent: #2c2926;
+  --link: #2c2926;
+  --border: #ddd8cd;
+  --code-bg: #e9e5db;
   --vermillion: #8b2500;
   --gold: #c9a84c;
   --manuscript-blue: #1a3a5c;
@@ -107,6 +107,7 @@ code{
   background: var(--code-bg);
   padding: 0 4px;
   border-radius: 4px;
+  font-size: 0.82em;
 }
 
 pre{

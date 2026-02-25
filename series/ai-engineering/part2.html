@@ -60,12 +60,33 @@
   <link rel="stylesheet" href="../../css/mode-toggle.css">
   <link rel="stylesheet" href="../../css/prism-blog.css" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="../../css/code-blocks.css" media="print" onload="this.media='all'">
-  <script>try{if(localStorage.getItem('blog-reading-mode')==='deep-dive')document.documentElement.classList.add('deep-dive-mode')}catch(e){}</script>
+  <script>try{if(localStorage.getItem('blog-reading-mode')!=='tldr')document.documentElement.classList.add('deep-dive-mode')}catch(e){}</script>
   <style>
-    .hero-header {
+    .page { margin-top: 0; }
+
+    .page-header.hero-header {
       position: relative;
-      padding-top: 24px;
-      padding-bottom: 64px;
+      max-width: none;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      padding: 104px 16px 204px;
+      background: url('OG2.jpg') center / cover no-repeat;
+      box-sizing: border-box;
+    }
+    .page-header.hero-header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .page-header.hero-header > * {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .toc ul {
       margin-top: 0;
@@ -77,59 +98,75 @@
       margin-top: 0;
       margin-bottom: 12px;
     }
-    .hero-header::before {
-      content: '';
-      position: absolute;
-      top: -80px;
-      bottom: -140px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100vw;
-      background: url('OG2.jpg') center / cover no-repeat;
-      opacity: 1;
-      z-index: 0;
-      pointer-events: none;
-    }
-    .hero-header::after {
-      content: '';
-      position: absolute;
-      top: -80px;
-      bottom: -140px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100vw;
-      background: rgba(0, 0, 0, 0.35);
-      z-index: 0;
-      pointer-events: none;
-    }
-    .hero-header > * {
-      position: relative;
-      z-index: 1;
-    }
     .hero-header .title,
     .hero-header .meta,
-    .hero-header .back-btn,
     .hero-header .series-nav h3,
-    .hero-header .series-nav li,
-    .hero-header .series-nav a,
-    .hero-header .mode-toggle button {
+    .hero-header .series-nav li {
       color: #fff;
     }
+    /* Mode toggle: inactive = translucent, active = solid white */
+    .hero-header .mode-toggle button {
+      color: rgba(255,255,255,0.65);
+      position: relative;
+    }
+    .hero-header .mode-toggle button::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 100%;
+      height: 2px;
+      background: rgba(255,255,255,0.65);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 250ms ease;
+    }
+    .hero-header .mode-toggle button:hover:not(.active)::after {
+      transform: scaleX(1);
+    }
+    .hero-header .mode-toggle button.active {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
+    .hero-header .mode-toggle button:hover:not(.active) {
+      color: rgba(255,255,255,0.9);
+    }
+    /* Series nav links: translucent, brighten on hover */
+    .hero-header .series-nav a {
+      color: rgba(255,255,255,0.7);
+      transition: color 150ms ease;
+      position: relative;
+    }
+    .hero-header .series-nav a::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.7);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 250ms ease;
+    }
+    .hero-header .series-nav a:hover::after {
+      transform: scaleX(1);
+    }
+    .hero-header .series-nav a:hover {
+      color: #fff;
+    }
+    .hero-header .back-btn {
+      color: rgba(255,255,255,0.7);
+    }
     .hero-header .back-btn:hover {
-      color: #ddd;
+      color: #fff;
     }
     .hero-header hr {
       display: none;
     }
-    @media (max-width: 768px) {
-      .hero-header {
-        padding-top: 12px;
-        padding-bottom: 12px;
-      }
-      .hero-header::before,
-      .hero-header::after {
-        top: -40px;
-        bottom: -44px;
+    @media (max-width: 1024px) {
+      .page-header.hero-header {
+        padding: 52px 16px 56px;
       }
     }
   </style>
@@ -295,7 +332,7 @@
 
 
 
-    <div class="layout" style="margin-top: 240px;">
+    <div class="layout" style="margin-top: 48px;">
       <aside class="toc deep-dive-only">
         <div class="toc-sticky">
           <h2>Contents</h2>

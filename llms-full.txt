@@ -266,7 +266,7 @@ If you're building an agent and something feels off about the outputs, run throu
 
 ### How Context Fails
 
-When an agent misbehaves, my first question is always "what kind of context failure is this?" because the mitigations are completely different depending on the answer. [Drew Breunig](https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html) laid out four failure modes that I think cover most of what goes wrong, and I've started using them as a debugging checklist.
+When an agent misbehaves, my first question is always "what kind of context failure is this?" because the mitigations are completely different depending on the answer. The following four failure modes cover most of what goes wrong.
 
 > **Four Context Failure Modes**
 >
@@ -405,9 +405,8 @@ If you spot errors or have war stories from your own context engineering work, I
 2. Lutke, T. "Context Engineering over Prompt Engineering." [X/Twitter](https://x.com/tobi/status/1935533422589399127), June 2025.
 3. Rajasekaran, P. et al. "Effective Context Engineering for AI Agents." [Anthropic Engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), September 2025.
 4. Martin, L. "Context Engineering for Agents." [LangChain Blog](https://blog.langchain.com/context-engineering-for-agents/), July 2025.
-5. Breunig, D. "How Contexts Fail and How to Fix Them." [dbreunig.com](https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html), June 2025.
-6. Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." [Manus Blog](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus), July 2025.
-7. Spotify Engineering. "Context Engineering: Background Coding Agents Part 2." [engineering.atspotify.com](https://engineering.atspotify.com/2025/11/context-engineering-background-coding-agents-part-2), November 2025.
+5. Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." [Manus Blog](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus), July 2025.
+6. Spotify Engineering. "Context Engineering: Background Coding Agents Part 2." [engineering.atspotify.com](https://engineering.atspotify.com/2025/11/context-engineering-background-coding-agents-part-2), November 2025.
 8. Inngest. "Five Critical Lessons for Context Engineering." [inngest.com](https://www.inngest.com/blog/five-lessons-for-context-engineering), 2025.
 9. Mei, Z. et al. "A Survey of Context Engineering for Large Language Models." [arXiv:2507.13334](https://arxiv.org/abs/2507.13334), July 2025.
 10. Willison, S. "Context Engineering." [simonwillison.net](https://simonwillison.net/2025/Jun/27/context-engineering/), June 2025.

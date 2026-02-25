@@ -20,10 +20,10 @@
 
   // Initialize on DOM ready
   document.addEventListener('DOMContentLoaded', function() {
-    var saved = 'tldr';
-    try { saved = localStorage.getItem(STORAGE_KEY) || 'tldr'; } catch(e) {}
+    var saved = 'deep-dive';
+    try { saved = localStorage.getItem(STORAGE_KEY) || 'deep-dive'; } catch(e) {}
     // Migrate legacy 'builder' preference
-    if (saved === 'builder') saved = 'tldr';
+    if (saved === 'builder') saved = 'deep-dive';
     setMode(saved);
 
     document.querySelectorAll('.mode-toggle button').forEach(function(btn) {

@@ -61,12 +61,36 @@
   <link rel="stylesheet" href="../../css/mode-toggle.css">
   <link rel="stylesheet" href="../../css/prism-blog.css" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="../../css/code-blocks.css" media="print" onload="this.media='all'">
-  <script>try{if(localStorage.getItem('blog-reading-mode')==='deep-dive')document.documentElement.classList.add('deep-dive-mode')}catch(e){}</script>
+  <script>try{if(localStorage.getItem('blog-reading-mode')!=='tldr')document.documentElement.classList.add('deep-dive-mode')}catch(e){}</script>
   <style>
-    .hero-header {
+    /* Remove top margin so hero is flush with viewport top */
+    .page { margin-top: 0; }
+
+    /* Hero: full-width container so background never clips.
+       .page-header.hero-header beats .page-header specificity in deep-dive-layout.css */
+    .page-header.hero-header {
       position: relative;
-      padding-top: 24px;
-      padding-bottom: 64px;
+      max-width: none;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      padding: 104px 16px 204px;
+      background: url('OG1.jpg') center / cover no-repeat;
+      box-sizing: border-box;
+    }
+    .page-header.hero-header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .page-header.hero-header > * {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .toc ul {
       margin-top: 0;
@@ -78,59 +102,76 @@
       margin-top: 0;
       margin-bottom: 12px;
     }
-    .hero-header::before {
-      content: '';
-      position: absolute;
-      top: -80px;
-      bottom: -140px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100vw;
-      background: url('OG1.jpg') center / cover no-repeat;
-      opacity: 1;
-      z-index: 0;
-      pointer-events: none;
-    }
-    .hero-header::after {
-      content: '';
-      position: absolute;
-      top: -80px;
-      bottom: -140px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100vw;
-      background: rgba(0, 0, 0, 0.35);
-      z-index: 0;
-      pointer-events: none;
-    }
-    .hero-header > * {
-      position: relative;
-      z-index: 1;
-    }
     .hero-header .title,
     .hero-header .meta,
     .hero-header .back-btn,
     .hero-header .series-nav h3,
-    .hero-header .series-nav li,
-    .hero-header .series-nav a,
-    .hero-header .mode-toggle button {
+    .hero-header .series-nav li {
       color: #fff;
     }
+    /* Mode toggle: inactive = translucent, active = solid white */
+    .hero-header .mode-toggle button {
+      color: rgba(255,255,255,0.65);
+      position: relative;
+    }
+    .hero-header .mode-toggle button::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 100%;
+      height: 2px;
+      background: rgba(255,255,255,0.65);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 250ms ease;
+    }
+    .hero-header .mode-toggle button:hover:not(.active)::after {
+      transform: scaleX(1);
+    }
+    .hero-header .mode-toggle button.active {
+      color: #fff;
+      border-bottom-color: #fff;
+    }
+    .hero-header .mode-toggle button:hover:not(.active) {
+      color: rgba(255,255,255,0.9);
+    }
+    /* Series nav links: translucent, brighten on hover */
+    .hero-header .series-nav a {
+      color: rgba(255,255,255,0.7);
+      transition: color 150ms ease;
+      position: relative;
+    }
+    .hero-header .series-nav a::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.7);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 250ms ease;
+    }
+    .hero-header .series-nav a:hover::after {
+      transform: scaleX(1);
+    }
+    .hero-header .series-nav a:hover {
+      color: #fff;
+    }
+    .hero-header .back-btn {
+      color: rgba(255,255,255,0.7);
+    }
     .hero-header .back-btn:hover {
-      color: #ddd;
+      color: #fff;
     }
     .hero-header hr {
       display: none;
     }
-    @media (max-width: 768px) {
-      .hero-header {
-        padding-top: 12px;
-        padding-bottom: 12px;
-      }
-      .hero-header::before,
-      .hero-header::after {
-        top: -40px;
-        bottom: -44px;
+    @media (max-width: 1024px) {
+      .page-header.hero-header {
+        padding: 52px 16px 56px;
       }
     }
   </style>
@@ -301,7 +342,7 @@
 
 
 
-    <div class="layout" style="margin-top: 240px;">
+    <div class="layout" style="margin-top: 48px;">
       <aside class="toc deep-dive-only">
         <div class="toc-sticky">
           <h2>Contents</h2>
@@ -326,11 +367,11 @@
         <section id="from-prompts-to-context" class="deep-dive-only">
           <h2>From Prompts to Context</h2>
 
-          <p>When GPT-3 landed in 2020, early adopters quickly discovered that tiny changes in phrasing produced wildly different outputs. Swap "summarize" for "explain briefly," add "step by step," rearrange a few words, tell it to roleplay as a character with no safety guidelines, and the same model would go from incoherent to useful to giving you a recipe for homemade biological weapons. That sensitivity spawned an entire discipline called prompt engineering, the craft of writing instructions that reliably steer language models toward useful behavior.</p>
+          <p>When GPT-3 landed in 2020, early adopters quickly discovered that tiny changes in phrasing produced wildly different outputs. Swap "summarize" for "explain briefly," add "step by step," rearrange a few words, tell it to roleplay as a character with no safety guidelines, and the same model would go from incoherent to useful to giving you a recipe for homemade biological weapons. That sensitivity created an entire discipline called "prompt engineering", the craft of writing instructions that reliably steer language models toward useful behavior.</p>
 
           <p>For a while, prompt engineering was the whole game. Your system prompt was a paragraph or two, the context window was 4K tokens, and the main skill was wordsmithing, finding the exact phrasing, the right few-shot examples, the magic "think step by step" incantation that unlocked the behavior you wanted.</p>
 
-          <p>Context windows eventually went from 4K to 200K tokens, and models got good enough that phrasing stopped being the bottleneck for most tasks. Sometime around mid-2025, the community started calling what we do "context engineering" instead, and the new label caught on fast. <a href="#ref-karpathy">Andrej Karpathy</a> called it "the delicate art and science of filling the context window with just the right information for the next step." I like that framing because it puts the emphasis on information selection, not wordsmithing.</p>
+          <p>Context windows eventually went from 4K to 200K tokens, and models became intelligent enough that phrasing stopped being the bottleneck. Sometime around mid 2025, the community started using the term "context engineering" instead, and the new label caught on fast. <a href="#ref-karpathy">Andrej Karpathy</a> called it "the delicate art and science of filling the context window with just the right information for the next step." I like that framing because it puts the emphasis on information selection, not wordsmithing.</p>
 
           <p>Most agent failures I encounter today are context failures, where the model can do what I need but doesn't have the right information when it needs it. The system prompt is but one of seven components that fill the context window, and for a simple single-turn task, careful prompt engineering is all you need. But the moment you add retrieval, tools, multi-step reasoning, or agent workflows, the challenge shifts from "how do I phrase this instruction" to "what information does the model need to see right now, and how do I assemble it reliably."</p>
 
@@ -357,40 +398,41 @@
           <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-manus">Manus</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, Google), and seven components turns out to be the right granularity.</p>
           </div>
 
-          <div style="border:1px solid var(--border); border-radius:8px; padding:20px 24px; margin:24px 0; background:#f0ead9;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-              <span style="font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted);">Context Window</span>
-              <span style="flex:1; border-top:1px solid var(--border);"></span>
-              <span style="font-size:12px; color:var(--muted);">8K-200K tokens</span>
+          <div style="border-radius:8px; padding:12px 14px; margin:24px 0; background:#ece6d6;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <span style="font-size:14px; font-weight:500; text-transform:uppercase; letter-spacing:0.05em; color:var(--fg);">Context Window</span>
+              <span style="font-size:14px; color:var(--fg);">8K-200K tokens</span>
             </div>
-            <div style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:20%; background:#b8a88a; border-radius:3px; padding:6px 10px; color:#f0ead9; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">System prompt</div>
-                <span style="color:var(--muted); font-size:12px;">500-2,000</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:15%; background:#c4b69e; border-radius:3px; padding:6px 10px; color:#f0ead9; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">User prompt</div>
-                <span style="color:var(--muted); font-size:12px; font-style:italic;">variable</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:50%; background:#9a8970; border-radius:3px; padding:6px 10px; color:#f0ead9; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">State + conversation history</div>
-                <span style="color:var(--muted); font-size:12px;">500-5,000</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:15%; background:#c4b69e; border-radius:3px; padding:6px 10px; color:#f0ead9; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Long-term memory</div>
-                <span style="color:var(--muted); font-size:12px; font-style:italic;">variable</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:100%; background:#7a6c58; border-radius:3px; padding:6px 10px; color:#f0ead9; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Retrieved information (RAG)</div>
-                <span style="color:var(--muted); font-size:12px; white-space:nowrap;">0-10,000</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:30%; background:#a8987e; border-radius:3px; padding:6px 10px; color:#f0ead9; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Tool definitions</div>
-                <span style="color:var(--muted); font-size:12px;">500-3,000</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:5%; min-width:80px; background:#d1c4ac; border-radius:3px; padding:6px 10px; color:#6d6355; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Schema</div>
-                <span style="color:var(--muted); font-size:12px;">50-500</span>
+            <div style="background:#f9f7f3; border-radius:6px; padding:16px 18px;">
+              <div style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:20%; background:#efe6d4; border:1.5px solid #b8a88a; border-radius:3px; padding:6px 10px; color:#8a7a62; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">System prompt</div>
+                  <span style="color:var(--muted); font-size:12px;">500-2,000</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:15%; background:#f2ebdd; border:1.5px solid #c4b69e; border-radius:3px; padding:6px 10px; color:#9a8c74; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">User prompt</div>
+                  <span style="color:var(--muted); font-size:12px; font-style:italic;">variable</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:50%; background:#e8dece; border:1.5px solid #9a8970; border-radius:3px; padding:6px 10px; color:#7a6c58; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">State + conversation history</div>
+                  <span style="color:var(--muted); font-size:12px;">500-5,000</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:15%; background:#f2ebdd; border:1.5px solid #c4b69e; border-radius:3px; padding:6px 10px; color:#9a8c74; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Long-term memory</div>
+                  <span style="color:var(--muted); font-size:12px; font-style:italic;">variable</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:100%; background:#e2d7c5; border:1.5px solid #7a6c58; border-radius:3px; padding:6px 10px; color:#5e5344; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Retrieved information (RAG)</div>
+                  <span style="color:var(--muted); font-size:12px; white-space:nowrap;">0-10,000</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:30%; background:#ece3d3; border:1.5px solid #a8987e; border-radius:3px; padding:6px 10px; color:#7e7060; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Tool definitions</div>
+                  <span style="color:var(--muted); font-size:12px;">500-3,000</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:5%; min-width:80px; background:#f4ede0; border:1.5px solid #d1c4ac; border-radius:3px; padding:6px 10px; color:#8a7d6a; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Schema</div>
+                  <span style="color:var(--muted); font-size:12px;">50-500</span>
+                </div>
               </div>
             </div>
           </div>
@@ -523,9 +565,10 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <p><strong>Structured output</strong> specifications (JSON schemas, type definitions, output constraints) are easy to overlook in a token budget because they feel like "free" structure. They're not. At scale they add up, and I've seen schemas that consume 300+ tokens before the model even starts generating.</p>
           </div>
 
-          <div class="algorithm-box deep-dive-only">
-            <h4>Typical Token Allocation (Agentic System)</h4>
-            <table>
+          <div class="algorithm-box deep-dive-only" style="border:none; background:#ece6d6;">
+            <h4>Typical Token Allocation</h4>
+            <div style="background:#f9f7f3; border-radius:6px; overflow:hidden;">
+            <table style="margin:0; border-radius:6px;">
               <thead>
                 <tr><th>Component</th><th>Tokens</th><th>Behavior</th></tr>
               </thead>
@@ -537,7 +580,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
                 <tr><td>State / structured output</td><td>50-500</td><td>Dynamic per turn</td></tr>
               </tbody>
             </table>
-            <p>Total must fit the model's window (8k-200k depending on provider). Getting this budget right is less about cramming in more and more about being ruthless with what you leave out.</p>
+            </div>
           </div>
 
           <div class="theory-only">
@@ -570,7 +613,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <div class="deep-dive-only">
           <p>Every production context system I've seen uses some combination of four strategies, and <a href="#ref-langchain">LangChain's framework</a> gives them clean names.</p>
 
-          <p><strong>Writing</strong> means getting information out of the context window and into external storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team has a concrete version of this that I really like: their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent. (Though Manus later found that roughly a third of all agent actions were spent updating the todo list, and shifted to a dedicated planner agent instead. Even clever patterns have costs.)</p>
+          <p><strong>Writing</strong> means getting information out of the context window and into external storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team has a concrete version of this, their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent. (Though Manus later found that roughly a third of all agent actions were spent updating the todo list, and shifted to a dedicated planner agent instead. Even clever patterns have costs.)</p>
 
           <p>My first version wrote a rolling summary every 5 turns and called it a day. That's fine for a prototype, but production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under (imagine Claude Code running on million-line codebase). I think of it as three tiers:</p>
 
@@ -694,12 +737,13 @@ graph.add_edge("output_gate", END)</code></pre>
           </div>
 
           <div class="deep-dive-only">
-          <p>When an agent misbehaves, my first question is always "what kind of context failure is this?" because the mitigations are completely different depending on the answer. <a href="#ref-breunig">Drew Breunig</a> laid out four failure modes that I think cover most of what goes wrong, and I've started using them as a debugging checklist.</p>
+          <p>When an agent misbehaves, my first question is always "what kind of context failure is this?" because the mitigations are completely different depending on the answer. The following four failure modes cover most of what goes wrong.</p>
           </div>
 
-          <div class="algorithm-box">
+          <div class="algorithm-box" style="border:none; background:#ece6d6;">
             <h4>Four Context Failure Modes</h4>
-            <table>
+            <div style="background:#f9f7f3; border-radius:6px; overflow:hidden;">
+            <table style="margin:0; border-radius:6px;">
               <thead>
                 <tr><th>Mode</th><th>Cause</th><th>Fix</th></tr>
               </thead>
@@ -710,6 +754,7 @@ graph.add_edge("output_gate", END)</code></pre>
                 <tr><td>Clash</td><td>Contradictory instructions in prompt</td><td>Clear precedence hierarchy</td></tr>
               </tbody>
             </table>
+            </div>
           </div>
 
           <div class="deep-dive-only">
@@ -746,48 +791,51 @@ graph.add_edge("output_gate", END)</code></pre>
           <p>All of the above is easier to understand with a concrete example, so let me walk through the diabetes management coaching assistant I built as a ReAct agent with LangGraph. The system prompt ranges from ~2,000 to ~4,050 tokens depending on session maturity, assembled dynamically from several blocks.</p>
           </div>
 
-          <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#f0ead9; overflow-x:auto;">
-            <div style="display:flex; align-items:center; gap:0; min-width:700px; justify-content:center; flex-wrap:nowrap;">
-              <div style="background:#f5f0e3; border:2px solid var(--border); border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
-                <div style="font-weight:600; font-size:13px;">Patient</div>
-                <div style="font-size:10px; color:var(--muted);">message</div>
-              </div>
-              <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
-              <div style="background:#e5dccb; border:2px solid var(--border); border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
-                <div style="font-weight:600; font-size:13px;">Input Gate</div>
-                <div style="font-size:10px; color:var(--muted);">safety check</div>
-              </div>
-              <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
-              <div style="display:flex; flex-direction:column; gap:4px;">
-                <div style="background:#f5f0e3; border:2px solid var(--border); border-radius:8px; padding:6px 12px; text-align:center;">
-                  <div style="font-weight:600; font-size:13px;">Pro Agent</div>
-                  <div style="font-size:10px; color:var(--muted);">complex + thinking</div>
+          <div style="border-radius:8px; padding:16px; margin:24px 0; background:#ece6d6;">
+            <h4 style="font-family:var(--font-serif); margin:0 0 12px 0; font-size:19px; font-weight:500;">Gated Dual-Agent Pipeline</h4>
+            <div style="background:#f9f7f3; border-radius:6px; padding:24px; overflow-x:auto;">
+              <div style="display:flex; align-items:center; gap:0; min-width:700px; justify-content:center; flex-wrap:nowrap;">
+                <div style="background:#dce8f5; border:2px solid #4a7fb5; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
+                  <div style="font-weight:600; font-size:13px; color:#3b6a9a;">Patient</div>
+                  <div style="font-size:10px; color:#6a9ac7;">message</div>
                 </div>
-                <div style="background:#f5f0e3; border:2px solid var(--border); border-radius:8px; padding:6px 12px; text-align:center;">
-                  <div style="font-weight:600; font-size:13px;">Flash Agent</div>
-                  <div style="font-size:10px; color:var(--muted);">simple queries</div>
+                <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
+                <div style="background:#fce4de; border:2px solid #d4694a; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
+                  <div style="font-weight:600; font-size:13px; color:#b8513a;">Input Gate</div>
+                  <div style="font-size:10px; color:#d4694a;">safety check</div>
+                </div>
+                <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                  <div style="background:#d9eedc; border:2px solid #4a9e5c; border-radius:8px; padding:6px 12px; text-align:center;">
+                    <div style="font-weight:600; font-size:13px; color:#3a8249;">Pro Agent</div>
+                    <div style="font-size:10px; color:#5aaa6a;">complex + thinking</div>
+                  </div>
+                  <div style="background:#d6eded; border:2px solid #3d9494; border-radius:8px; padding:6px 12px; text-align:center;">
+                    <div style="font-weight:600; font-size:13px; color:#2e7a7a;">Flash Agent</div>
+                    <div style="font-size:10px; color:#4ea0a0;">simple queries</div>
+                  </div>
+                </div>
+                <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
+                <div style="background:#fce4de; border:2px solid #d4694a; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
+                  <div style="font-weight:600; font-size:13px; color:#b8513a;">Output Gate</div>
+                  <div style="font-size:10px; color:#d4694a;">scope check</div>
+                </div>
+                <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
+                <div style="background:#fdf0d5; border:2px solid #c9953a; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
+                  <div style="font-weight:600; font-size:13px; color:#a67c2e;">Response</div>
                 </div>
               </div>
-              <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
-              <div style="background:#e5dccb; border:2px solid var(--border); border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
-                <div style="font-weight:600; font-size:13px;">Output Gate</div>
-                <div style="font-size:10px; color:var(--muted);">scope check</div>
+              <div style="display:flex; justify-content:center; margin-top:12px;">
+                <div style="border:1.5px dashed #9b7cc4; border-radius:8px; padding:8px 16px; display:flex; gap:16px; font-size:11px; color:#7a5faa; background:#efe8f6;">
+                  <span>Background: rolling summary</span>
+                  <span style="color:#c4b3da;">|</span>
+                  <span>profile updates</span>
+                  <span style="color:#c4b3da;">|</span>
+                  <span>outcome tracking</span>
+                </div>
               </div>
-              <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
-              <div style="background:#f5f0e3; border:2px solid var(--border); border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
-                <div style="font-weight:600; font-size:13px;">Response</div>
-              </div>
+              <div style="text-align:center; margin-top:8px; font-size:12px; color:var(--muted);">Each node runs in its own isolated LLM call with its own context window</div>
             </div>
-            <div style="display:flex; justify-content:center; margin-top:12px;">
-              <div style="border:1px dashed #c5c2b8; border-radius:8px; padding:8px 16px; display:flex; gap:16px; font-size:11px; color:var(--muted);">
-                <span>Background: rolling summary</span>
-                <span style="color:var(--border);">|</span>
-                <span>profile updates</span>
-                <span style="color:var(--border);">|</span>
-                <span>outcome tracking</span>
-              </div>
-            </div>
-            <div style="text-align:center; margin-top:8px; font-size:12px; color:var(--muted);">Each node runs in its own isolated LLM call with its own context window</div>
           </div>
 
           <table>
@@ -853,9 +901,10 @@ graph.add_edge("output_gate", END)</code></pre>
           <p>This function is where all the context engineering actually happens. Load state, build the prompt from components, append the volatile state block at the end (so the static sections form a cacheable prefix), and trim the conversation using turn-group-aware removal. Every technique I described in the earlier sections (XML structure, tiered compression, atomic trimming, isolation) converges in this one function.</p>
           </div>
 
-          <div class="algorithm-box deep-dive-only">
+          <div class="algorithm-box deep-dive-only" style="border:none; background:#ece6d6;">
             <h4>Context Engineering Techniques Used</h4>
-            <table>
+            <div style="background:#f9f7f3; border-radius:6px; overflow:hidden;">
+            <table style="margin:0; border-radius:6px;">
               <thead><tr><th>Category</th><th>Technique</th><th>Implementation</th></tr></thead>
               <tbody>
                 <tr><td>Structure</td><td>XML-tagged sections</td><td><code>&lt;identity&gt;</code>, <code>&lt;boundaries&gt;</code>, <code>&lt;patient-context&gt;</code>, etc.</td></tr>
@@ -869,6 +918,7 @@ graph.add_edge("output_gate", END)</code></pre>
                 <tr><td>Safety</td><td>Isolated gates</td><td>Input + output classifiers in separate LLM calls</td></tr>
               </tbody>
             </table>
+            </div>
           </div>
 
           <h3>Two Catches from My Own Audit</h3>
@@ -886,58 +936,61 @@ graph.add_edge("output_gate", END)</code></pre>
           <p>The expensive one is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix, so if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (<span class="nokatex">$0.30/MTok cached vs $3/MTok uncached</span> on Claude Sonnet). The fix is one line, move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns. The broader principle from <a href="#seven-components">Section 2</a> applies here too. Treat the prompt prefix as append-only, sort sections by volatility, and let the stable parts form a cacheable prefix.</p>
           </div>
 
-          <div style="border:1px solid var(--border); border-radius:8px; padding:24px; margin:24px 0; background:#f0ead9;">
-            <div style="margin-bottom:16px;">
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                <span style="font-size:14px; font-weight:600; color:var(--vermillion);">Before</span>
-                <span style="font-size:12px; color:var(--muted);">Cache breaks on every turn</span>
+          <div style="border-radius:8px; padding:16px; margin:24px 0; background:#ece6d6;">
+            <h4 style="font-family:var(--font-serif); margin:0 0 12px 0; font-size:19px; font-weight:500;">KV-Cache Prefix Ordering</h4>
+            <div style="background:#f9f7f3; border-radius:6px; padding:24px;">
+              <div style="margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                  <span style="font-size:14px; font-weight:600; color:var(--vermillion);">Before</span>
+                  <span style="font-size:12px; color:var(--muted);">Cache breaks on every turn</span>
+                </div>
+                <div style="display:flex; gap:2px; font-size:11px; border-radius:6px; overflow:hidden;">
+                  <div style="background:#e8cbc0; border:1px solid #c9a99e; padding:8px 10px; min-width:100px; text-align:center; position:relative;">
+                    <div style="font-weight:600;">conversation_state</div>
+                    <div style="color:var(--vermillion); font-size:10px;">volatile</div>
+                  </div>
+                  <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center;">
+                    <div style="font-weight:500;">identity</div>
+                    <div style="color:var(--muted); font-size:10px;">static</div>
+                  </div>
+                  <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center;">
+                    <div style="font-weight:500;">boundaries</div>
+                    <div style="color:var(--muted); font-size:10px;">static</div>
+                  </div>
+                  <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center;">
+                    <div style="font-weight:500;">examples</div>
+                    <div style="color:var(--muted); font-size:10px;">static</div>
+                  </div>
+                  <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center; color:var(--muted);">...</div>
+                </div>
+                <div style="font-size:10px; color:var(--vermillion); margin-top:4px;">&uarr; Prefix changes every turn. 0% cache hit rate.</div>
               </div>
-              <div style="display:flex; gap:2px; font-size:11px; border-radius:6px; overflow:hidden;">
-                <div style="background:#e8cbc0; border:1px solid #c9a99e; padding:8px 10px; min-width:100px; text-align:center; position:relative;">
-                  <div style="font-weight:600;">conversation_state</div>
-                  <div style="color:var(--vermillion); font-size:10px;">volatile</div>
+              <div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                  <span style="font-size:14px; font-weight:600; color:#5c7a4a;">After</span>
+                  <span style="font-size:12px; color:var(--muted);">Static prefix caches across turns</span>
                 </div>
-                <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center;">
-                  <div style="font-weight:500;">identity</div>
-                  <div style="color:var(--muted); font-size:10px;">static</div>
+                <div style="display:flex; gap:2px; font-size:11px; border-radius:6px; overflow:hidden;">
+                  <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center;">
+                    <div style="font-weight:500;">identity</div>
+                    <div style="color:#5c7a4a; font-size:10px;">cached</div>
+                  </div>
+                  <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center;">
+                    <div style="font-weight:500;">boundaries</div>
+                    <div style="color:#5c7a4a; font-size:10px;">cached</div>
+                  </div>
+                  <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center;">
+                    <div style="font-weight:500;">examples</div>
+                    <div style="color:#5c7a4a; font-size:10px;">cached</div>
+                  </div>
+                  <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center; color:#5c7a4a;">...</div>
+                  <div style="background:#ece3c8; border:1px solid #d5c9a0; padding:8px 10px; min-width:100px; text-align:center;">
+                    <div style="font-weight:600;">conversation_state</div>
+                    <div style="color:#8a7a3c; font-size:10px;">volatile</div>
+                  </div>
                 </div>
-                <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center;">
-                  <div style="font-weight:500;">boundaries</div>
-                  <div style="color:var(--muted); font-size:10px;">static</div>
-                </div>
-                <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center;">
-                  <div style="font-weight:500;">examples</div>
-                  <div style="color:var(--muted); font-size:10px;">static</div>
-                </div>
-                <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center; color:var(--muted);">...</div>
+                <div class="nokatex" style="font-size:10px; color:#5c7a4a; margin-top:4px;">&uarr; Stable prefix. $0.30/MTok cached vs $3.00/MTok uncached (10x).</div>
               </div>
-              <div style="font-size:10px; color:var(--vermillion); margin-top:4px;">&uarr; Prefix changes every turn. 0% cache hit rate.</div>
-            </div>
-            <div>
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                <span style="font-size:14px; font-weight:600; color:#5c7a4a;">After</span>
-                <span style="font-size:12px; color:var(--muted);">Static prefix caches across turns</span>
-              </div>
-              <div style="display:flex; gap:2px; font-size:11px; border-radius:6px; overflow:hidden;">
-                <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center;">
-                  <div style="font-weight:500;">identity</div>
-                  <div style="color:#5c7a4a; font-size:10px;">cached</div>
-                </div>
-                <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center;">
-                  <div style="font-weight:500;">boundaries</div>
-                  <div style="color:#5c7a4a; font-size:10px;">cached</div>
-                </div>
-                <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center;">
-                  <div style="font-weight:500;">examples</div>
-                  <div style="color:#5c7a4a; font-size:10px;">cached</div>
-                </div>
-                <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center; color:#5c7a4a;">...</div>
-                <div style="background:#ece3c8; border:1px solid #d5c9a0; padding:8px 10px; min-width:100px; text-align:center;">
-                  <div style="font-weight:600;">conversation_state</div>
-                  <div style="color:#8a7a3c; font-size:10px;">volatile</div>
-                </div>
-              </div>
-              <div class="nokatex" style="font-size:10px; color:#5c7a4a; margin-top:4px;">&uarr; Stable prefix. $0.30/MTok cached vs $3.00/MTok uncached (10x).</div>
             </div>
           </div>
 
@@ -1013,7 +1066,7 @@ graph.add_edge("output_gate", END)</code></pre>
             <li id="ref-lutke">Lutke, T. "Context Engineering over Prompt Engineering." <a href="https://x.com/tobi/status/1935533422589399127">X/Twitter</a>, June 2025.</li>
             <li id="ref-anthropic">Rajasekaran, P. et al. "Effective Context Engineering for AI Agents." <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic Engineering</a>, September 2025.</li>
             <li id="ref-langchain">Martin, L. "Context Engineering for Agents." <a href="https://blog.langchain.com/context-engineering-for-agents/">LangChain Blog</a>, July 2025.</li>
-            <li id="ref-breunig">Breunig, D. "How Contexts Fail and How to Fix Them." <a href="https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html">dbreunig.com</a>, June 2025.</li>
+
             <li id="ref-manus">Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">Manus Blog</a>, July 2025.</li>
             <li id="ref-spotify">Spotify Engineering. "Context Engineering: Background Coding Agents Part 2." <a href="https://engineering.atspotify.com/2025/11/context-engineering-background-coding-agents-part-2">engineering.atspotify.com</a>, November 2025.</li>
             <li id="ref-inngest">Inngest. "Five Critical Lessons for Context Engineering." <a href="https://www.inngest.com/blog/five-lessons-for-context-engineering">inngest.com</a>, 2025.</li>

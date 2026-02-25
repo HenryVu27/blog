@@ -99,6 +99,13 @@
   clip-path: none;
 }
 
+/* Scale down KaTeX math so it blends with body text */
+.post .katex { font-size: 0.95em; }
+.post .katex .mathrm,
+.post .katex .text {
+  font-family: var(--font-serif);
+}
+
 /* Drop cap: first letter of opening paragraph, manuscript style */
 .post > section:first-child > p:first-of-type::first-letter,
 .post > section:first-child > .deep-dive-only > p:first-of-type::first-letter {

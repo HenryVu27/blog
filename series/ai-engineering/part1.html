@@ -394,6 +394,10 @@
             </div>
           </div>
 
+          <div class="deep-dive-only">
+          <p>One thing that diagram doesn't show is that those advertised window sizes are aspirational. Models claim 200K, 1M, even 2M token windows, but performance degrades well before you hit the ceiling. <a href="#ref-ruler">NVIDIA's RULER benchmark</a> tested 34 models on tasks harder than simple needle-in-a-haystack retrieval, and found that only about half could maintain quality at 32K tokens, despite most claiming support for 128K or more. The effective context length, the range where the model actually reasons reliably rather than just pattern-matching on nearby tokens, tends to be a fraction of the number on the spec sheet. I've seen this consistently across providers. My agent's output quality degrades substantially somewhere around 80-100K tokens even on a 200K model,.</p>
+          </div>
+
           <div class="tldr-only">
             <ul class="list-tight">
               <li>Version system prompts like code</li>
@@ -1016,6 +1020,7 @@ graph.add_edge("output_gate", END)</code></pre>
             <li id="ref-willison">Willison, S. "Context Engineering." <a href="https://simonwillison.net/2025/Jun/27/context-engineering/">simonwillison.net</a>, June 2025.</li>
             <li id="ref-osmani">Osmani, A. "Context Engineering: Bringing Engineering Discipline to AI." <a href="https://addyo.substack.com/p/context-engineering-bringing-engineering">Substack</a>, 2025.</li>
             <li id="ref-fowler">Fowler, M. "Context Engineering for Coding Agents." <a href="https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html">martinfowler.com</a>, 2025.</li>
+            <li id="ref-ruler">Hsieh, C.-P. et al. "RULER: What's the Real Context Size of Your Long-Context Language Models?" <a href="https://arxiv.org/abs/2404.06654">arXiv:2404.06654</a>, 2024. Published at COLM 2024.</li>
             <li id="ref-liu">Liu, N.F. et al. "Lost in the Middle: How Language Models Use Long Contexts." <a href="https://arxiv.org/abs/2307.03172">arXiv:2307.03172</a>, 2023. Published in TACL, 2024.</li>
             <li id="ref-longmemeval">Wu, D. et al. "LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory." <a href="https://arxiv.org/abs/2410.10813">arXiv:2410.10813</a>, 2024. Published at ICLR 2025.</li>
             <li id="ref-gaia">Mialon, G. et al. "GAIA: A Benchmark for General AI Assistants." <a href="https://arxiv.org/abs/2311.12983">arXiv:2311.12983</a>, 2023. Published at ICLR 2024.</li>

@@ -374,15 +374,6 @@
 
           <p>This post walks through those seven components, the strategies for managing them, how they fail, and what a real token budget looks like in a diabetes management coaching agent I built with LangGraph. I'll go deeper on RAG in Part 2, memory in Part 3, agents in Part 4, and multi-agent coordination in Part 5.</p>
 
-          <div class="theory-only">
-            <div class="callout">
-              <p><a href="#ref-mei">Mei et al.'s 166-page survey</a>, analyzing 1,411 papers, provides the first mathematical formalization for context engineering. They model context as a structured assembly of six typed components:</p>
-              <p>$$C = A(c_\text{instr},\; c_\text{know},\; c_\text{tools},\; c_\text{mem},\; c_\text{state},\; c_\text{query}).$$</p>
-              <p>Context engineering then becomes a constrained optimization problem, where you find the assembly function $F$ that maximizes expected reward over tasks, subject to window size limit:</p>
-              <p>$$F^* = \arg\max_F \; \mathbb{E}_{\tau \sim \mathcal{T}} \left[\text{Reward}\!\left(P_\theta(Y \mid C_{F}(\tau)),\; Y^*_\tau\right)\right] \quad \text{s.t.} \;\; |C| \leq L_\text{max}.$$</p>
-              <p>(This feels like ML researchers dressing up everything in math for publication, but it does offer some intuition about the trade-off.)</p>
-            </div>
-          </div>
         </section>
 
         <!-- ============================================================ -->
@@ -509,7 +500,7 @@
 
           <p>Where I've seen the most waste is <strong>state and short-term history</strong>, the current conversation turns and prior exchanges that serve as the working memory of your system. The <a href="#ref-longmemeval">LongMemEval benchmark</a> showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
 
-          <p>The underlying design principle here is that in mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is but a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
+          <p>In mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is but a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
 
           <p>A simple block with state information is injected to give the model temporal awareness and continuity across the ReAct loop:</p>
           </div>
@@ -555,11 +546,11 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <div class="deep-dive-only">
           <p>The agent decides when to search (pull, not push), and the tool enriches the query behind the scenes. The condition filter means a Type 2 patient never sees Type 1 insulin pump troubleshooting guides, without the patient or the model needing to specify that constraint explicitly.</p>
 
-          <p><strong>Tool definitions</strong> are the sneaky budget item. Function signatures the system can invoke consume context tokens whether they're used or not, and there's a genuine tension in how to manage them. <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking, where tools stay in context but get suppressed at the decoding level through a state machine.</p>
+          <p><strong>Tool definitions</strong> consume context tokens regardless of whether they are used, and there's a genuine art to managing them. <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking, where tools stay in context but get suppressed at the decoding level through a state machine.</p>
 
           <p>I don't think there's a clean answer here yet. I'm currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you're at Manus's scale with dozens of tools, the cache math probably dominates.</p>
 
-          <p>The broader principle from <a href="#ref-manus">Manus's engineering blog</a> applies regardless of tool count, and it's straightforward: never reorder or mutate tokens already in the KV-cache prefix. Treat your prompt prefix as append-only. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Both <a href="#ref-anthropic-caching">Anthropic</a> and <a href="#ref-openai-caching">OpenAI</a> now offer explicit cache control with up to 90% discounts on cached input tokens, but the gotchas will bite you. JSON key ordering instability in some languages (Swift, Go) breaks caches silently, toggling features like web search invalidates the system cache, and the cache follows a strict hierarchy (<code>tools</code> → <code>system</code> → <code>messages</code>) where changes at any level invalidate everything after it.</p>
+          <p>The broader principle from <a href="#ref-manus">Manus's engineering blog</a> applies regardless of tool count, which is to never mutate tokens already in the KV-cache prefix. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Both <a href="#ref-anthropic-caching">Anthropic</a> and <a href="#ref-openai-caching">OpenAI</a> now offer explicit cache control with up to 90% discounts on cached input tokens, but the gotchas will bite you. JSON key ordering instability in some languages (Swift, Go) can affect caches silently, toggling features like web search invalidates the system cache, and the cache follows a strict hierarchy (<code>tools</code> → <code>system</code> → <code>messages</code>) where changes at any level invalidate everything after it.</p>
 
           <p><strong>Structured output</strong> specifications (JSON schemas, type definitions, output constraints) are easy to overlook in a token budget because they feel like "free" structure. They're not. At scale they add up, and I've seen schemas that consume 300+ tokens before the model even starts generating.</p>
           </div>
@@ -582,15 +573,6 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
             </div>
           </div>
 
-          <div class="theory-only">
-            <div class="callout">
-              <p><a href="#ref-mei">Mei et al.'s survey</a> also formalizes optimal retrieval as an information-theoretic problem. The best retrieval function maximizes mutual information between the target answer and retrieved knowledge, conditioned on the query:</p>
-              <p>$$\text{Retrieve}^* = \arg\max_{\text{Retrieve}} \; I(Y^*;\; c_\text{know} \mid c_\text{query}).$$</p>
-              <p>And context assembly can be framed as Bayesian posterior inference, combining the likelihood of the query given a context with the prior over contexts given interaction history:</p>
-              <p>$$P(C \mid c_\text{query}, \ldots) \propto P(c_\text{query} \mid C) \cdot P(C \mid \text{History}, \text{World}).$$</p>
-              <p>Again, more math than most will ever need. But I found the mutual information framing helpful for one thing in particular. When two retrieval approaches return different documents, the one that tells the model more *new* information (higher mutual information with the answer, conditional on the query) is the better one. This provides some intuition as to why hybrid retrieval beats pure semantic search.</p>
-            </div>
-          </div>
         </section>
 
         <!-- ============================================================ -->
@@ -603,7 +585,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
             <ul class="list-tight">
               <li><strong>Write:</strong> move information out of the window into external storage</li>
               <li><strong>Select:</strong> retrieve relevant information back via RAG or memory queries</li>
-              <li><strong>Compress:</strong> tiered approach (raw context → compact by stripping filler → summarize only when needed), compress proactively at ~75% capacity, trim in atomic turn groups. Never compress instructions and data together</li>
+              <li><strong>Compress:</strong> tiered approach (raw context → compact by stripping filler → summarize only when needed), compress proactively at 80-90% capacity, trim in atomic turn groups. Never compress instructions and data together</li>
               <li><strong>Isolate:</strong> split work across separate LLM calls so each gets focused context</li>
             </ul>
             <p>Most teams over-invest in writing and selecting; the real gains are in compression and isolation.</p>
@@ -654,12 +636,12 @@ async def rewrite(self, query, conversation_history, patient_profile):
           <p>The goal is to reduce tokens while maintaining task performance, and production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under (imagine Claude Code running on a million-line codebase and websearching the entire Internet in parallel). I think of it as three tiers:</p>
 
           <ol>
-            <li><strong>Raw context</strong> when below ~75% capacity. If the window has room, don't compress at all. Raw turns carry more signal than any summary.</li>
+            <li><strong>Raw context</strong> when below ~80% capacity. If the window has room, don't compress at all. Raw turns carry more signal than any summary.</li>
             <li><strong>Compact first</strong> when approaching the budget. Strip low-signal content (greetings, filler acknowledgments, tool call boilerplate) while keeping messages structurally intact. Low/no LLM call needed.</li>
             <li><strong>Summarize</strong> only when compaction isn't enough. Replace older turns with a generated summary, preserving the recent window verbatim.</li>
           </ol>
 
-          <p>The 75% threshold matters more than it might seem. Let's call it the <strong>pre-rot threshold</strong>: compress proactively at ~75% capacity, not reactively at 95%. By the time you're near the wall, attention quality has already degraded across the last 20% of growth (this connects directly to the <a href="#failure-modes">distraction failure mode</a> in Section 4). Compressing early keeps the model in its high-performance zone.</p>
+          <p>The exact threshold is a judgment call that depends on your model and task, but I'd aim to start compacting somewhere in the 80-90% range rather than waiting until 95%. Let's call it the <strong>pre-rot threshold</strong>. By the time you're near 95%, attention quality has already started to degrade (this connects directly to the <a href="#failure-modes">distraction failure mode</a> in Section 4). Compressing before you hit the ceiling keeps the model in its high-performance zone.</p>
           </div>
 
 <div class="code-block" data-filename="context_manager.py" data-lang="python">
@@ -668,7 +650,7 @@ async def rewrite(self, query, conversation_history, patient_profile):
     current_usage = estimate_tokens(messages)
 
     # Tier 1: Raw context fits — do nothing
-    if current_usage < window_budget * 0.75:
+    if current_usage < window_budget * 0.80:
         return messages
 
     # Tier 2: Compact — strip low-signal content, keep messages intact
@@ -683,11 +665,11 @@ async def rewrite(self, query, conversation_history, patient_profile):
 </div>
 
           <div class="deep-dive-only">
-          <p>The <code>_compact</code> step does straightforward string surgery, stripping "thanks!", "ok sounds good", empty assistant acknowledgments, and tool call metadata that the model doesn't need to see on future turns. The summarization tier only fires when compaction alone can't get below 85% capacity, which in practice means conversations beyond ~15 turns.</p>
+          <p>The <code>_compact</code> step does straightforward stripping of "thanks!", "ok sounds good", empty assistant acknowledgments, and tool call metadata that the model doesn't need to see on future turns. The summarization tier only fires when compaction alone can't get below 85% capacity, which in practice means conversations beyond ~15 turns.</p>
 
           <p>One interesting finding from the <a href="#ref-rcc">recurrent context compression</a> research: compressing instructions and context simultaneously degrades responses. You need to compress the data but preserve the instructions separately, since they're treated differently at an attention level.</p>
 
-          <p>Trimming is the other half of compression, and the critical detail is how you trim. Per-message FIFO (drop the oldest message) is the naive approach, and it breaks things in subtle ways. Dropping an individual assistant message can orphan a tool result from its tool call, producing a conversation that the API rejects or the model misinterprets. Production SDKs from both <a href="#ref-openai-agents">OpenAI</a> and <a href="#ref-anthropic-harness">Anthropic</a> trim in <strong>atomic turn groups</strong>: a user message plus all assistant messages and tool results that follow it, removed as a unit.</p>
+          <p>Trimming is the other half of compression. Production SDKs from both <a href="#ref-openai-agents">OpenAI</a> and <a href="#ref-anthropic-harness">Anthropic</a> trim in <strong>atomic turn groups</strong>: a user message plus all assistant messages and tool results that follow it, removed as a unit.</p>
           </div>
 
 <div class="code-block" data-filename="trimming.py" data-lang="python">
@@ -738,7 +720,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <div class="deep-dive-only">
           <p>The input gate sees only the latest user message and a short classification prompt. The output gate sees only the agent's response and a scope-checking prompt. Neither gate's context (safety rules, classification examples) appears in the main agent's window, keeping the patient conversation clean and focused.</p>
 
-          <p>If you're building an agent and something feels off about the outputs, run through these four categories and ask which one you're neglecting. In my experience the answer is almost always compression or isolation; people over-invest in writing and selecting because those feel like "building features," while trimming old history and splitting contexts feel like cleanup work.</p>
+          <p>If you're building an agent and something feels off about the outputs, run through these four categories and ask which one you're neglecting. In my experience the answer is very often compression or isolation, less is more.</p>
           </div>
         </section>
 
@@ -778,17 +760,17 @@ graph.add_edge("output_gate", END)</code></pre>
 
           <p><strong>Context distraction</strong> is more subtle. The context grows so long that the model over-focuses on accumulated history and neglects what it learned during training. Beyond ~100k tokens, I've noticed agents tend toward repeating actions from history rather than synthesizing novel plans. Aggressive trimming and summarization help, along with actively removing completed or irrelevant sections. I suspect most people's context windows are 2-3x larger than they need to be.</p>
 
-          <p>This is why the <a href="#four-strategies">pre-rot threshold from Section 3</a> matters so much. If you wait until 95% capacity to compress, attention quality has already degraded across the last 20% of growth. Compressing proactively at ~75% avoids the worst of it.</p>
+          <p>This is why the <a href="#four-strategies">pre-rot threshold from Section 3</a> matters so much. If you wait until 95% capacity to compress, attention quality has already started to degrade.</p>
 
-          <p><strong>Context confusion</strong> is what happens when superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. <a href="#ref-anthropic">Anthropic's</a> guiding principle is the right one here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome." Every token should "earn" its place.</p>
+          <p><strong>Context confusion</strong> is what happens when superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. <a href="#ref-anthropic">Anthropic's</a> guiding principle is the right one here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome."; every token should "earn" its place.</p>
 
-          <p><strong>Context clash</strong> is the one I find most often in my own code, probably because it's the easiest to create accidentally. It happens when new information conflicts with existing information already in the prompt, and contradictory instructions produce unpredictable behavior. My own agent has one I caught during an audit for this post. The system prompt says "When READING information you already have in the patient context above, use it directly, do not re-fetch with <code>get_patient_profile</code>." But <code>get_patient_profile</code> is still available as a callable tool. The instruction and the tool list contradict each other. The agent sometimes calls the tool anyway, wasting a round-trip to fetch data that's already in the prompt. The fix is straightforward (remove the tool), but the clash was easy to miss because the instruction is in the <code>&lt;tools&gt;</code> section of the prompt and the tool definition is in Python code, and I never reviewed them side by side until I went looking for exactly this kind of problem.</p>
+          <p><strong>Context clash</strong> is the one I find most often in my own code, probably because it's the easiest to create accidentally. It happens when new information conflicts with existing information already in the prompt, and contradictory instructions produce unpredictable behavior. My own agent has one I caught during an audit for this post. The system prompt says "When READING information you already have in the patient context above, use it directly, do not re-fetch with <code>get_patient_profile</code>." But <code>get_patient_profile</code> is still available as a callable tool. The instruction and the tool list contradict each other. The agent (rarely) calls the tool anyway, wasting a round-trip to fetch data that's already in the prompt. The fix is straightforward (remove the tool), but the clash was easy to miss because the instruction is in the <code>&lt;tools&gt;</code> section of the prompt and the tool definition is in Python code, and I never reviewed them side by side until I went looking for exactly this kind of problem.</p>
           </div>
 
           <div class="theory-only">
             <div class="callout">
               <p>There's a deeper mechanism behind context distraction that <a href="#ref-chroma">Chroma's research</a> calls <strong>context rot</strong>. They attribute it to the $O(n^2)$ pairwise token relationships in self-attention, where at 100K+ tokens the model's attention budget is spread across billions of pair interactions, and critical information gets drowned out. The full story is more nuanced than that framing suggests. Factors like positional encoding degradation (especially RoPE-based encodings at positions beyond the training distribution), attention sink phenomena where early tokens absorb disproportionate weight, or training data skewing toward shorter contexts, all contribute.</p>
-              <p><a href="#ref-mei">Mei et al.'s survey</a> cites the <strong>lost-in-the-middle</strong> finding (<a href="#ref-liu">Liu et al., 2023</a>), which showed that performance degrades significantly when relevant information sits in the middle of long contexts versus the beginning or end. Liu et al. found a consistent U-shaped curve across models and settings, with accuracy dropping by 20%+ in some configurations. The exact magnitude varies by model, task, and number of documents, but the core result (middle positions perform worst) has been replicated across multiple studies and model families. (Frontier models have since made meaningful progress here, and the effect is less pronounced than when first measured.)</p>
+              <p>The <strong>lost-in-the-middle</strong> finding (<a href="#ref-liu">Liu et al., 2023</a>) showed that performance degrades significantly when relevant information sits in the middle of long contexts versus the beginning or end. Liu et al. found a consistent U-shaped curve across models and settings, with accuracy dropping by 20%+ in some configurations. The exact magnitude varies by model, task, and number of documents, but the core result (middle positions perform worst) has been replicated across multiple studies and model families. (Frontier models have since made meaningful progress here, and the effect is less pronounced than when first measured.)</p>
             </div>
           </div>
         </section>
@@ -930,7 +912,7 @@ graph.add_edge("output_gate", END)</code></pre>
               <thead><tr><th>Category</th><th>Technique</th><th>Implementation</th></tr></thead>
               <tbody>
                 <tr><td>Structure</td><td>XML-tagged sections</td><td><code>&lt;identity&gt;</code>, <code>&lt;boundaries&gt;</code>, <code>&lt;patient-context&gt;</code>, etc.</td></tr>
-                <tr><td>Compression</td><td>Tiered (raw → compact → summarize)</td><td>Pre-rot threshold at 75% capacity</td></tr>
+                <tr><td>Compression</td><td>Tiered (raw → compact → summarize)</td><td>Pre-rot threshold at 80-90% capacity</td></tr>
                 <tr><td>Compression</td><td>Atomic turn-group trimming</td><td>Drop oldest complete turn, never orphan tool results</td></tr>
                 <tr><td>Memory</td><td>Semantic (patient profile)</td><td>Structured schema, tool-driven updates</td></tr>
                 <tr><td>Memory</td><td>Episodic (outcomes)</td><td>Created on <code>track_outcome</code>, stored with emotion</td></tr>
@@ -1017,15 +999,9 @@ graph.add_edge("output_gate", END)</code></pre>
           </div>
 
           <div class="deep-dive-only">
-          <p>The subtler one is a <strong>profile-in-prompt-and-tool clash</strong>. The patient profile is already injected into the <code>&lt;patient-context&gt;</code> section of the system prompt on every turn. But <code>get_patient_profile</code> also exists as a callable tool. The tool exists to let the agent "check what it knows," but the agent already knows; it's right there in the prompt. I mentioned this in <a href="#failure-modes">Section 4</a> as a context clash, and it is, but it's also context confusion in a way I didn't realize until I watched the agent's behavior. The tool's existence signals to the model that the profile might <em>not</em> be in context, which makes it less likely to trust the data it already has. The instruction says "use the profile in <code>&lt;patient-context&gt;</code> directly," but the tool's mere availability creates an implicit counter-signal. Removing the tool entirely fixed the redundant fetches and, more importantly, made the agent more confident in referencing profile data from the prompt.</p>
+          <p>The subtler one is a <strong>profile-in-prompt-and-tool clash</strong>. The patient profile is already injected into the <code>&lt;patient-context&gt;</code> section of the system prompt on every turn. But <code>get_patient_profile</code> also exists as a callable tool. The tool exists to let the agent "check what it knows," but the agent already knows; it's right there in the prompt. The instruction says "use the profile in <code>&lt;patient-context&gt;</code> directly," but the tool's mere availability creates an implicit counter-signal. Removing the tool entirely fixed the redundant fetches and, more importantly, made the agent more confident in referencing profile data from the prompt.</p>
           </div>
 
-          <div class="theory-only">
-            <div class="callout">
-              <p>The benchmarks suggest context engineering matters a lot more than most people realize. On <a href="#ref-gaia">GAIA</a>, human accuracy is 92% while GPT-4 hits 15%. A 77-point gap. On <a href="#ref-gta">GTA</a>, GPT-4 completes fewer than 50% of tasks. On <a href="#ref-webarena">WebArena</a>, the top agent (IBM CUGA) reaches only 61.7%. These benchmarks all require integrating information from multiple sources, using tools, and maintaining state across steps, which is exactly what context engineering addresses.</p>
-              <p>Memory systems fare poorly too. <a href="#ref-longmemeval">LongMemEval</a> (500 curated questions) finds 30% accuracy degradation in commercial assistants during extended interactions. GPT-4, Claude, and Llama 3.1 all struggle with episodic memory involving interconnected events, even in brief contexts. The gap between model capability on narrow benchmarks and system capability on realistic tasks is, I think, the context engineering gap.</p>
-            </div>
-          </div>
         </section>
 
         <!-- ============================================================ -->
@@ -1045,7 +1021,7 @@ graph.add_edge("output_gate", END)</code></pre>
 
           <p>The metrics I <em>want</em> but haven't built yet are per-component token budgets (logging how much each prompt section actually consumes versus my design-time estimates) and task completion rate bucketed by context size. The second one would tell me whether more context is actually helping or triggering the <a href="#failure-modes">distraction failure mode</a> from Section 4.</p>
 
-          <p>On the benchmarking side, <a href="#ref-contextbench">ContextBench</a> (February 2025) is worth knowing about. It tests whether coding agents can retrieve the right context from 66 real repositories across 8 languages, and the headline numbers are not great, as even SOTA models achieve block-level F1 below 0.45 and line-level F1 below 0.35. Higher recall was consistently favored over precision, suggesting it's better to include a few irrelevant chunks than to miss a critical one. Sophisticated scaffolding didn't necessarily lead to better retrieval either, which complicates the "just add more RAG infrastructure" instinct.</p>
+          <p>On the benchmarking side, <a href="#ref-contextbench">ContextBench</a> is worth knowing about. It tests whether coding agents can retrieve the right context from 66 real repositories across 8 languages, and the headline numbers are not great, as even SOTA models achieve block-level F1 below 0.45 and line-level F1 below 0.35. Higher recall was consistently favored over precision, suggesting it's better to include a few irrelevant chunks than to miss a critical one. Sophisticated scaffolding didn't necessarily lead to better retrieval either, which complicates the "just add more RAG infrastructure" instinct.</p>
 
           </div>
         </section>
@@ -1061,9 +1037,7 @@ graph.add_edge("output_gate", END)</code></pre>
           </div>
 
           <div class="deep-dive-only">
-          <p>If I had to distill this post into one actionable idea, it's that context engineering is mostly about removal, not addition. The instinct is always to add more information, more tools, more history, more instructions. But every improvement I've made to my agent involved taking something out or moving it around, not putting more in. Remove the redundant tool. Move the volatile state block to the end of the prompt. Compress proactively at 75% capacity instead of reactively at 95%. Trim in atomic turn groups instead of shaving individual messages.</p>
-
-          <p>This covers within-session context management for a single agent. Multi-session continuity and memory systems that improve over time rather than accumulating garbage are Part 3 territory. Production agent harnesses where the filesystem becomes the source of truth, and the context window is just a view into external state, are Part 4. If you're building a single-session agent today, the patterns here apply directly; the later parts extend them to longer time horizons and more complex architectures.</p>
+          <p>If I had to distill this post into one actionable idea, it's that context engineering is mostly about removal, not addition. The instinct is always to add more information, more tools, more history, more instructions. But every improvement I've made to my agent involved taking something out or moving it around, not putting more in. Remove the redundant tool. Move the volatile state block to the end of the prompt. Compress proactively at 80-90% capacity instead of reactively at 95%. Trim in atomic turn groups instead of shaving individual messages.</p>
 
           <p>One caveat worth keeping in mind as you apply any of this. Context strategy isn't portable across providers. Different models have different attention patterns, different context window behaviors, and different sensitivities to prompt structure. What works for Claude might fail on GPT might fail on Gemini. I've been burned by this enough times that I now test prompts on every model I plan to support, rather than assuming my architecture generalizes.</p>
 

@@ -376,11 +376,11 @@
 
           <div class="theory-only">
             <div class="callout">
-              <p><a href="#ref-mei">Mei et al.'s 166-page survey</a> (arXiv:2507.13334, analyzing 1,411 papers) provides the first mathematical formalization for context engineering. They model context as a structured assembly of six typed components:</p>
+              <p><a href="#ref-mei">Mei et al.'s 166-page survey</a>, analyzing 1,411 papers, provides the first mathematical formalization for context engineering. They model context as a structured assembly of six typed components:</p>
               <p>$$C = A(c_\text{instr},\; c_\text{know},\; c_\text{tools},\; c_\text{mem},\; c_\text{state},\; c_\text{query}).$$</p>
               <p>Context engineering then becomes a constrained optimization problem, where you find the assembly function $F$ that maximizes expected reward across tasks, subject to a hard window size limit:</p>
               <p>$$F^* = \arg\max_F \; \mathbb{E}_{\tau \sim \mathcal{T}} \left[\text{Reward}\!\left(P_\theta(Y \mid C_{F}(\tau)),\; Y^*_\tau\right)\right] \quad \text{s.t.} \;\; |C| \leq L_\text{max}.$$</p>
-              <p>(ML researchers dressing up everything in math to make it paper-worthy, but this offers some intuition about the trade-off.)</p>
+              <p>(This feels like dressing up everything in math to make it paper-worthy, but this does offer some intuition about the trade-off.)</p>
             </div>
           </div>
         </section>

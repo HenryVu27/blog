@@ -435,7 +435,7 @@
           </div>
 
           <div class="deep-dive-only">
-          <p>One thing that diagram doesn't show is that those advertised window sizes are aspirational. Models claim 200K, 1M, even 2M token windows, but performance degrades well before you hit the ceiling. <a href="#ref-ruler">NVIDIA's RULER benchmark</a> tested 34 models on tasks harder than simple needle-in-a-haystack retrieval, and found that only about half could maintain quality at 32K tokens, despite most claiming support for 128K or more. The effective context length, the range where the model actually reasons reliably rather than just pattern-matching on nearby tokens, tends to be a fraction of the number on the spec sheet. I've seen this consistently across providers where my agent's output quality degrades substantially somewhere around 80-100K tokens, even on a 200K model.</p>
+          <p>One thing that diagram doesn't show is that those advertised window sizes are aspirational. Models claim 200K, 1M, even 2M token windows, but performance degrades well before you hit the ceiling. <a href="#ref-ruler">NVIDIA's RULER benchmark</a> tested 10 models on tasks harder than simple needle-in-a-haystack retrieval, and found that fewer than half could maintain quality at 32K tokens, despite most claiming support for 128K or more. The effective context length, the range where the model actually reasons reliably rather than just pattern-matching on nearby tokens, tends to be a fraction of the number on the spec sheet. I've seen this consistently across providers where my agent's output quality degrades substantially somewhere around 80-100K tokens, even on a 200K model.</p>
           </div>
 
           <div class="tldr-only">
@@ -448,7 +448,7 @@
           </div>
 
           <div class="deep-dive-only">
-          <p>Of the seven, the <strong>system prompt</strong> is where most people start. It sets behavioral guidelines, role definitions, and rules, i.e. the entire personality of your agent. What I didn't expect when I started building agents is how much the system prompt wants to grow. Every failure mode you encounter tempts you to add another instruction, and before long you're at 4,000 tokens of rules that sometimes contradict each other. I've learned (the expensive way) to start minimal and iteratively add instructions based on observed failures. <a href="#ref-spotify">Spotify's engineering team</a> found that larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. I treat my system prompts as code now, versioned, reviewed, and tested.</p>
+          <p>Of the seven, the <strong>system prompt</strong> is where most people start. It sets behavioral guidelines, role definitions, and rules, i.e. the entire personality of your agent. What I didn't expect when I started building agents is how much the system prompt wants to grow. Every failure mode you encounter tempts you to add another instruction, and before long you're at 4,000 tokens of rules that sometimes contradict each other. I've learned (the expensive way) to start minimal and iteratively add instructions based on observed failures. <a href="#ref-spotify">Spotify's engineering team</a> found that for autonomous background agents running without human supervision, larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. I treat my system prompts as code now, versioned, reviewed, and tested.</p>
 
           <p>My agent's system prompt is broken into XML-tagged sections:</p>
           </div>
@@ -517,6 +517,7 @@
     lines = [f"  &lt;turn&gt;{turn}&lt;/turn&gt;", f"  &lt;phase&gt;{phase}&lt;/phase&gt;"]
     if current_datetime:
         day_name = current_datetime.strftime("%A")
+        hour = current_datetime.hour
         time_of_day = "morning" if hour &lt; 12 else "afternoon" if hour &lt; 17 else "evening"
         lines.append(f"  &lt;datetime&gt;{day_name} {time_of_day}&lt;/datetime&gt;")
     if recent_tool_calls:
@@ -609,7 +610,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <div class="deep-dive-only">
           <p>Every production context system I've seen uses some combination of four strategies, and <a href="#ref-langchain">LangChain's framework</a> gives them clean names.</p>
 
-          <p><strong>Writing</strong> means getting information out of the context window and into external storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team has a concrete version of this, their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent. (Though Manus later found that roughly a third of all agent actions were spent updating the todo list, and shifted to a dedicated planner agent instead. Even clever patterns have costs.)</p>
+          <p><strong>Writing</strong> means getting information out of the context window and into external storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. Memories go further, enabling cross-session retention by extracting reflections or facts and storing them in a persistent backend. The <a href="#ref-manus">Manus</a> team has a concrete version of this, their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent.</p>
 
           <p>My first version wrote a rolling summary every 5 turns and called it a day. That's fine for a prototype, but production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under (imagine Claude Code running on million-line codebase and websearching the entire Internet in parallel). I think of it as three tiers:</p>
 
@@ -745,7 +746,7 @@ graph.add_edge("output_gate", END)</code></pre>
               </thead>
               <tbody>
                 <tr><td>Poisoning</td><td>Error enters context, compounds downstream</td><td>Validate before memory writes</td></tr>
-                <tr><td>Distraction</td><td>History too long, drowns out training</td><td>Aggressive trimming + summarization</td></tr>
+                <tr><td>Distraction</td><td>History too long, overwhelms pretrained knowledge</td><td>Aggressive trimming + summarization</td></tr>
                 <tr><td>Confusion</td><td>Noise treated as signal</td><td>Curate ruthlessly, earn every token</td></tr>
                 <tr><td>Clash</td><td>Contradictory instructions in prompt</td><td>Clear precedence hierarchy</td></tr>
               </tbody>
@@ -767,8 +768,8 @@ graph.add_edge("output_gate", END)</code></pre>
 
           <div class="theory-only">
             <div class="callout">
-              <p>There's a deeper mechanism behind context distraction that <a href="#ref-anthropic">Anthropic</a> calls <strong>context rot</strong>. They attribute it to the $O(n^2)$ pairwise token relationships in self-attention, where at 100K+ tokens the model's attention budget is spread across billions of pair interactions, and critical information gets drowned out. The full story is more nuanced than that framing suggests. Factors like positional encoding degradation (especially RoPE-based encodings at positions beyond the training distribution), attention sink phenomena where early tokens absorb disproportionate weight, or training data skewing toward shorter contexts, all contribute.</p>
-              <p><a href="#ref-mei">Mei et al.'s survey</a> cites the <strong>lost-in-the-middle</strong> finding (<a href="#ref-liu">Liu et al., 2023</a>), which showed that performance degrades significantly when relevant information sits in the middle of long contexts versus the beginning or end. Liu et al. found a consistent U-shaped curve across models and settings, with accuracy dropping by 20%+ in some configurations. The exact magnitude varies by model, task, and number of documents, but the core result (middle positions perform worst) has been replicated across multiple studies and model families.</p>
+              <p>There's a deeper mechanism behind context distraction that <a href="#ref-chroma">Chroma's research</a> calls <strong>context rot</strong>. They attribute it to the $O(n^2)$ pairwise token relationships in self-attention, where at 100K+ tokens the model's attention budget is spread across billions of pair interactions, and critical information gets drowned out. The full story is more nuanced than that framing suggests. Factors like positional encoding degradation (especially RoPE-based encodings at positions beyond the training distribution), attention sink phenomena where early tokens absorb disproportionate weight, or training data skewing toward shorter contexts, all contribute.</p>
+              <p><a href="#ref-mei">Mei et al.'s survey</a> cites the <strong>lost-in-the-middle</strong> finding (<a href="#ref-liu">Liu et al., 2023</a>), which showed that performance degrades significantly when relevant information sits in the middle of long contexts versus the beginning or end. Liu et al. found a consistent U-shaped curve across models and settings, with accuracy dropping by 20%+ in some configurations. The exact magnitude varies by model, task, and number of documents, but the core result (middle positions perform worst) has been replicated across multiple studies and model families. (Frontier models have since made meaningful progress here, and the effect is less pronounced than when first measured.)</p>
             </div>
           </div>
         </section>
@@ -1088,6 +1089,7 @@ graph.add_edge("output_gate", END)</code></pre>
             <li id="ref-huggingface-codeagent">HuggingFace. "Code Agents." <a href="https://huggingface.co/docs/smolagents/tutorials/code_agent">HuggingFace Docs</a>, 2025.</li>
             <li id="ref-anthropic-caching">Anthropic. "Prompt Caching." <a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching">Anthropic Docs</a>, 2024.</li>
             <li id="ref-openai-caching">OpenAI. "Prompt Caching." <a href="https://platform.openai.com/docs/guides/prompt-caching">OpenAI Docs</a>, 2024.</li>
+            <li id="ref-chroma">Hong, K., Troynikov, A., Huber, J. "Context Rot: How Increasing Input Tokens Impacts LLM Performance." <a href="https://research.trychroma.com/context-rot">Chroma Research</a>, July 2025.</li>
           </ol>
         </section>
 

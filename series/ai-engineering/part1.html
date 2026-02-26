@@ -15,7 +15,7 @@
   <meta property="og:description" content="The seven components of a context window, four strategies for managing them, failure modes, token budgets, and measuring context quality. A practitioner's deep dive.">
   <meta property="og:url" content="https://www.henryvu.blog/series/ai-engineering/part1.html">
   <meta property="og:site_name" content="Henry Vu's Blog">
-  <meta property="og:image" content="https://www.henryvu.blog/series/ai-engineering/OG.jpg">
+  <meta property="og:image" content="https://www.henryvu.blog/series/ai-engineering/OG1.png">
   <meta property="article:published_time" content="2026-02-24T00:00:00Z">
   <meta property="article:author" content="https://www.henryvu.blog/">
   <meta property="article:section" content="AI Engineering">
@@ -36,7 +36,7 @@
   <meta name="twitter:creator" content="@HenryVu27">
   <meta name="twitter:title" content="What Fills the Context Window: A Guide to Context Engineering">
   <meta name="twitter:description" content="The seven components of a context window, four strategies for managing them, failure modes, and token budgets.">
-  <meta name="twitter:image" content="https://www.henryvu.blog/series/ai-engineering/OG.jpg">
+  <meta name="twitter:image" content="https://www.henryvu.blog/series/ai-engineering/OG1.png">
 
   <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -200,7 +200,7 @@
     "@type": "BlogPosting",
     "headline": "What Fills the Context Window: A Guide to Context Engineering",
     "description": "A practitioner's guide to context engineering for LLMs. Covers the seven components of a context window, four strategies (write, select, compress, isolate), failure modes, token budgets, and measuring context quality.",
-    "image": "https://www.henryvu.blog/series/ai-engineering/OG.jpg",
+    "image": "https://www.henryvu.blog/series/ai-engineering/OG1.png",
     "datePublished": "2026-02-24",
     "dateModified": "2026-02-24",
     "author": {
@@ -488,7 +488,7 @@
 </div>
 
           <div class="deep-dive-only">
-          <p>I started using XML tags mostly for my own sanity (it's easier to review a prompt when you can collapse sections), but it turns out LLMs respond better to structured input than unstructured dumps. Both <a href="#ref-anthropic">Anthropic</a> and <a href="#ref-google-agents">Google</a> recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which matters more than you'd think once your prompt is 2,000+ tokens and three people are editing it.</p>
+          <p>I started using XML tags mostly for my own sanity (it's easier to review a prompt when you can collapse sections), but it turns out LLMs respond better to structured input than unstructured dumps. Both <a href="#ref-anthropic">Anthropic</a> and <a href="#ref-google-agents">Google</a> recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which is nice to have once your prompt is 2,000+ tokens and three people are editing it concurrently.</p>
 
           <p>Once your prompt gets complex enough, you start wanting to break individual sections out into their own files and load them on demand. Agent frameworks like Claude Code already do this with skills (workflow instructions like "debug systematically" or "do TDD") and plugins (third-party extensions) that only enter the context window when the current task calls for them. I used Claude Code to research this post, with agents spawning subagents and 70+ tools to synthesize points from research papers and technical posts. Here's how the context budget split mid-session:</p>
 
@@ -507,7 +507,7 @@
 
           <h3 class="deep-dive-only" id="comp-user-prompt">User Prompt</h3>
 
-          <p>I spend the least time worrying about this one because it's the one thing I don't control. The immediate message from the human can be anything, from well-structured to incoherent, concise to rambling, and your context engineering has to be robust enough to handle whatever arrives.</p>
+          <p>I spend the least time worrying about this one because it's the one thing I don't really control. User message can be anything, from well-structured to incoherent, concise to rambling, and your context engineering has to be robust enough to handle whatever arrives.</p>
 
           <h3 class="deep-dive-only" id="comp-state">State and Short-Term History</h3>
 
@@ -571,7 +571,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
 
           <h3 class="deep-dive-only" id="comp-schema">Structured Output</h3>
 
-          <p>JSON schemas, type definitions, and output constraints are easy to overlook in a token budget because they feel like "free" structure. They're not. At scale they add up, and I've seen schemas that consume 300+ tokens before the model even starts generating.</p>
+          <p>JSON schemas, type definitions, and output constraints are easy to overlook in a token budget because they feel like "free" structure, but the schema itself gets injected into the prompt behind the scenes. A moderately complex schemas, with nested objects with descriptions and enums, consume 300+ tokens, and that cost adds up pretty quickly at scale.</p>
           </div>
 
 

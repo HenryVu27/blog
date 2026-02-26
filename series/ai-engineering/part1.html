@@ -380,7 +380,7 @@
               <p>$$C = A(c_\text{instr},\; c_\text{know},\; c_\text{tools},\; c_\text{mem},\; c_\text{state},\; c_\text{query}).$$</p>
               <p>Context engineering then becomes a constrained optimization problem, where you find the assembly function $F$ that maximizes expected reward across tasks, subject to a hard window size limit:</p>
               <p>$$F^* = \arg\max_F \; \mathbb{E}_{\tau \sim \mathcal{T}} \left[\text{Reward}\!\left(P_\theta(Y \mid C_{F}(\tau)),\; Y^*_\tau\right)\right] \quad \text{s.t.} \;\; |C| \leq L_\text{max}.$$</p>
-              <p>My first reaction was that this is ML researchers dressing up practitioner intuition in math to make it paper-worthy. But coming from an optimization background, the formulation maps onto an intuition I'm already familiar with.</p>
+              <p>(ML researchers dressing up everything in math to make it paper-worthy, but this offers some intuition about the trade-off.)</p>
             </div>
           </div>
         </section>
@@ -392,7 +392,7 @@
           <h2>Seven Components</h2>
 
           <div class="deep-dive-only">
-          <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-manus">Manus</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, Google), and seven components turns out to be the right granularity.</p>
+          <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-manus">Manus</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, <a href="#ref-google-agents">Google</a>), and seven components turns out to be the right granularity.</p>
           </div>
 
           <div style="border-radius:8px; padding:12px 14px; margin:24px 0; background:#ece6d6;">
@@ -435,7 +435,7 @@
           </div>
 
           <div class="deep-dive-only">
-          <p>One thing that diagram doesn't show is that those advertised window sizes are aspirational. Models claim 200K, 1M, even 2M token windows, but performance degrades well before you hit the ceiling. <a href="#ref-ruler">NVIDIA's RULER benchmark</a> tested 34 models on tasks harder than simple needle-in-a-haystack retrieval, and found that only about half could maintain quality at 32K tokens, despite most claiming support for 128K or more. The effective context length, the range where the model actually reasons reliably rather than just pattern-matching on nearby tokens, tends to be a fraction of the number on the spec sheet. I've seen this consistently across providers where my agent's output quality degrades substantially somewhere around 80-100K tokens, even on a 200K model,.</p>
+          <p>One thing that diagram doesn't show is that those advertised window sizes are aspirational. Models claim 200K, 1M, even 2M token windows, but performance degrades well before you hit the ceiling. <a href="#ref-ruler">NVIDIA's RULER benchmark</a> tested 34 models on tasks harder than simple needle-in-a-haystack retrieval, and found that only about half could maintain quality at 32K tokens, despite most claiming support for 128K or more. The effective context length, the range where the model actually reasons reliably rather than just pattern-matching on nearby tokens, tends to be a fraction of the number on the spec sheet. I've seen this consistently across providers where my agent's output quality degrades substantially somewhere around 80-100K tokens, even on a 200K model.</p>
           </div>
 
           <div class="tldr-only">
@@ -486,7 +486,7 @@
 </div>
 
           <div class="deep-dive-only">
-          <p>I started using XML tags mostly for my own sanity (it's easier to review a prompt when you can collapse sections), but it turns out LLMs respond measurably better to structured input than unstructured dumps. Both <a href="#ref-anthropic">Anthropic</a> and Google recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which matters more than you'd think once your prompt is 2,000+ tokens and three people are editing it.</p>
+          <p>I started using XML tags mostly for my own sanity (it's easier to review a prompt when you can collapse sections), but it turns out LLMs respond better to structured input than unstructured dumps. Both <a href="#ref-anthropic">Anthropic</a> and <a href="#ref-google-agents">Google</a> recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which matters more than you'd think once your prompt is 2,000+ tokens and three people are editing it.</p>
 
           <p>Once your prompt gets complex enough, you start wanting to break individual sections out into their own files and load them on demand. Agent frameworks like Claude Code already do this with skills (workflow instructions like "debug systematically" or "do TDD") and plugins (third-party extensions) that only enter the context window when the current task calls for them. I used Claude Code to research this post, with agents spawning subagents and 70+ tools to synthesize points from research papers and technical posts. Here's how the context budget split mid-session:</p>
 
@@ -556,7 +556,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
 
           <p>I don't think there's a clean answer here yet. I'm currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you're at Manus's scale with dozens of tools, the cache math probably dominates.</p>
 
-          <p>The broader principle from <a href="#ref-manus">Manus's engineering blog</a> is worth internalizing regardless of tool count, and it's straightforward: never reorder or mutate tokens already in the KV-cache prefix. Treat your prompt prefix as append-only. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Both Anthropic and OpenAI now offer explicit cache control with up to 90% discounts on cached input tokens, but the gotchas will bite you. JSON key ordering instability in some languages (Swift, Go) breaks caches silently, toggling features like web search invalidates the system cache, and the cache follows a strict hierarchy (<code>tools</code> → <code>system</code> → <code>messages</code>) where changes at any level invalidate everything after it.</p>
+          <p>The broader principle from <a href="#ref-manus">Manus's engineering blog</a> is worth internalizing regardless of tool count, and it's straightforward: never reorder or mutate tokens already in the KV-cache prefix. Treat your prompt prefix as append-only. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Both <a href="#ref-anthropic-caching">Anthropic</a> and <a href="#ref-openai-caching">OpenAI</a> now offer explicit cache control with up to 90% discounts on cached input tokens, but the gotchas will bite you. JSON key ordering instability in some languages (Swift, Go) breaks caches silently, toggling features like web search invalidates the system cache, and the cache follows a strict hierarchy (<code>tools</code> → <code>system</code> → <code>messages</code>) where changes at any level invalidate everything after it.</p>
 
           <p><strong>Structured output</strong> specifications (JSON schemas, type definitions, output constraints) are easy to overlook in a token budget because they feel like "free" structure. They're not. At scale they add up, and I've seen schemas that consume 300+ tokens before the model even starts generating.</p>
           </div>
@@ -671,7 +671,7 @@ async def rewrite(self, query, conversation_history, patient_profile):
           <div class="deep-dive-only">
           <p>The comment at the top shows why this matters. "My numbers have been all over the place lately" has almost zero retrieval value as-is because there's no condition type, no medication context, no timeframe. The rewriter infers "post-meal readings" from the last 3 turns, adds the patient's diagnosis and medication context, and produces a query that actually hits relevant documents.</p>
 
-          <p><strong>Compression</strong> reduces tokens while maintaining task performance. Summarization replaces older conversation history with a condensed version (Claude Code applies auto-compact when approaching context limits). Trimming removes older messages, and the critical detail is how you trim. Per-message FIFO (drop the oldest message) is the naive approach, and it breaks things in subtle ways. Dropping an individual assistant message can orphan a tool result from its tool call, producing a conversation that the API rejects or the model misinterprets. Production SDKs from both <a href="#ref-openai-agents">OpenAI</a> and Anthropic trim in <strong>atomic turn groups</strong>: a user message plus all assistant messages and tool results that follow it, removed as a unit.</p>
+          <p><strong>Compression</strong> reduces tokens while maintaining task performance. Summarization replaces older conversation history with a condensed version (Claude Code applies auto-compact when approaching context limits). Trimming removes older messages, and the critical detail is how you trim. Per-message FIFO (drop the oldest message) is the naive approach, and it breaks things in subtle ways. Dropping an individual assistant message can orphan a tool result from its tool call, producing a conversation that the API rejects or the model misinterprets. Production SDKs from both <a href="#ref-openai-agents">OpenAI</a> and <a href="#ref-anthropic-harness">Anthropic</a> trim in <strong>atomic turn groups</strong>: a user message plus all assistant messages and tool results that follow it, removed as a unit.</p>
           </div>
 
 <div class="code-block" data-filename="trimming.py" data-lang="python">
@@ -690,7 +690,7 @@ async def rewrite(self, query, conversation_history, patient_profile):
           <div class="deep-dive-only">
           <p>The function walks forward from the start until it hits the next user message, then slices off everything before it. One complete turn (user message, assistant response, any tool calls and results in between) gets removed as an atomic unit. My agent calls this in a loop until the conversation fits within the character budget, which handles the same two problems as a message cap plus character budget but without the risk of orphaned tool results.</p>
 
-          <p><strong>Isolation</strong> means splitting information across separate processing units so each one gets a clean, focused context window. Multi-agent systems give each sub-agent its own window focused on a specific subtask, returning a condensed summary (1,000-2,000 tokens) to the lead agent. HuggingFace's CodeAgent isolates token-heavy objects in sandbox environments, keeping only references in the main context. You can also separate LLM-exposed fields from auxiliary context storage in your state schema, because not everything the system knows needs to be in the window.</p>
+          <p><strong>Isolation</strong> means splitting information across separate processing units so each one gets a clean, focused context window. Multi-agent systems give each sub-agent its own window focused on a specific subtask, returning a condensed summary (1,000-2,000 tokens) to the lead agent. <a href="#ref-huggingface-codeagent">HuggingFace's CodeAgent</a> isolates token-heavy objects in sandbox environments, keeping only references in the main context. You can also separate LLM-exposed fields from auxiliary context storage in your state schema, because not everything the system knows needs to be in the window.</p>
 
           <p>My agent isolates safety classification into separate LLM calls so the guardrail context never contaminates the main patient conversation:</p>
           </div>
@@ -754,7 +754,7 @@ graph.add_edge("output_gate", END)</code></pre>
           </div>
 
           <div class="deep-dive-only">
-          <p><strong>Context poisoning</strong> is the scariest one. A hallucination or error enters the context and gets repeatedly referenced, compounding mistakes over time. Once a wrong fact lands in the conversation history, the model treats it as ground truth and builds on it. Google DeepMind's Gemini 2.5 technical report showed just how bad this gets. A Pokemon-playing agent hallucinated the existence of an item called "TEA," wrote it into its goals scratchpad, and then spent hundreds of actions trying to find something that doesn't exist in the game. The agent also developed a "black-out strategy" (intentionally fainting all its Pokemon to teleport) rather than navigating normally. Once a hallucination enters a persistent scratchpad, the model treats it as ground truth and builds increasingly nonsensical plans on top of it. The fix is to validate information before writing to long-term memory, treating memory writes like database writes where you check constraints before committing.</p>
+          <p><strong>Context poisoning</strong> is the scariest one. A hallucination or error enters the context and gets repeatedly referenced, compounding mistakes over time. Once a wrong fact lands in the conversation history, the model treats it as ground truth and builds on it. <a href="#ref-gemini-report">Google DeepMind's Gemini 2.5 technical report</a> showed just how bad this gets. A Pokemon-playing agent hallucinated the existence of an item called "TEA," wrote it into its goals scratchpad, and then spent hundreds of actions trying to find something that doesn't exist in the game. The agent also developed a "black-out strategy" (intentionally fainting all its Pokemon to teleport) rather than navigating normally. Once a hallucination enters a persistent scratchpad, the model treats it as ground truth and builds increasingly nonsensical plans on top of it. The fix is to validate information before writing to long-term memory, treating memory writes like database writes where you check constraints before committing.</p>
 
           <p><strong>Context distraction</strong> is more subtle. The context grows so long that the model over-focuses on accumulated history and neglects what it learned during training. Beyond ~100k tokens, I've noticed agents tend toward repeating actions from history rather than synthesizing novel plans. Aggressive trimming and summarization help, along with actively removing completed or irrelevant sections. I suspect most people's context windows are 2-3x larger than they need to be.</p>
 
@@ -996,8 +996,8 @@ graph.add_edge("output_gate", END)</code></pre>
 
           <div class="theory-only">
             <div class="callout">
-              <p>The benchmarks suggest context engineering matters a lot more than most people realize. On GAIA, human accuracy is 92% while GPT-4 hits 15%. A 77-point gap. On GTA, GPT-4 completes fewer than 50% of tasks. On WebArena, the top agent (IBM CUGA) reaches only 61.7%. These benchmarks all require integrating information from multiple sources, using tools, and maintaining state across steps, which is exactly what context engineering addresses.</p>
-              <p>Memory systems fare poorly too. LongMemEval (500 curated questions) finds 30% accuracy degradation in commercial assistants during extended interactions. GPT-4, Claude, and Llama 3.1 all struggle with episodic memory involving interconnected events, even in brief contexts. The gap between model capability on narrow benchmarks and system capability on realistic tasks is, I think, the context engineering gap.</p>
+              <p>The benchmarks suggest context engineering matters a lot more than most people realize. On <a href="#ref-gaia">GAIA</a>, human accuracy is 92% while GPT-4 hits 15%. A 77-point gap. On <a href="#ref-gta">GTA</a>, GPT-4 completes fewer than 50% of tasks. On <a href="#ref-webarena">WebArena</a>, the top agent (IBM CUGA) reaches only 61.7%. These benchmarks all require integrating information from multiple sources, using tools, and maintaining state across steps, which is exactly what context engineering addresses.</p>
+              <p>Memory systems fare poorly too. <a href="#ref-longmemeval">LongMemEval</a> (500 curated questions) finds 30% accuracy degradation in commercial assistants during extended interactions. GPT-4, Claude, and Llama 3.1 all struggle with episodic memory involving interconnected events, even in brief contexts. The gap between model capability on narrow benchmarks and system capability on realistic tasks is, I think, the context engineering gap.</p>
             </div>
           </div>
         </section>
@@ -1081,6 +1081,13 @@ graph.add_edge("output_gate", END)</code></pre>
             <li id="ref-openai-prompting">OpenAI. "GPT-4.1 Prompting Guide." <a href="https://cookbook.openai.com/examples/gpt4-1_prompting_guide">OpenAI Cookbook</a>, 2025.</li>
             <li id="ref-letta-bench">Letta. "Context-Bench: Benchmarking Long-Horizon Agent Memory." <a href="https://www.letta.com/blog/context-bench">letta.com</a>, October 2025.</li>
             <li id="ref-contextbench">Fournier, C. et al. "ContextBench: A Benchmark for Context Retrieval in Coding Agents." <a href="https://arxiv.org/abs/2602.05892">arXiv:2602.05892</a>, February 2025.</li>
+            <li id="ref-gemini-report">Google DeepMind. "Gemini 2.5: Our Most Intelligent AI Model." <a href="https://storage.googleapis.com/deepmind-media/gemini/gemini_v2_5_report.pdf">Technical Report</a>, 2025.</li>
+            <li id="ref-gta">Wang, Z. et al. "GTA: A Benchmark for General Tool Agents." <a href="https://arxiv.org/abs/2407.08713">arXiv:2407.08713</a>, 2024.</li>
+            <li id="ref-webarena">Zhou, S. et al. "WebArena: A Realistic Web Environment for Building Autonomous Agents." <a href="https://arxiv.org/abs/2307.13854">arXiv:2307.13854</a>, 2023. Published at ICLR 2024.</li>
+            <li id="ref-google-agents">Google. "Agent Development Kit: Build, Evaluate, and Deploy Agents." <a href="https://google.github.io/adk-docs/">google.github.io/adk-docs</a>, 2025.</li>
+            <li id="ref-huggingface-codeagent">HuggingFace. "Code Agents." <a href="https://huggingface.co/docs/smolagents/tutorials/code_agent">HuggingFace Docs</a>, 2025.</li>
+            <li id="ref-anthropic-caching">Anthropic. "Prompt Caching." <a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching">Anthropic Docs</a>, 2024.</li>
+            <li id="ref-openai-caching">OpenAI. "Prompt Caching." <a href="https://platform.openai.com/docs/guides/prompt-caching">OpenAI Docs</a>, 2024.</li>
           </ol>
         </section>
 
@@ -1088,7 +1095,7 @@ graph.add_edge("output_gate", END)</code></pre>
     </div>
 
     <footer class="footer">
-      <a href="https://x.com/HenryVu27">X</a> · <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a> · <a href="#">GitHub</a>
+      <a href="https://x.com/HenryVu27">X</a> · <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a> · <a href="https://github.com/HenryVu27">GitHub</a>
     </footer>
   </main>
 

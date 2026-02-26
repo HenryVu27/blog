@@ -8,19 +8,23 @@
  *   </div>
  *
  * The script:
- *  1. Injects the title bar (header + chevron) from data attributes.
+ *  1. Injects the title bar (filename label, non-interactive).
  *  2. Wraps the <pre> in a .code-body div.
- *  3. Adds language class for Prism and triggers highlighting.
- *  4. Wires up click-to-collapse on the title bar.
+ *  3. Adds a fade overlay with expand/collapse arrow.
+ *  4. Adds language class for Prism and triggers highlighting.
+ *  5. Animates expand/collapse via measured max-height.
  */
 
 (function () {
   "use strict";
 
-  var CHEVRON_SVG =
+  var ARROW_SVG =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
     'stroke-linecap="round" stroke-linejoin="round">' +
     '<polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+  // Collapsed preview height: ~3 lines of code + padding
+  var COLLAPSED_HEIGHT = "calc(3 * 1.55em + 32px)";
 
   function initCodeBlocks() {
     var blocks = document.querySelectorAll(".code-block");
@@ -42,25 +46,15 @@
         pre.className = "language-" + lang;
       }
 
-      // Build header
+      // Build header (static label, no interaction)
       var header = document.createElement("div");
       header.className = "code-header";
-      header.setAttribute("role", "button");
-      header.setAttribute("aria-expanded", "true");
-      header.setAttribute("tabindex", "0");
 
       var filenameSpan = document.createElement("span");
       filenameSpan.className = "code-filename";
       filenameSpan.textContent = filename;
 
-      var toggleBtn = document.createElement("button");
-      toggleBtn.className = "code-toggle";
-      toggleBtn.setAttribute("aria-label", "Toggle code block");
-      toggleBtn.setAttribute("tabindex", "-1");
-      toggleBtn.innerHTML = CHEVRON_SVG;
-
       header.appendChild(filenameSpan);
-      header.appendChild(toggleBtn);
 
       // Wrap pre in .code-body
       var body = document.createElement("div");
@@ -68,25 +62,57 @@
       block.insertBefore(body, pre);
       body.appendChild(pre);
 
-      // Insert header at top
+      // Add arrow button after code-body (always visible, interactive)
+      var arrow = document.createElement("div");
+      arrow.className = "code-arrow";
+      arrow.setAttribute("role", "button");
+      arrow.setAttribute("tabindex", "0");
+      arrow.setAttribute("aria-label", "Expand code block");
+      arrow.innerHTML = ARROW_SVG;
+
+      // Insert header at top, then body, then arrow
       block.insertBefore(header, body);
+      block.appendChild(arrow);
 
       // Start collapsed in TLDR mode (no deep-dive-mode class on body/html)
       var isDeepDive = document.body.classList.contains("deep-dive-mode") ||
                        document.documentElement.classList.contains("deep-dive-mode");
       if (!isDeepDive) {
         block.classList.add("collapsed");
-        header.setAttribute("aria-expanded", "false");
+        body.style.maxHeight = COLLAPSED_HEIGHT;
       }
 
       // Collapse / expand handler
       function toggle() {
-        var collapsed = block.classList.toggle("collapsed");
-        header.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        var isCollapsed = block.classList.contains("collapsed");
+
+        if (isCollapsed) {
+          // Expand: measure full scroll height, animate to it
+          var fullHeight = body.scrollHeight + "px";
+          body.style.maxHeight = fullHeight;
+          block.classList.remove("collapsed");
+          arrow.setAttribute("aria-label", "Collapse code block");
+
+          // After transition, remove max-height so content reflows naturally
+          body.addEventListener("transitionend", function handler() {
+            body.removeEventListener("transitionend", handler);
+            if (!block.classList.contains("collapsed")) {
+              body.style.maxHeight = "none";
+            }
+          });
+        } else {
+          // Collapse: first pin current height so transition has a start value
+          body.style.maxHeight = body.scrollHeight + "px";
+          // Force reflow so the browser registers the starting value
+          body.offsetHeight; // eslint-disable-line no-unused-expressions
+          body.style.maxHeight = COLLAPSED_HEIGHT;
+          block.classList.add("collapsed");
+          arrow.setAttribute("aria-label", "Expand code block");
+        }
       }
 
-      header.addEventListener("click", toggle);
-      header.addEventListener("keydown", function (e) {
+      arrow.addEventListener("click", toggle);
+      arrow.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           toggle();

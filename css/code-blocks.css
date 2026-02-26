@@ -8,21 +8,14 @@
   background: var(--code-bg);
 }
 
-/* Title bar */
+/* Title bar (static label, not interactive) */
 .code-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 8px 14px;
   background: var(--border);
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
   user-select: none;
-  transition: background 150ms ease;
-}
-
-.code-header:hover {
-  background: #d2cdc3;
 }
 
 .code-filename {
@@ -33,47 +26,41 @@
   letter-spacing: 0.01em;
 }
 
-.code-toggle {
+/* Code body: animated via max-height */
+.code-body {
+  position: relative;
+  overflow: hidden;
+  transition: max-height 350ms ease;
+}
+
+/* Fade bottom edge of code when collapsed using CSS mask */
+.code-block.collapsed .code-body {
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+}
+
+/* Arrow toggle (sits inside .code-block after .code-body, seamless) */
+.code-arrow {
   display: flex;
-  align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  background: transparent;
+  padding: 2px 0 6px;
   cursor: pointer;
-  border-radius: 4px;
-  transition: background 120ms ease;
 }
 
-.code-toggle:hover {
-  background: rgba(0,0,0,0.08);
-}
-
-.code-toggle svg {
+.code-arrow svg {
   width: 16px;
   height: 16px;
-  color: #777;
-  transition: transform 250ms ease;
+  color: #aaa;
+  transition: color 150ms ease, transform 350ms ease;
 }
 
-/* Collapsed state */
-.code-block.collapsed .code-header {
-  border-bottom-color: transparent;
+.code-arrow:hover svg {
+  color: #666;
 }
 
-.code-block.collapsed .code-toggle svg {
-  transform: rotate(-90deg);
-}
-
-.code-block.collapsed .code-body {
-  display: none;
-}
-
-/* Code body */
-.code-body {
-  overflow: auto;
+/* Flip arrow when expanded */
+.code-block:not(.collapsed) .code-arrow svg {
+  transform: rotate(180deg);
 }
 
 /* Override global pre styles when inside .code-block */

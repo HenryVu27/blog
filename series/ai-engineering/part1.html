@@ -44,9 +44,6 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
 
-  <!-- Series Pagination -->
-  <link rel="next" href="https://www.henryvu.blog/series/ai-engineering/part2.html">
-
   <!-- RSS Feed -->
   <link rel="alternate" type="application/rss+xml" title="Henry Vu's Blog" href="https://www.henryvu.blog/feed.xml">
 
@@ -332,7 +329,7 @@
         <h3>AI Engineering Series</h3>
         <ul>
           <li>Part 1: What Fills the Context Window (current)</li>
-          <li><a href="part2.html">Part 2: RAG, From Retrieval to Reasoning</a></li>
+          <li>Part 2: RAG, From Retrieval to Reasoning (coming soon)</li>
           <li>Part 3: Memory Engineering (coming soon)</li>
           <li>Part 4: Building AI Agents (coming soon)</li>
           <li>Part 5: Multi-Agent Systems (coming soon)</li>
@@ -348,12 +345,12 @@
           <h2>Contents</h2>
           <ul>
             <li class="deep-dive-only"><a href="#from-prompts-to-context"><span class="toc-section-number">1</span><span class="toc-section-title">From Prompts to Context</span></a></li>
-            <li><a href="#seven-components"><span class="toc-section-number">2</span><span class="toc-section-title">The Seven Components</span></a></li>
+            <li><a href="#seven-components"><span class="toc-section-number">2</span><span class="toc-section-title">Seven Components</span></a></li>
             <li><a href="#four-strategies"><span class="toc-section-number">3</span><span class="toc-section-title">Write / Select / Compress / Isolate</span></a></li>
             <li><a href="#failure-modes"><span class="toc-section-number">4</span><span class="toc-section-title">How Context Fails</span></a></li>
             <li><a href="#token-budget"><span class="toc-section-number">5</span><span class="toc-section-title">A Real Token Budget</span></a></li>
             <li><a href="#measuring"><span class="toc-section-number">6</span><span class="toc-section-title">Measuring Context Quality</span></a></li>
-            <li><a href="#what-i-learned"><span class="toc-section-number">7</span><span class="toc-section-title">What I Learned</span></a></li>
+            <li><a href="#what-i-learned"><span class="toc-section-number">7</span><span class="toc-section-title">Lesson</span></a></li>
             <li class="deep-dive-only"><a href="#references"><span class="toc-section-number">8</span><span class="toc-section-title">References</span></a></li>
           </ul>
         </div>
@@ -380,9 +377,9 @@
           <div class="theory-only">
             <div class="callout">
               <p><a href="#ref-mei">Mei et al.'s 166-page survey</a> (arXiv:2507.13334, analyzing 1,411 papers) provides the first mathematical formalization for context engineering. They model context as a structured assembly of six typed components:</p>
-              <p>$$C = A(c_\text{instr},\; c_\text{know},\; c_\text{tools},\; c_\text{mem},\; c_\text{state},\; c_\text{query})$$</p>
+              <p>$$C = A(c_\text{instr},\; c_\text{know},\; c_\text{tools},\; c_\text{mem},\; c_\text{state},\; c_\text{query}).$$</p>
               <p>Context engineering then becomes a constrained optimization problem, where you find the assembly function $F$ that maximizes expected reward across tasks, subject to a hard window size limit:</p>
-              <p>$$F^* = \arg\max_F \; \mathbb{E}_{\tau \sim \mathcal{T}} \left[\text{Reward}\!\left(P_\theta(Y \mid C_{F}(\tau)),\; Y^*_\tau\right)\right] \quad \text{s.t.} \;\; |C| \leq L_\text{max}$$</p>
+              <p>$$F^* = \arg\max_F \; \mathbb{E}_{\tau \sim \mathcal{T}} \left[\text{Reward}\!\left(P_\theta(Y \mid C_{F}(\tau)),\; Y^*_\tau\right)\right] \quad \text{s.t.} \;\; |C| \leq L_\text{max}.$$</p>
               <p>My first reaction was that this is ML researchers dressing up practitioner intuition in math to make it paper-worthy. But coming from an optimization background, the formulation maps onto an intuition I'm already familiar with.</p>
             </div>
           </div>
@@ -392,7 +389,7 @@
         <!-- SECTION 2: The Seven Components of Context                   -->
         <!-- ============================================================ -->
         <section id="seven-components">
-          <h2>The Seven Components</h2>
+          <h2>Seven Components</h2>
 
           <div class="deep-dive-only">
           <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-manus">Manus</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, Google), and seven components turns out to be the right granularity.</p>
@@ -508,7 +505,7 @@
 
           <p>I spend the least time worrying about the <strong>user prompt</strong> because it's the one thing I don't control. The immediate message from the human can be anything, from well-structured to incoherent, concise to rambling, and your context engineering has to be robust enough to handle whatever arrives.</p>
 
-          <p>Where I've seen the most waste is <strong>state and short-term history</strong>, the current conversation turns and prior exchanges that serve as the working memory of your system. Most implementations just dump the raw history in verbatim, greetings, acknowledgments, off-topic tangents. The <a href="#ref-longmemeval">LongMemEval benchmark</a> (Wu et al., ICLR 2025) showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
+          <p>Where I've seen the most waste is <strong>state and short-term history</strong>, the current conversation turns and prior exchanges that serve as the working memory of your system. The <a href="#ref-longmemeval">LongMemEval benchmark</a> (Wu et al., ICLR 2025) showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
 
           <p>The underlying design principle here is that in mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is but a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
 
@@ -585,9 +582,9 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <div class="theory-only">
             <div class="callout">
               <p><a href="#ref-mei">Mei et al.'s survey</a> also formalizes optimal retrieval as an information-theoretic problem. The best retrieval function maximizes mutual information between the target answer and retrieved knowledge, conditioned on the query:</p>
-              <p>$$\text{Retrieve}^* = \arg\max_{\text{Retrieve}} \; I(Y^*;\; c_\text{know} \mid c_\text{query})$$</p>
+              <p>$$\text{Retrieve}^* = \arg\max_{\text{Retrieve}} \; I(Y^*;\; c_\text{know} \mid c_\text{query}).$$</p>
               <p>And context assembly can be framed as Bayesian posterior inference, combining the likelihood of the query given a context with the prior over contexts given interaction history:</p>
-              <p>$$P(C \mid c_\text{query}, \ldots) \propto P(c_\text{query} \mid C) \cdot P(C \mid \text{History}, \text{World})$$</p>
+              <p>$$P(C \mid c_\text{query}, \ldots) \propto P(c_\text{query} \mid C) \cdot P(C \mid \text{History}, \text{World}).$$</p>
               <p>Again, more math than most will ever need. But I found the mutual information framing helpful for one thing in particular. When two retrieval approaches return different documents, the one that tells the model more *new* information (higher mutual information with the answer, conditional on the query) is the better one. This provides some intuition as to why hybrid retrieval beats pure semantic search.</p>
             </div>
           </div>
@@ -1031,7 +1028,7 @@ graph.add_edge("output_gate", END)</code></pre>
         <!-- SECTION 7: What I Learned                                    -->
         <!-- ============================================================ -->
         <section id="what-i-learned">
-          <h2>What I Learned</h2>
+          <h2>Lesson</h2>
 
           <div class="tldr-only">
             <p>Context engineering is mostly about removal, not addition. Every improvement involved taking something out or moving it around. Context strategy isn't portable across providers; test on every model you support. Input tokens outnumber output tokens ~100:1 in production agents, so context-side optimization has outsized economic leverage, and that makes this a durable skill.</p>

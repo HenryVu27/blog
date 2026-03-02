@@ -12,6 +12,7 @@ This blog publishes long-form, citation-dense technical articles about AI/ML eng
 
 Henry Vu - AI/ML Engineer
 - Website: https://www.henryvu.blog
+- Portfolio: https://henryvu.io/
 - LinkedIn: https://www.linkedin.com/in/henry-vu27/
 - GitHub: https://github.com/HenryVu27
 - X/Twitter: https://x.com/HenryVu27

@@ -434,9 +434,9 @@
           </div>
 
           <div class="deep-dive-only">
-          <p>One thing that diagram doesn't show is that those advertised window sizes are aspirational. Models claim 200K, 1M, even 2M token windows, but performance degrades well before you hit the ceiling. <a href="#ref-ruler">NVIDIA's RULER benchmark</a> tested 10 models on tasks harder than simple needle-in-a-haystack retrieval, and found that fewer than half could maintain quality at 32K tokens, despite many claiming support for 128K or more. I've also seen this consistently across providers where my agent's output quality degrades substantially somewhere around 80-100K tokens, even on a 200K model.</p>
+          <p> ~200k-token context window seems to be the ceiling for current frontier models, after which their output quality degrades substantially, despite most claiming support for 1M or even 2M tokens.</p>
 
-          <p>The other thing that diagram doesn't capture is <strong>thinking tokens</strong>, which have become a meaningful budget consideration since reasoning models went mainstream. Claude's extended thinking, OpenAI's o3/o4-mini reasoning tokens, and Gemini 2.5's thinking budget all let the model do internal chain-of-thought before producing a visible response. These tokens are billed as output tokens (not cheap), but the context engineering win is that they don't permanently consume the conversational context window. For complex agentic tasks (multi-step planning, code generation, math), allocating thinking budget can improve output quality without any of the context pressure that comes from stuffing more information into the window itself, but there is a latency trade-off.</p>
+          <p>The other thing that diagram doesn't capture is <strong>thinking tokens</strong>. Claude's extended thinking, OpenAI's reasoning tokens (from the o-series through GPT-5), and Gemini's thinking budget all let the model do internal chain-of-thought before producing a visible response. These tokens are billed as output tokens (not cheap), but they're stripped from conversation history after each turn rather than carried forward as context. So for complex agentic tasks, allocating thinking budget can improve output quality without any of the context pressure that comes from stuffing more information into the window itself, though you pay in latency and output-token cost.</p>
           </div>
 
           <div class="tldr-only">
@@ -451,7 +451,7 @@
           <div class="deep-dive-only">
           <h3 class="deep-dive-only" id="comp-system-prompt">System Prompt</h3>
 
-          <p>Of the seven, this is a natural place to start. It sets behavioral guidelines, role definitions, and rules, i.e. the entire personality of your agent. What I didn't expect when I started building agents is how much the system prompt wants to grow. Every failure mode tempts you to add another instruction, and soon you're at 4,000 tokens of rules that sometimes contradict each other. I've learned (the expensive way) to start minimal and iteratively add instructions based on observed failures. <a href="#ref-spotify">Spotify's engineering team</a> found that for autonomous background agents running without human supervision, larger, static, version-controlled prompts proved more predictable than dynamic tool-based approaches. I treat my system prompts as a lite piece of code now, versioned, reviewed, and tested.</p>
+          <p>Of the seven, this is a natural place to start because it sets behavioral guidelines, role definitions, and available capabilities, i.e. the personality of an agent. What I didn't expect when I first started building agents is how much the system prompt wants to grow. Every failure mode tempts you to add another instruction, before you know it, the agent has become some Frankenstein monster with 4,000 tokens of rules that do everything (no clear boundaries) and sometimes contradict each other. One expensive lesson I've learned is to start minimal and iteratively add instructions based on observed failures. You may want to version your system prompts like application code now, with diffs and reviews, because a "small tweak" can break behavior three turns later in unexpected ways.</p>
 
           <p>My agent's system prompt is broken into XML-tagged sections:</p>
           </div>
@@ -504,7 +504,6 @@
             </div>
           </div>
 
-          <p>One system prompt tip from <a href="#ref-openai-prompting">OpenAI's GPT-4.1 prompting guide</a> you may find helpful: three specific instructions that increased their SWE-bench score by ~20%. (1) Persistence: "keep going until the user's query is completely resolved." (2) Tool-calling: "use your tools to answer questions rather than relying on memory." (3) Planning: explicitly asking the model to plan before acting. Three sentences transformed the model "from a chatbot-like state into a much more eager agent," which says something about how sensitive agent behavior is to system prompt phrasing even in 2025-2026.</p>
 
           <h3 class="deep-dive-only" id="comp-user-prompt">User Prompt</h3>
 
@@ -535,14 +534,14 @@
 </div>
 
           <div class="deep-dive-only">
-          <p>This 50-100 token block provodes information about what turn the model is on, what phase the conversation is in, what time of day it is, and which tools it already called.</p>
+          <p>This 50-100 token block provides information about what turn the model is on, what phase the conversation is in, what time of day it is, and which tools it already called.</p>
 
           </div>
 
           <div class="deep-dive-only">
           <h3 class="deep-dive-only" id="comp-rag">Retrieved Information (RAG)</h3>
 
-          <p>I spend the most engineering time here. External knowledge from documents, databases, and APIs gets injected on-demand, and the design decision I keep coming back to is to let the model pull what it needs via tool calls rather than front-loading everything. RAG is time-consuming also because of quality evaluation, as the model's output can fail for reasons that have nothing to do with what you retrieved, and standard metrics like recall@k don't capture whether the retrieved context actually helped the model reason correctly. Part 2 goes deep on retrieval and evaluation.</p>
+          <p>I spend the most engineering time here. External knowledge from documents, databases, and APIs gets injected on-demand, and the design decision I keep coming back to is to let the model pull what it needs via tool calls rather than front-loading everything (unless latency is a concern). RAG is time-consuming also because of quality evaluation, as the model's output can fail for reasons that have nothing to do with what you retrieved, and standard metrics like recall@k don't capture whether the retrieved context actually helped the model reason correctly. Part 2 goes deep on retrieval and evaluation.</p>
 
           </div>
 
@@ -636,7 +635,7 @@ async def rewrite(self, query, conversation_history, patient_profile):
           <h3 class="deep-dive-only">Compressing</h3>
 
           <div class="deep-dive-only">
-          <p>The goal is to reduce tokens while maintaining task performance, and production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under (imagine Claude Code running on a million-line codebase and websearching the entire Internet in parallel). I think of it as three tiers:</p>
+          <p>The goal is to reduce tokens while maintaining task performance, and production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under (imagine Claude Code running on a million-line codebase and websearching the entire Internet in parallel). You can think of it as three tiers:</p>
 
           <ol>
             <li><strong>Raw context</strong> when below ~80% capacity. If the window has room, don't compress at all. Raw turns carry more signal than any summary.</li>
@@ -644,7 +643,7 @@ async def rewrite(self, query, conversation_history, patient_profile):
             <li><strong>Summarize</strong> only when compaction isn't enough. Replace older turns with a generated summary, preserving the recent window verbatim.</li>
           </ol>
 
-          <p>The exact threshold is a judgment call that depends on your model and task, but I'd aim to start compacting somewhere in the 80-90% range rather than waiting until 95%. Let's call it the <strong>pre-rot threshold</strong>. By the time you're near 95%, attention quality has already started to degrade (this connects directly to the <a href="#failure-modes">distraction failure mode</a> in Section 4). Compressing before you hit the ceiling keeps the model in its high-performance zone.</p>
+          <p>The exact threshold is a judgment call that depends on your model and task, but I'd aim to start compacting somewhere in the 80-90% range rather than waiting until 95%. Let's call it the <strong>pre-rot threshold</strong>. By the time you're near 95%, attention quality has already started to degrade (this connects directly to the <a href="#failure-modes">distraction failure mode</a> in Section 4).</p>
           </div>
 
 <div class="code-block" data-filename="context_manager.py" data-lang="python">
@@ -672,7 +671,7 @@ async def rewrite(self, query, conversation_history, patient_profile):
 
           <p>One interesting finding from the <a href="#ref-rcc">recurrent context compression</a> research: compressing instructions and context simultaneously degrades responses. You need to compress the data but preserve the instructions separately, since they're treated differently at an attention level.</p>
 
-          <p>Trimming is the other half of compression. Production SDKs from both <a href="#ref-openai-agents">OpenAI</a> and <a href="#ref-anthropic-harness">Anthropic</a> trim in <strong>atomic turn groups</strong>: a user message plus all assistant messages and tool results that follow it, removed as a unit.</p>
+          <p>Trimming is the other half of compression. Production SDKs from both <a href="#ref-openai-agents">OpenAI</a> and <a href="#ref-anthropic-harness">Anthropic</a> trim in <strong>atomic turn groups</strong>, i.e. they group user messages, assistant messages, tool results that follow it, and remove them as a unit.</p>
           </div>
 
 <div class="code-block" data-filename="trimming.py" data-lang="python">
@@ -913,7 +912,7 @@ graph.add_edge("output_gate", END)</code></pre>
 </div>
 
           <div class="deep-dive-only">
-          <p>This function is where all the context engineering actually happens. Load state, build the prompt from components, append the volatile state block at the end (so the static sections form a cacheable prefix), and trim the conversation using turn-group-aware removal. The <code>cache_control</code> breakpoint on the static block is the key detail: it tells the API where the reusable prefix ends. Anthropic allows up to 4 explicit breakpoints per request, and the cache follows a strict hierarchy (<code>tools</code> -> <code>system</code> -> <code>messages</code>) where changes at any level invalidate everything after it. The minimum cacheable prefix is 1,024 tokens on Sonnet, 4,096 on Opus, and cache entries expire after 5 minutes by default (refreshed on each hit).</p>
+          <p>This function is where all the context engineering actually happens. Load state, build the prompt from components, append the volatile state block at the end (so the static sections form a cacheable prefix), and trim the conversation using turn-group-aware removal. The <code>cache_control</code> breakpoint on the static block is key here as it tells the API where the reusable prefix ends, so everything before it gets reused across turns instead of re-processed.</p>
           </div>
 
           <div class="algorithm-box deep-dive-only" style="border:none; background:#ece6d6;">
@@ -948,7 +947,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <div class="deep-dive-only">
           <p>When I audited this agent against the best practices I'd just finished researching, two problems jumped out that I wouldn't have caught without specifically looking.</p>
 
-          <p>The expensive one is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix, so if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (<span class="nokatex">$0.30/MTok cached vs $3/MTok uncached</span> on Claude Sonnet). To fix, just move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns. The broader principle from <a href="#seven-components">Section 2</a> applies here too. Treat the prompt prefix as append-only, sort sections by volatility, and let the stable parts form a cacheable prefix.</p>
+          <p>The expensive one is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix, so if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (<span class="nokatex">$0.30/MTok cached vs $3/MTok uncached</span> on Claude Sonnet). To fix, just move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns. The broader principle from <a href="#seven-components">Section 2</a> applies here too. You should treat the prompt prefix as append-only, sort sections by volatility, and let the stable parts form a cacheable prefix.</p>
           </div>
 
           <div style="border-radius:8px; padding:16px; margin:24px 0; background:#ece6d6;">
@@ -1028,9 +1027,7 @@ graph.add_edge("output_gate", END)</code></pre>
           <div class="deep-dive-only">
           <p>The one metric I track reliably is <strong>cache hit rate</strong>, because Anthropic hands it to you for free. Every API response includes <code>cache_read_input_tokens</code> and <code>cache_creation_input_tokens</code>, and the ratio tells you whether your prefix ordering is stable across turns. After fixing the <a href="#token-budget">KV-cache violation from Section 5</a>, my cache hit rate went from ~0% to ~85% on turns 2+, which I could verify directly from the billing dashboard. If your cache hit rate is low, something in your prompt prefix is changing between calls, and the fix is almost always moving volatile content later in the prompt.</p>
 
-          <p>Beyond that, I keep an eye on <strong>cost per conversation</strong> (total API spend divided by completed sessions) because it rolls up cache efficiency, context size, model routing, and retrieval volume into a single number. <a href="#ref-letta-bench">Letta's Context-Bench</a> reinforces why this matters more than per-token price: <span class="nokatex">Claude Sonnet 4.5 led their benchmark at 74.0% accuracy for $24.58, while GPT-5 reached 72.67% for $43.56</span>, roughly 77% more expensive for slightly lower performance. Models with higher unit costs sometimes use far fewer tokens, so the aggregate figure is what counts.</p>
-
-          <p>The metrics I <em>want</em> but haven't built yet are per-component token budgets (logging how much each prompt section actually consumes versus my design-time estimates) and task completion rate bucketed by context size. The second one would tell me whether more context is actually helping or triggering the <a href="#failure-modes">distraction failure mode</a> from Section 4.</p>
+          <p>Beyond that, keep an eye on <strong>cost per conversation</strong> (total API spend divided by completed sessions) because it rolls up cache efficiency, context size, model routing, and retrieval volume into a single number. <a href="#ref-letta-bench">Letta's Context-Bench</a> reinforces why this matters more than per-token price: <span class="nokatex">Claude Sonnet 4.5 led their benchmark at 74.0% accuracy for $24.58, while GPT-5 reached 72.67% for $43.56</span>, roughly 77% more expensive for slightly lower performance. Models with higher unit costs sometimes use far fewer tokens, so the aggregate figure is what counts.</p>
 
           <p>On the benchmarking side, <a href="#ref-contextbench">ContextBench</a> is worth knowing about. It tests whether coding agents can retrieve the right context from 66 real repositories across 8 languages, and the headline numbers are not great, as even SOTA models achieve block-level F1 below 0.45 and line-level F1 below 0.35. Higher recall was consistently favored over precision, suggesting it's better to include a few irrelevant chunks than to miss a critical one. Sophisticated scaffolding didn't necessarily lead to better retrieval either, which complicates the "just add more RAG infrastructure" instinct.</p>
 
@@ -1074,7 +1071,7 @@ graph.add_edge("output_gate", END)</code></pre>
             <li id="ref-langchain">Martin, L. "Context Engineering for Agents." <a href="https://blog.langchain.com/context-engineering-for-agents/">LangChain Blog</a>, July 2025.</li>
 
             <li id="ref-manus">Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">Manus Blog</a>, July 2025.</li>
-            <li id="ref-spotify">Spotify Engineering. "Context Engineering: Background Coding Agents Part 2." <a href="https://engineering.atspotify.com/2025/11/context-engineering-background-coding-agents-part-2">engineering.atspotify.com</a>, November 2025.</li>
+
             <li id="ref-inngest">Inngest. "Five Critical Lessons for Context Engineering." <a href="https://www.inngest.com/blog/five-lessons-for-context-engineering">inngest.com</a>, 2025.</li>
             <li id="ref-ruler">Hsieh, C.-P. et al. "RULER: What's the Real Context Size of Your Long-Context Language Models?" <a href="https://arxiv.org/abs/2404.06654">arXiv:2404.06654</a>, 2024. Published at COLM 2024.</li>
             <li id="ref-liu">Liu, N.F. et al. "Lost in the Middle: How Language Models Use Long Contexts." <a href="https://arxiv.org/abs/2307.03172">arXiv:2307.03172</a>, 2023. Published in TACL, 2024.</li>
@@ -1083,7 +1080,7 @@ graph.add_edge("output_gate", END)</code></pre>
             <li id="ref-openai-agents">OpenAI. "Agents SDK." <a href="https://github.com/openai/openai-agents-python">GitHub</a>, 2025.</li>
             <li id="ref-rcc">Huang, Y. et al. "Recurrent Context Compression: Efficiently Expanding the Context Window of LLM." <a href="https://arxiv.org/abs/2406.06110">arXiv:2406.06110</a>, 2024.</li>
             <li id="ref-rag-mcp">Writer.com. "RAG-MCP: Mitigating Prompt Bloat in Tool-Augmented LLMs." <a href="https://arxiv.org/abs/2505.03275">arXiv:2505.03275</a>, 2025.</li>
-            <li id="ref-openai-prompting">OpenAI. "GPT-4.1 Prompting Guide." <a href="https://cookbook.openai.com/examples/gpt4-1_prompting_guide">OpenAI Cookbook</a>, 2025.</li>
+
             <li id="ref-letta-bench">Letta. "Context-Bench: Benchmarking Long-Horizon Agent Memory." <a href="https://www.letta.com/blog/context-bench">letta.com</a>, October 2025.</li>
             <li id="ref-contextbench">Fournier, C. et al. "ContextBench: A Benchmark for Context Retrieval in Coding Agents." <a href="https://arxiv.org/abs/2602.05892">arXiv:2602.05892</a>, February 2026.</li>
             <li id="ref-gemini-report">Google DeepMind. "Gemini 2.5: Our Most Intelligent AI Model." <a href="https://storage.googleapis.com/deepmind-media/gemini/gemini_v2_5_report.pdf">Technical Report</a>, 2025.</li>

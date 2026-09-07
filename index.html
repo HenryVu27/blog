@@ -37,7 +37,8 @@
   <!-- Fonts & Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond&text=%E2%9D%A6%E2%9D%A7%E2%98%99%E2%98%9E&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 
   <!-- Google Analytics (GA4) -->
@@ -84,17 +85,26 @@
   }
   </script>
 </head>
-<body>
+<body class="home">
   <main class="page">
+    <header class="rh">
+      <a class="rh-name" href="https://henryvu.io/">Henry Vu</a>
+      <nav class="rh-nav" aria-label="Portfolio">
+        <a href="https://henryvu.io/#about">About</a>
+        <a href="https://henryvu.io/#work">Work</a>
+        <a href="https://henryvu.io/#projects">Projects</a>
+        <a href="https://henryvu.io/#contact">Contact</a>
+      </nav>
+    </header>
     <header>
       <h1 class="title">Henry Vu</h1>
-      <p class="meta">AI/ML Engineer</p>
+      <p class="meta">Machine learning engineer in Dallas. Long-form writing on AI engineering and the algorithms underneath it.</p>
     </header>
 
     <section>
       <h2>Writing</h2>
 
-      <p><strong>AI Engineering</strong></p>
+      <p class="series">AI Engineering</p>
       <ul class="list-tight">
         <li>
           <a href="series/ai-engineering/part1.html">Part 1: What Fills the Context Window</a>
@@ -104,9 +114,9 @@
         </li>
       </ul>
 
-      <hr>
+      <div class="dinkus" role="separator" aria-hidden="true">&#x2767;</div>
 
-      <p><strong>Multi-Armed Bandits</strong></p>
+      <p class="series">Multi-Armed Bandits</p>
       <ul class="list-tight">
         <li>
           <a href="series/bandits/part1.html">Part 1: Foundations</a>
@@ -117,9 +127,13 @@
     </section>
 
     <footer class="footer">
-      <hr>
-      <p><a href="https://x.com/HenryVu27">X</a> · <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a> · <a href="https://github.com/HenryVu27">GitHub</a> · <a href="https://henryvu.io/">Portfolio</a></p>
-      <p>&copy; Henry Vu</p>
+      <p>Set in Century Expanded and IM Fell English</p>
+      <p class="social">
+        <a href="https://github.com/HenryVu27">GitHub</a>
+        <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a>
+        <a href="https://x.com/HenryVu27">X</a>
+        <a href="https://henryvu.io/">Portfolio</a>
+      </p>
     </footer>
   </main>
 </body>

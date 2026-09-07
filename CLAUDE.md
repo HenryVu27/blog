@@ -478,17 +478,18 @@ When discussing any technique or optimization:
 
 ```css
 :root {
-    --bg: #ffffff;
-    --text: #333333;
-    --muted: #666666;
-    --accent: #000000;
-    --link: #000000;
-    --border: #e5e7eb;
-    --code-bg: #f5f7fb;
+    --bg: #f3ebda;          /* vellum, shared with henryvu.io day theme */
+    --ink: #2a2118;         /* headings */
+    --text: #3f3428;        /* iron-gall ink */
+    --muted: #6b5b48;
+    --border: #d8cbb0;
+    --code-bg: #ebe0c9;
+    --vermillion: #7f2a1e;  /* madder; link hover */
+    --gold-deep: #7a5c14;   /* ornaments only */
 }
 ```
 
-Warm accent color for interactive elements: `#d4d1c4` (tan) with `#6b6a61` borders. Used on `.control-btn`, `.proof-popover-trigger`, and `.viz-container` / `.algorithm-box` backgrounds (`#f5f4f0`).
+Body face is Century Expanded (self-hosted). The blog index (`body.home`) alone also loads IM Fell English and IM Fell English SC for its title, running head, series labels, and colophon, plus a 2.5 KB EB Garamond glyph subset for the fleuron; posts do not load them. Warm accent color for interactive elements: `#d4d1c4` (tan) with `#6b6a61` borders. Used on `.control-btn`, `.proof-popover-trigger`, and `.viz-container` / `.algorithm-box` backgrounds (`#f5f4f0`).
 
 Do not introduce new colors or fonts without explicit approval. The aesthetic is **minimal, monochrome, content-focused** with warm tan accents on interactive elements.
 

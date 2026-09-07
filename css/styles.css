@@ -12,19 +12,24 @@
 }
 
 :root{
-  --bg: #f2efe8;
-  --text: #2c2926;
-  --muted: #6d6355;
-  --accent: #2c2926;
-  --link: #2c2926;
-  --border: #ddd8cd;
-  --code-bg: #e9e5db;
-  --vermillion: #8b2500;
+  --bg: #f3ebda;
+  --ink: #2a2118;
+  --text: #3f3428;
+  --muted: #6b5b48;
+  --accent: #2a2118;
+  --link: #2a2118;
+  --border: #d8cbb0;
+  --code-bg: #ebe0c9;
+  --vermillion: #7f2a1e;
   --gold: #c9a84c;
+  --gold-deep: #7a5c14;
   --manuscript-blue: #1a3a5c;
   --font-serif: "Century Expanded", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-drop-cap: "Goudy Initialen", serif;
+  --font-display: "IM Fell English", "Iowan Old Style", Palatino, Georgia, serif;
+  --font-sc: "IM Fell English SC", "IM Fell English", Georgia, serif;
+  --font-ornament: "EB Garamond", var(--font-serif);
 }
 
 html,body{
@@ -47,6 +52,7 @@ html,body{
 }
 
 .title{
+  color: var(--ink);
   font-family: var(--font-serif);
   font-size: 44px;
   font-weight: 300;
@@ -55,6 +61,7 @@ html,body{
 }
 
 h2{
+  color: var(--ink);
   font-family: var(--font-serif);
   font-size: 29px;
   font-weight: 500;
@@ -172,3 +179,25 @@ pre{
 }
 
 
+
+/* ---- Blog index only (body.home): running head, small caps, fleuron, colophon ---- */
+.home .rh { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; flex-wrap: wrap;
+            padding: 0 0 14px; margin-bottom: 44px; border-bottom: 1px solid var(--border);
+            font-family: var(--font-sc); letter-spacing: .1em; font-size: 15px; color: var(--muted); }
+.home .rh a { color: inherit; text-decoration: none; }
+.home .rh a:hover, .home .rh .rh-name { color: var(--ink); }
+.home .rh-nav { display: flex; gap: 22px; flex-wrap: wrap; }
+.home .title { font-family: var(--font-display); font-weight: 400; font-size: 56px; line-height: 1; margin-bottom: 12px; }
+.home .meta { font-style: italic; margin-bottom: 40px; }
+.home h2 { font-family: var(--font-display); font-weight: 400; font-size: 34px; margin: 0 0 16px; }
+.home .series { font-family: var(--font-sc); letter-spacing: .1em; font-size: 16px; color: var(--muted); margin: 28px 0 6px; }
+.home .list-tight { list-style: none; padding-left: 0; }
+.home .list-tight li { position: relative; padding-left: 1rem; }
+.home .list-tight li::before { content: ""; position: absolute; left: 0; top: .72em; width: 3px; height: 3px; border-radius: 50%; background: var(--muted); opacity: .6; }
+.home .dinkus { text-align: center; font-family: var(--font-ornament); font-size: 22px; line-height: 1; color: var(--gold-deep); opacity: .8; margin: 36px 0 20px; }
+.home .footer { margin-top: 72px; font-family: var(--font-sc); letter-spacing: .1em; font-size: 14px; line-height: 2; }
+.home .footer hr { display: none; }
+.home .footer p { margin: 0; }
+.home .footer .social { display: flex; justify-content: center; gap: 26px; flex-wrap: wrap; }
+.home .footer a { color: inherit; text-decoration: none; }
+.home .footer a:hover { color: var(--ink); }

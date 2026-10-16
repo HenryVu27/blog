@@ -47,15 +47,13 @@
   <link rel="alternate" type="application/rss+xml" title="Henry Vu's Blog" href="https://www.henryvu.blog/feed.xml">
 
   <!-- Fonts & Styles -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../css/styles.css">
-  <link rel="stylesheet" href="../../css/post-styles.css">
-  <link rel="stylesheet" href="../../css/deep-dive-layout.css">
-  <link rel="stylesheet" href="../../css/katex-fixes.css" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="../../css/proof-popover.css" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="preload" href="../../assets/fonts/ebgaramond-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../../css/styles.css?v=20261015">
+  <link rel="stylesheet" href="../../css/post-styles.css?v=20261015">
+  <link rel="stylesheet" href="../../css/deep-dive-layout.css?v=20261015">
+  <link rel="stylesheet" href="../../css/katex-fixes.css?v=20261015" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="../../css/proof-popover.css?v=20261015" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="../../css/components.css?v=20261015">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" media="print" onload="this.media='all'">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
@@ -130,277 +128,70 @@
   }
   </script>
   <style>
-    /* Part 1 specific: algorithm-box background override */
-    .algorithm-box { background: var(--code-bg); }
-
-    /* Visualization styles (specific to this post) */
-    .viz-container {
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      margin: 24px 0;
-    }
-    .viz-controls {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-    }
-    .viz-controls-left {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .viz-controls-right {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .control-group label {
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--text);
-    }
-    .control-group input[type="range"] {
-      width: 160px;
-      accent-color: #888;
-    }
+    /* Interactive comparison (this post only): sans labels, hairline controls, no panels */
+    .viz-container { margin-block: 2.4em; font-family: var(--sans); font-size: 14px; color: var(--text-2); font-variant-numeric: lining-nums tabular-nums; }
+    .viz-controls { display: flex; gap: 20px 24px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
+    .viz-controls-left { display: flex; gap: 20px 32px; align-items: flex-end; flex-wrap: wrap; }
+    .viz-controls-right { display: flex; gap: 8px; align-items: center; }
+    .control-group { display: flex; flex-direction: column; gap: 8px; }
+    .control-group label { font-size: 13px; font-weight: 500; color: var(--text-2); }
+    .control-group label span { color: var(--ink); font-weight: 600; }
+    .control-group input[type="range"] { width: 170px; margin: 0; accent-color: var(--ink); }
     .control-btn {
-      background: rgba(0, 0, 0, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 14px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 120ms ease;
-      box-shadow: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      min-width: 44px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      min-width: 34px; height: 32px; padding: 0 10px; cursor: pointer;
+      background: none; border: 1px solid var(--rule); border-radius: 3px;
+      font: 500 13px var(--sans); color: var(--ink); transition: border-color 120ms ease;
     }
-    .control-btn:hover {
-      background: rgba(0, 0, 0, 0.08);
-      border-color: rgba(0, 0, 0, 0.2);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .control-btn:active {
-      transform: translateY(1px);
-      box-shadow: none;
-    }
-    .control-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-    }
-    .settings-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 3000;
-      align-items: center;
-      justify-content: center;
-    }
-    .settings-modal.visible {
-      display: flex;
-    }
+    .control-btn:hover { border-color: var(--mark-strong); }
+    .control-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+    .settings-modal { display: none; position: fixed; inset: 0; background: rgba(29, 26, 22, .3); z-index: 3000; align-items: center; justify-content: center; }
+    .settings-modal.visible { display: flex; }
     .settings-content {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      max-width: 500px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      width: 90%; max-width: 460px; max-height: 80vh; overflow-y: auto; padding: 22px 24px;
+      background: #faf7f0; border: 1px solid var(--rule); border-radius: 4px; box-shadow: 0 10px 30px rgba(29, 26, 22, .15);
+      font-family: var(--sans); font-size: 14px; color: var(--text-2); font-variant-numeric: lining-nums tabular-nums;
     }
-    .settings-content h3 {
-      margin: 0 0 16px 0;
-      font-size: 22px;
-      font-weight: 600;
+    .settings-content h3 { margin: 0 0 16px; font: 600 15px var(--sans); color: var(--ink); }
+    .settings-arms { display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px; }
+    .settings-arm-control { display: flex; align-items: center; gap: 12px; }
+    .settings-arm-control label { min-width: 60px; font-weight: 500; color: var(--ink); }
+    .settings-arm-control input[type="range"] { flex: 1; accent-color: var(--ink); }
+    .settings-arm-control .value { min-width: 40px; text-align: right; }
+    .settings-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--rule); }
+    .settings-presets button, .settings-actions button {
+      padding: 6px 12px; cursor: pointer; background: none; border: 1px solid var(--rule); border-radius: 3px;
+      font: 500 13px var(--sans); color: var(--ink); transition: border-color 120ms ease;
     }
-    .settings-arms {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .settings-arm-control {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .settings-arm-control label {
-      min-width: 70px;
-      font-size: 15px;
-      font-weight: 500;
-    }
-    .settings-arm-control input[type="range"] {
-      flex: 1;
-      accent-color: #888;
-    }
-    .settings-arm-control .value {
-      min-width: 40px;
-      text-align: right;
-      font-size: 15px;
-      font-weight: 500;
-    }
-    .settings-presets {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-    }
-    .settings-presets button {
-      background: rgba(0, 0, 0, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 120ms ease;
-    }
-    .settings-presets button:hover {
-      background: #c7c3b5;
-    }
-    .settings-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-    }
-    .settings-actions button {
-      background: rgba(0, 0, 0, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 16px;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 120ms ease;
-    }
-    .settings-actions button:hover {
-      background: #c7c3b5;
-    }
-    .settings-actions button.primary {
-      background: var(--text);
-      color: white;
-    }
-    .settings-actions button.primary:hover {
-      background: #555;
-    }
-    .viz-main {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-bottom: 24px;
-    }
-    @media (max-width: 900px) {
-      .viz-main {
-        grid-template-columns: 1fr;
-      }
-    }
-    .viz-panel {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-    }
-    .viz-panel h3 {
-      margin: 0 0 12px 0;
-      font-size: 22px;
-      font-weight: 600;
-      text-align: center;
-    }
-    .viz-stats {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-      font-size: 15px;
-    }
-    .viz-regret {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-    }
-    .viz-regret h3 {
-      margin: 0 0 12px 0;
-      font-size: 22px;
-      font-weight: 600;
-      text-align: center;
-    }
-    #regret-chart {
-      display: block;
-      max-width: 100%;
-    }
-    .arm-bar {
-      transition: all 0.3s ease;
-    }
-    .arm-label {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      font-size: 15px;
-      font-weight: 500;
-      fill: var(--text);
-    }
-    .confidence-interval {
-      stroke: #888;
-      stroke-width: 2;
-      fill: none;
-      opacity: 0.5;
-    }
-    .true-mean-line {
-      stroke: #e74c3c;
-      stroke-width: 2;
-      stroke-dasharray: 4,4;
-    }
+    .settings-presets button:hover, .settings-actions button:hover { border-color: var(--mark-strong); }
+    .settings-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .settings-actions button.primary { border-color: var(--ink); }
+
+    .viz-main { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 32px; }
+    @media (max-width: 900px) { .viz-main { grid-template-columns: 1fr; } }
+    .viz-panel h3, .viz-regret h3 { margin: 0 0 6px; font: 600 14px/1.3 var(--sans); color: var(--ink); text-align: left; }
+    .viz-stats { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--muted); }
+    .viz-stats strong { color: var(--ink); font-weight: 600; }
+    #regret-chart { display: block; max-width: 100%; }
+    .arm-bar { transition: all 0.3s ease; }
+    .arm-label { font-family: var(--sans); font-size: 12px; fill: var(--text-2); }
+    .confidence-interval { stroke: var(--ink); stroke-width: 1.5; fill: none; opacity: .55; }
+    .true-mean-line { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4,3; }
   </style>
 </head>
 <body class="deep-dive-mode">
   <main class="page">
-    <div class="page-header">
-      <nav class="nav">
-        <a href="../../index.html" class="back-btn">←</a>
-      </nav>
+    <header class="rh">
+      <a class="rh-name" href="../../index.html">Henry Vu</a>
+      <span>Multi-Armed Bandits</span>
+    </header>
 
-      <header>
-        <h1 class="title">Multi-Armed Bandits: Foundations</h1>
-        <div class="meta">2025-09-17</div>
-        <hr>
-      </header>
-
-      <div class="series-nav">
-        <h3>Multi-Armed Bandit Series</h3>
-        <ul>
-          <li>Part 1: Foundations (current)</li>
-          <li>Part 2: Advanced Algorithms (coming soon)</li>
-          <li>Part 3: Modern Theory (coming soon)</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="content-divider"></div>
+    <header class="post-header">
+      <p class="eyebrow">Multi-Armed Bandits, Part 1 of 3</p>
+      <h1 class="title">Multi-Armed Bandits: Foundations</h1>
+      <div class="post-meta"><time datetime="2025-09-17">17 September 2025</time></div>
+    </header>
 
     <div class="layout">
       <aside class="toc">
@@ -424,7 +215,7 @@
 
           <p>If you have been around modern <a href="../../series/ai-engineering/part1.html">LLMs</a>, you have probably heard of reinforcement learning. At its core, RL is an interaction loop: a learner chooses an action, receives feedback from the environment (reward), updates its rule for acting next time, and repeats. Much of today’s LLM finetuning to align with human preferences can be seen through this lens.</p>
 
-          <p>Unlike representation learning where the learner tries to "imitate" the data, RL forces the learner to interact with the environment. The central question in this interaction is how to balance <i>exploration</i> and <i>exploitation</i>. Should the learner take advantage of current knowledge and exploit the option that currently looks best to maximize immediate reward? Or should it take some risks to explore, potentially sacrificing short-term gains to improve knowledge and long-term performance? Too much greed misses better options; too much exploration wastes opportunities.</p>
+          <p>Unlike representation learning where the learner tries to “imitate” the data, RL forces the learner to interact with the environment. The central question in this interaction is how to balance <i>exploration</i> and <i>exploitation</i>. Should the learner take advantage of current knowledge and exploit the option that currently looks best to maximize immediate reward? Or should it take some risks to explore, potentially sacrificing short-term gains to improve knowledge and long-term performance? Too much greed misses better options; too much exploration wastes opportunities.</p>
 
           <p>This fundamental tension between exploration and exploitation appears everywhere in sequential decision-making. Multi-armed bandits capture this trade-off in its simplest form: a single-state Markov decision process focused only on action selection under uncertainty. We now see applications of bandits across industries where information arrives in sequential manner. Examples range from ad placement, recommender systems, packet routing, to more theoretical settings like convex optimization and Brownian motion.</p>
 
@@ -441,48 +232,50 @@
           <h2>A Classic Dilemma</h2>
 
           <figure>
-            <img src="images/MAB.jpg" alt="Choosing among uncertain options in a multi-armed bandit" style="max-width:100%; height:auto;" />
+            <img src="images/MAB.jpg" alt="Choosing among uncertain options in a multi-armed bandit" loading="lazy">
           </figure>
 
-          <p>Imagine you're playing a three-armed bandit machine. You've already pulled each lever several times and observed these payoffs (in dollars):</p>
+          <p>Imagine you’re playing a three-armed bandit machine. You’ve already pulled each lever several times and observed these payoffs (in dollars):</p>
 
-          <table style="border-collapse: collapse; margin: 16px 0;">
+          <table>
+            <thead><tr>
+              <th>Round</th>
+              <th>1</th>
+              <th>2</th>
+              <th>3</th>
+              <th>4</th>
+              <th>5</th>
+              <th>6</th>
+            </tr></thead>
+            <tbody>
             <tr>
-              <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">Round</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">1</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">2</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">3</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">4</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">5</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">6</td>
+              <td class="rowhead">Arm 1</td>
+              <td>$5</td>
+              <td>-</td>
+              <td>$5</td>
+              <td>-</td>
+              <td>$5</td>
+              <td>-</td>
             </tr>
             <tr>
-              <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">Arm 1</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">$5</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">$5</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">$5</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
+              <td class="rowhead">Arm 2</td>
+              <td>-</td>
+              <td>$0</td>
+              <td>-</td>
+              <td>$0</td>
+              <td>-</td>
+              <td>-</td>
             </tr>
             <tr>
-              <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">Arm 2</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">$0</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">$0</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
+              <td class="rowhead">Arm 3</td>
+              <td>-</td>
+              <td>-</td>
+              <td>$15</td>
+              <td>-</td>
+              <td>-</td>
+              <td>$0</td>
             </tr>
-            <tr>
-              <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">Arm 3</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">$15</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">-</td>
-              <td style="border: 1px solid #ccc; padding: 8px;">$0</td>
-            </tr>
+            </tbody>
           </table>
 
           <p>So far, Arm 1 averages <span>$5</span>, Arm 2 averages <span>$0</span>, and Arm 3 averages <span>$7.50</span>. You have 10 more pulls remaining. Do you stick with Arm 1 (reliable <span>$5</span>), gamble on Arm 3 (high variance but higher average), or give Arm 2 another chance? How do you balance exploiting what seems best versus exploring to learn more?</p>
@@ -493,9 +286,9 @@
         <section id="warmup">
           <h2>The Regret and Finite-Armed Stochastic Bandits</h2>
 
-          <p>Bandit theory can quickly become intimidating as you could dive arbitrarily deep into measure theory, σ-algebras, or martingales. But that isn't necessary to grasp the core ideas. Instead, let's build intuition with the simplest meaningful setting: finite-armed stochastic bandits. This framework captures the essence of exploration versus exploitation while remaining concrete enough to analyze common solution strategies.</p>
+          <p>Bandit theory can quickly become intimidating as you could dive arbitrarily deep into measure theory, σ-algebras, or martingales. But that isn’t necessary to grasp the core ideas. Instead, let’s build intuition with the simplest meaningful setting: finite-armed stochastic bandits. This framework captures the essence of exploration versus exploitation while remaining concrete enough to analyze common solution strategies.</p>
 
-          <p>The problem statement is as follows: we have $K$ arms, where pulling arm $i$ at time $t$ yields reward $X_{i,t}$ drawn from an unknown distribution $\nu_i$ with mean $\mu_i$. The learner's goal is to minimize <em>regret</em> after $n$ rounds, which is the difference between the cumulative reward achieved by the learner, and that of an oracle that always pulls the optimal arm.</p>
+          <p>The problem statement is as follows: we have $K$ arms, where pulling arm $i$ at time $t$ yields reward $X_{i,t}$ drawn from an unknown distribution $\nu_i$ with mean $\mu_i$. The learner’s goal is to minimize <em>regret</em> after $n$ rounds, which is the difference between the cumulative reward achieved by the learner, and that of an oracle that always pulls the optimal arm.</p>
 
           <p>Why not evaluate a learner by raw cumulative reward $\sum_{t=1}^n X_t$?</p>
           <ul>
@@ -524,7 +317,7 @@
 
           <p>This identity exposes the exploration–exploitation trade-off: each pull of a suboptimal arm incurs $\Delta_i$ expected loss. Good algorithms keep $\mathbb{E}[N_i(n)]$ small for large gaps while still exploring when gaps are small, targeting sublinear regret $R_n = o(n)$. The decomposition also provides a powerful framework for algorithm analysis. Instead of directly bounding the complex random quantity $R_n$, we can analyze each $\mathbb{E}[N_i(n)]$ separately.</p>
 
-          <p>Now let's formalize the problem setup.</p>
+          <p>Now let’s formalize the problem setup.</p>
 
           <div class="algorithm-box">
             <h4>Problem Setup</h4>
@@ -549,7 +342,7 @@
 
           <p>We begin with two classical inequalities that provide our first handle on tail probabilities.</p>
 
-          <p><strong>Markov's Inequality:</strong> For any non-negative random variable $X$ and $\varepsilon > 0$,</p>
+          <p><strong>Markov’s Inequality:</strong> For any non-negative random variable $X$ and $\varepsilon > 0$,</p>
           <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="markov-inequality">
             $$\mathbb{P}(X \geq \varepsilon) \leq \frac{\mathbb{E}[X]}{\varepsilon}.$$
           </span></p>
@@ -564,7 +357,7 @@
             <p class="proof-center">$$\mathbb{P}(X \geq \varepsilon) = \mathbb{E}[\mathbb{1}\{X \geq \varepsilon\}] \leq \mathbb{E}\left[\frac{X}{\varepsilon}\right] = \frac{\mathbb{E}[X]}{\varepsilon}.$$</p>
           </div>
 
-          <p><strong>Chebyshev's Inequality:</strong> For any random variable $X$ with finite variance,</p>
+          <p><strong>Chebyshev’s Inequality:</strong> For any random variable $X$ with finite variance,</p>
           <p class="proof-center"><span class="proof-popover-trigger" data-proof-id="chebyshev-inequality">
             $$\mathbb{P}\left(|X - \mathbb{E}[X]| \geq \varepsilon\right) \leq \frac{\mathbb{V}[X]}{\varepsilon^2}.$$
           </span></p>
@@ -572,14 +365,14 @@
           <div id="chebyshev-inequality" style="display:none">
             <p><strong>Proof:</strong> Let $\mu = \mathbb{E}[X]$ and $\sigma^2 = \mathbb{V}[X]$. Define $Y = (X - \mu)^2$, which is non-negative. Then</p>
             <p class="proof-center">$$\mathbb{P}(|X - \mu| \geq \varepsilon) = \mathbb{P}((X-\mu)^2 \geq \varepsilon^2) = \mathbb{P}(Y \geq \varepsilon^2).$$</p>
-            <p>Applying Markov's inequality to $Y$:</p>
+            <p>Applying Markov’s inequality to $Y$:</p>
             <p class="proof-center">$$\mathbb{P}(Y \geq \varepsilon^2) \leq \frac{\mathbb{E}[Y]}{\varepsilon^2} = \frac{\mathbb{E}[(X-\mu)^2]}{\varepsilon^2} = \frac{\sigma^2}{\varepsilon^2}.$$</p>
           </div>
 
-          <p>To see Chebyshev's limitations, apply it to a sample mean $\hat{\mu}_n = \frac{1}{n}\sum_{i=1}^n X_i$ where each $X_i$ has variance $\sigma^2$. Since $\mathbb{V}[\hat{\mu}_n] = \sigma^2/n$,</p>
+          <p>To see Chebyshev’s limitations, apply it to a sample mean $\hat{\mu}_n = \frac{1}{n}\sum_{i=1}^n X_i$ where each $X_i$ has variance $\sigma^2$. Since $\mathbb{V}[\hat{\mu}_n] = \sigma^2/n$,</p>
           <p class="proof-center">$$\mathbb{P}(|\hat{\mu}_n - \mu| \geq \varepsilon) \leq \frac{\sigma^2}{n\varepsilon^2}.$$</p>
 
-          <p>This bound exhibits polynomial decay in both parameters $\varepsilon$ and $n$. Chebyshev's and Markov's inequalities are nice because they make no assumptions about the distribution of $X$, and only rely on the existence of the mean and variance. However, when $X$ has well-behaved tails (like Gaussian or bounded random variables), they are a bit too loose. And to get failure probability $\delta$, we need $n = \Omega(\sigma^2/(\varepsilon^2\delta))$ samples, linearly in $1/\delta$.</p>
+          <p>This bound exhibits polynomial decay in both parameters $\varepsilon$ and $n$. Chebyshev’s and Markov’s inequalities are nice because they make no assumptions about the distribution of $X$, and only rely on the existence of the mean and variance. However, when $X$ has well-behaved tails (like Gaussian or bounded random variables), they are a bit too loose. And to get failure probability $\delta$, we need $n = \Omega(\sigma^2/(\varepsilon^2\delta))$ samples, linearly in $1/\delta$.</p>
 
           <p>To obtain exponentially decaying tail bounds, we introduce the notion of <strong>subgaussian random variables</strong>. A random variable $X$ with $\mathbb{E}[X] = 0$ is called $\sigma$-subgaussian if its moment generating function satisfies</p>
           <p class="proof-center">$$\mathbb{E}[\exp(\lambda X)] \leq \exp\left(\frac{\lambda^2 \sigma^2}{2}\right) \quad \text{for all } \lambda \in \mathbb{R}.$$</p>
@@ -593,7 +386,7 @@
           <div id="subgaussian-tail" style="display:none">
             <p>Let $\lambda > 0$ be a parameter to be chosen later. For any $\varepsilon > 0$,</p>
             <p class="proof-center">$$\mathbb{P}(X \geq \varepsilon) = \mathbb{P}(\exp(\lambda X) \geq \exp(\lambda\varepsilon)).$$</p>
-            <p>Since $\exp$ is monotone increasing, the event $\{X \geq \varepsilon\}$ is equivalent to $\{\exp(\lambda X) \geq \exp(\lambda\varepsilon)\}$. Now apply Markov's inequality to the non-negative random variable $\exp(\lambda X)$:</p>
+            <p>Since $\exp$ is monotone increasing, the event $\{X \geq \varepsilon\}$ is equivalent to $\{\exp(\lambda X) \geq \exp(\lambda\varepsilon)\}$. Now apply Markov’s inequality to the non-negative random variable $\exp(\lambda X)$:</p>
             <p class="proof-center">$$\mathbb{P}(\exp(\lambda X) \geq \exp(\lambda\varepsilon)) \leq \frac{\mathbb{E}[\exp(\lambda X)]}{\exp(\lambda\varepsilon)}.$$</p>
             <p>By the subgaussian assumption, $\mathbb{E}[\exp(\lambda X)] \leq \exp(\lambda^2 \sigma^2/2)$, so</p>
             <p class="proof-center">$$\mathbb{P}(X \geq \varepsilon) \leq \exp\left(\frac{\lambda^2 \sigma^2}{2} - \lambda\varepsilon\right).$$</p>
@@ -611,7 +404,7 @@
           <div class="algorithm-box">
             <h4>Properties of Subgaussian Random Variables</h4>
             <p>Suppose $X$ is $\sigma$-subgaussian with $\mathbb{E}[X] = 0$, and $X_1, X_2$ are independent and $\sigma_1$- and $\sigma_2$-subgaussian, respectively. Then:</p>
-            <ol style="margin-top: 8px;">
+            <ol>
               <li>$\mathbb{E}[X] = 0$ and $\mathbb{V}[X] \leq \sigma^2$</li>
               <li>For any constant $c \in \mathbb{R}$, $cX$ is $|c|\sigma$-subgaussian</li>
               <li>$X_1 + X_2$ is $\sqrt{\sigma_1^2 + \sigma_2^2}$-subgaussian</li>
@@ -663,10 +456,10 @@
           </div>
 
           <figure>
-            <img src="images/ETC.png" alt="Explore-then-Commit strategy visualization" style="max-width:100%; height:auto;" />
+            <img src="images/ETC.png" alt="Explore-then-Commit strategy visualization" loading="lazy">
           </figure>
 
-          <p>To analyze the regret of ETC, recall that $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$ from the <a href="#warmup">regret decomposition</a> above. Let's denote $i^* = \arg\max_i \mu_i$ as the optimal arm.</p>
+          <p>To analyze the regret of ETC, recall that $R_n = \sum_{i=1}^K \Delta_i \mathbb{E}[N_i(n)]$ from the <a href="#warmup">regret decomposition</a> above. Let’s denote $i^* = \arg\max_i \mu_i$ as the optimal arm.</p>
 
           <div class="algorithm-box">
             <h4>Theorem (ETC Regret Bound)</h4>
@@ -687,7 +480,7 @@
           &= \mathbb{P}(\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*}) \geq \Delta_i)
           \end{aligned}$$</p>
 
-          <p>Then, we can show that <span class="proof-popover-trigger" data-proof-id="etc-subg">$\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*})$ is $\sqrt{2/m}$-subgaussian</span>, which follows from standard subgaussian properties. Hence by Hoeffding's inequality:</p>
+          <p>Then, we can show that <span class="proof-popover-trigger" data-proof-id="etc-subg">$\hat{\mu}_i(mK) - \mu_i - (\hat{\mu}_{i^*}(mK) - \mu_{i^*})$ is $\sqrt{2/m}$-subgaussian</span>, which follows from standard subgaussian properties. Hence by Hoeffding’s inequality:</p>
           <div id="etc-subg" style="display:none">
             <div><b>Lemma:</b> Suppose that $X$ is $\sigma$-subgaussian and $X_1$ and $X_2$ are independent and $\sigma_1$ and $\sigma_2$-subgaussian, respectively. Then:</div>
             <ol type="a" style="margin: 6px 0 10px 24px; padding-left: 0;">
@@ -766,7 +559,7 @@
         <section id="ucb">
           <h2>Upper Confidence Bound (UCB)</h2>
 
-          <p>UCB elegantly addresses <a href="#etc">ETC's limitations</a> by adaptively balancing exploration and exploitation. Instead of rigid phases, UCB constructs <a href="#concentration">confidence intervals</a> around arm means and selects the arm with highest upper confidence bound, a principle which we call <em>optimism under uncertainty</em>.</p>
+          <p>UCB elegantly addresses <a href="#etc">ETC’s limitations</a> by adaptively balancing exploration and exploitation. Instead of rigid phases, UCB constructs <a href="#concentration">confidence intervals</a> around arm means and selects the arm with highest upper confidence bound, a principle which we call <em>optimism under uncertainty</em>.</p>
 
           <p>At time $t$, having selected arm $i$ a total of $N_i(t-1)$ times and observed empirical mean $\hat{\mu}_i(t-1)$, UCB selects:</p>
 
@@ -783,7 +576,7 @@
 
           <p>The term $\hat{\mu}_i(t-1)$ is the <em>exploitation</em> component, favoring arms that have produced large average rewards so far. The square-root term is the <em>exploration bonus</em> (confidence width): it is larger for arms with few samples ($N_i(t-1)$ small) and decreases as $1/\sqrt{N_i(t-1)}$, encouraging additional pulls until the estimate is accurate.</p>
 
-          <p>The expression inside the argmax is called the <em>index</em> of arm $i$. Index algorithms form a broad class of bandit strategies where each arm is assigned a numerical score (the index) based on its historical performance and uncertainty. The algorithm then simply selects the arm with the highest index at each round. Intuitively, this leads to sublinear regret because when the optimal arm's index overestimates its true mean, any suboptimal arm must achieve an index value exceeding the optimal arm's index to be selected. However, this can't happen too often as the learner continues to explore the environment and update its estimates.</p>
+          <p>The expression inside the argmax is called the <em>index</em> of arm $i$. Index algorithms form a broad class of bandit strategies where each arm is assigned a numerical score (the index) based on its historical performance and uncertainty. The algorithm then simply selects the arm with the highest index at each round. Intuitively, this leads to sublinear regret because when the optimal arm’s index overestimates its true mean, any suboptimal arm must achieve an index value exceeding the optimal arm’s index to be selected. However, this can’t happen too often as the learner continues to explore the environment and update its estimates.</p>
 
           <p> The UCB algorithm is defined as follows:</p>
           <div class="algorithm-box">
@@ -808,7 +601,7 @@
 
           <p>To formalize this, we introduce the <b>good event $G_i$</b> for each suboptimal arm $i \neq 1$, which captures the scenario where all confidence intervals behave as intended.</p>
           <p>$$G_i = \left\{ \min_{t \in [n]} \mathrm{UCB}_1(t, \delta) > \mu_1 \right\} \cap \left\{ \hat{\mu}_{i, u_i} + \sqrt{\frac{2}{u_i} \log(1/\delta)} < \mu_1 \right\}$$</p>
-          <p>Here, $u_i$ is a threshold number of pulls for arm $i$ (to be chosen later), and $\delta$ is a small probability parameter. The first condition ensures that the optimal arm's index never dips below its true mean during the entire horizon, while the second guarantees that after $u_i$ samples, the index for arm $i$ falls below $\mu_1$ forever after. The crux of the regret bound is to show two things:</p>
+          <p>Here, $u_i$ is a threshold number of pulls for arm $i$ (to be chosen later), and $\delta$ is a small probability parameter. The first condition ensures that the optimal arm’s index never dips below its true mean during the entire horizon, while the second guarantees that after $u_i$ samples, the index for arm $i$ falls below $\mu_1$ forever after. The crux of the regret bound is to show two things:</p>
           <ul>
             <li>If $G_i$ holds, arm $i$ is played at most $u_i$ times, in other words, <span class="proof-popover-trigger" data-proof-id="ucb-step1">$T_i(n) \leq u_i$</span>.</li>
             <li>The probability <span class="proof-popover-trigger" data-proof-id="ucb-step2">$\mathbb{P}(G_i^c)$ is small</span>.</li>
@@ -871,7 +664,7 @@
         <section id="visualization">
           <h2>Interactive Comparison: ETC vs UCB</h2>
 
-          <div class="viz-container">
+          <div class="viz-container wide">
             <div class="viz-controls">
               <div class="viz-controls-left">
                 <div class="control-group">
@@ -935,9 +728,7 @@
           </div>
         </section>
 
-        <hr>
-
-        <section>
+        <section id="references">
           <h2>References</h2>
           <ul>
             <li>Lattimore, T., & Szepesvári, C. (2020). <em>Bandit Algorithms</em>. Cambridge University Press.</li>
@@ -946,7 +737,22 @@
       </article>
     </div>
 
-    <footer class="footer"><a href="https://henryvu.io/">Portfolio</a> · <a href="https://x.com/HenryVu27">X</a> · <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a> · <a href="https://github.com/HenryVu27">GitHub</a></footer>
+    <footer class="post-footer">
+      <div class="dinkus" aria-hidden="true">&#x2767;</div>
+      <nav class="series-nav" aria-label="Multi-Armed Bandits series">
+        <div class="contents">
+          <h2>Multi-Armed Bandits</h2>
+          <ol>
+            <li><span class="n">1</span><span class="t">Foundations</span><span class="when">this post</span></li>
+            <li class="soon"><span class="n">2</span><span class="t">Advanced Algorithms</span><span class="when">coming soon</span></li>
+            <li class="soon"><span class="n">3</span><span class="t">Modern Theory</span><span class="when">coming soon</span></li>
+          </ol>
+        </div>
+      </nav>
+      <div class="colophon">
+        <p class="social"><a href="https://henryvu.io/">Portfolio</a><a href="https://x.com/HenryVu27">X</a><a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a><a href="https://github.com/HenryVu27">GitHub</a></p>
+      </div>
+    </footer>
   </main>
 
   <!-- Settings Modal -->
@@ -1019,7 +825,7 @@
           arms.push({
             id: i,
             trueMean: means[i],
-            color: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6'][i]
+            color: ['#2f6ea8', '#b84a32', '#23876a', '#a87a12', '#c0648e'][i]
           });
         }
 
@@ -1151,7 +957,7 @@
           line.setAttribute('y1', y);
           line.setAttribute('x2', plotWidth);
           line.setAttribute('y2', y);
-          line.setAttribute('stroke', '#e5e5e5');
+          line.setAttribute('stroke', '#e3dccf');
           line.setAttribute('stroke-width', '1');
           g.appendChild(line);
 
@@ -1207,11 +1013,11 @@
             rect.setAttribute('width', armWidth);
             rect.setAttribute('height', meanHeight);
             rect.setAttribute('fill', arm.color);
-            rect.setAttribute('opacity', selectedThisRound ? '0.9' : '0.6');
+            rect.setAttribute('opacity', selectedThisRound ? '1' : '0.55');
             rect.setAttribute('class', 'arm-bar');
             if (selectedThisRound) {
-              rect.setAttribute('stroke', '#2c3e50');
-              rect.setAttribute('stroke-width', '3');
+              rect.setAttribute('stroke', '#1d1a16');
+              rect.setAttribute('stroke-width', '1.5');
             }
             g.appendChild(rect);
 
@@ -1303,7 +1109,7 @@
         const yScale = (r) => margin.top + plotHeight - (r / maxRegret) * plotHeight;
 
         // Grid
-        ctx.strokeStyle = '#e5e5e5';
+        ctx.strokeStyle = '#e3dccf';
         ctx.lineWidth = 1;
         for (let i = 0; i <= 5; i++) {
           const y = margin.top + (i / 5) * plotHeight;
@@ -1314,8 +1120,8 @@
         }
 
         // Axes
-        ctx.strokeStyle = '#2c3e50';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#b9ae9b';
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(margin.left, margin.top);
         ctx.lineTo(margin.left, margin.top + plotHeight);
@@ -1323,8 +1129,8 @@
         ctx.stroke();
 
         // Y-axis labels
-        ctx.fillStyle = '#2c3e50';
-        ctx.font = '14px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillStyle = '#6e675e';
+        ctx.font = '12px system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
         ctx.textAlign = 'right';
         for (let i = 0; i <= 5; i++) {
           const val = (maxRegret * i / 5).toFixed(1);
@@ -1341,8 +1147,9 @@
         }
 
         // ETC line
-        ctx.strokeStyle = '#e74c3c';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#b84a32';
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
         ctx.beginPath();
         etcRegretHistory.forEach((r, t) => {
           const x = xScale(t);
@@ -1353,8 +1160,9 @@
         ctx.stroke();
 
         // UCB line
-        ctx.strokeStyle = '#3498db';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#2f6ea8';
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
         ctx.beginPath();
         ucbRegretHistory.forEach((r, t) => {
           const x = xScale(t);
@@ -1365,18 +1173,18 @@
         ctx.stroke();
 
         // Legend
-        ctx.font = '16px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.font = '13px system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
         ctx.textAlign = 'left';
 
-        ctx.fillStyle = '#e74c3c';
-        ctx.fillRect(margin.left + plotWidth + 10, margin.top + 20, 30, 3);
-        ctx.fillStyle = '#2c3e50';
-        ctx.fillText('ETC', margin.left + plotWidth + 45, margin.top + 25);
+        ctx.fillStyle = '#b84a32';
+        ctx.fillRect(margin.left + plotWidth + 10, margin.top + 20, 24, 2);
+        ctx.fillStyle = '#2a2622';
+        ctx.fillText('ETC', margin.left + plotWidth + 42, margin.top + 25);
 
-        ctx.fillStyle = '#3498db';
-        ctx.fillRect(margin.left + plotWidth + 10, margin.top + 40, 30, 3);
-        ctx.fillStyle = '#2c3e50';
-        ctx.fillText('UCB', margin.left + plotWidth + 45, margin.top + 45);
+        ctx.fillStyle = '#2f6ea8';
+        ctx.fillRect(margin.left + plotWidth + 10, margin.top + 40, 24, 2);
+        ctx.fillStyle = '#2a2622';
+        ctx.fillText('UCB', margin.left + plotWidth + 42, margin.top + 45);
       }
 
       // Update UI

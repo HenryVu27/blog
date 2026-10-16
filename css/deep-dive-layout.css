@@ -1,168 +1,36 @@
-/* Deep-dive post layout: TOC sidebar + content grid */
-/* Include this for any long-form post with a table of contents */
+/* Long-form layout: one centered column, a quiet contents list in the left margin on wide screens,
+   and figures that break out of the column to --wide. */
 
-.page{
-  max-width: none;
-  margin: 80px 0 64px 0;
-  padding: 0;
-  overflow-x: hidden;
-}
+.page { max-width: none; padding: 0 var(--pad) 72px; }
+.layout { position: relative; margin-top: 56px; }
+.layout > .post { max-width: var(--measure); margin: 0 auto; }
 
-.page-header {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 0 16px;
-}
+/* ---------- Contents ---------- */
+.toc { max-width: var(--measure); margin: 0 auto 48px; font-size: 17px; line-height: 1.35; }
+.toc h2 { font-weight: 400; font-size: 17px; font-variant-caps: all-small-caps; letter-spacing: .1em; color: var(--muted); margin: 0 0 10px; }
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc li { margin: 0; padding: 4px 0; }
+.toc li a { display: block; color: var(--muted); text-decoration: none; }
+.toc li a:hover, .toc li a.is-current { color: var(--ink); }
+.toc-section-number { display: none; }
 
-/* Mobile-first: single column layout */
-.layout{
-  display: flex;
-  flex-direction: column;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 0 16px;
+/* narrow screens: the list sits above the text, closed off by a hairline */
+@media (max-width: 1339px) {
+  .toc { padding-bottom: 24px; border-bottom: 1px solid var(--rule); }
 }
 
-/* On narrow screens, TOC sits between hero and article */
-.layout .toc {
-  order: -1;
-  position: static;
-  border-right: none;
-  border-bottom: none;
-  padding: 0 0 16px 0;
-  margin-bottom: 16px;
-}
-.layout .toc::after {
-  content: "\2767";
-  display: block;
-  text-align: center;
-  font-size: 20px;
-  color: var(--muted);
-  margin-top: 24px;
-  background:
-    linear-gradient(var(--border), var(--border)) left center / calc(50% - 24px) 1px no-repeat,
-    linear-gradient(var(--border), var(--border)) right center / calc(50% - 24px) 1px no-repeat;
-}
-.layout .toc ul {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.layout .toc li a {
-  font-size: 16px;
-  line-height: 1.4;
-  white-space: nowrap;
-}
-
-/* Desktop: switch to grid with TOC sidebar */
-@media(min-width: 1025px){
-  .layout{
-    display: grid;
-    grid-template-columns: 300px 1fr 300px;
-    gap: 32px;
-    max-width: 1600px;
+/* wide screens: the list moves into the left margin and follows the reader */
+@media (min-width: 1340px) {
+  .layout > .toc {
+    position: absolute; top: 0; bottom: 0; margin: 0;
+    left: calc(50% - var(--measure) / 2 - (var(--wide) - var(--measure)) / 2 - 36px - 180px);
+    width: 180px;
   }
-  .layout .toc {
-    order: 0;
-    border-right: 1px solid var(--border);
-    border-bottom: none;
-    padding: 0 16px 0 0;
-    margin-bottom: 0;
-  }
-  .layout .toc::after {
-    display: none;
-  }
-  .layout .toc ul {
-    display: block;
-  }
-  .layout .toc li a {
-    font-size: 20px;
-    line-height: 1.5;
-    white-space: normal;
-  }
-
-  /* TLDR mode: TOC is hidden, center the article */
-  body:not(.deep-dive-mode) .layout,
-  html:not(.deep-dive-mode) .layout {
-    grid-template-columns: minmax(0, 900px);
-    justify-content: center;
-    max-width: 900px;
-  }
+  .toc-sticky { position: sticky; top: 32px; }
 }
 
-@media(min-width: 1200px){
-  .layout{
-    grid-template-columns: 320px 1fr 320px;
-    max-width: 1800px;
-  }
-  body:not(.deep-dive-mode) .layout,
-  html:not(.deep-dive-mode) .layout {
-    grid-template-columns: minmax(0, 900px);
-    max-width: 900px;
-  }
-}
-
-.toc{
-  border: none;
-  border-radius: 0;
-  margin: 0;
-  background: transparent;
-  align-self: start;
-}
-@media(min-width: 1800px){
-  .layout .toc{
-    padding: 0 24px 0 0;
-    margin-right: 24px;
-  }
-}
-.toc ul{ list-style: none; padding-left: 0 }
-.toc li{ margin: 14px 0 }
-.toc li a{
-  display: flex;
-  align-items: baseline;
-  text-decoration: none;
-  color: var(--text);
-  font-size: 20px;
-  line-height: 1.5;
-}
-.toc li a:hover{
-  color: var(--vermillion);
-}
-.toc-section-number{
-  display: none;
-}
-.toc-section-title{
-  color: var(--text);
-  font-weight: 400;
-}
-
-.toc h2{
-  font-family: var(--font-serif);
-  font-size: 29px;
-  margin: 0 0 16px 0;
-  font-weight: 400;
-}
-
-.post {
-  margin-top: 0;
-}
-.post section:first-child h2:first-child {
-  margin-top: 0;
-}
-
-/* Full-bleed content divider between header and body */
-.content-divider {
-  height: 1px;
-  background-color: var(--border);
-  box-shadow: 0 0 0 100vmax var(--border);
-  clip-path: inset(0 -100vmax);
-  margin: 64px 0;
-}
-
-.page-header hr{
-  border: 0;
-  border-top: 1px solid var(--border);
-  box-shadow: 0 0 0 100vmax var(--border);
-  clip-path: inset(0 -100vmax);
-  margin: 32px 0;
+/* ---------- Wide figures ---------- */
+.wide, .post .wide {
+  width: min(var(--wide), calc(100vw - 2 * var(--pad)));
+  margin-left: calc(50% - min(var(--wide), calc(100vw - 2 * var(--pad))) / 2);
 }

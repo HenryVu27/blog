@@ -35,11 +35,8 @@
   <link rel="alternate" type="application/rss+xml" title="Henry Vu's Blog" href="https://www.henryvu.blog/feed.xml">
 
   <!-- Fonts & Styles -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond&text=%E2%9D%A6%E2%9D%A7%E2%98%99%E2%98%9E&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preload" href="assets/fonts/ebgaramond-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/styles.css?v=20261015">
 
   <!-- Google Analytics (GA4) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-3CJTJES82Q"></script>
@@ -88,7 +85,6 @@
 <body class="home">
   <main class="page">
     <header class="rh">
-      <a class="rh-name" href="https://henryvu.io/">Henry Vu</a>
       <nav class="rh-nav" aria-label="Portfolio">
         <a href="https://henryvu.io/#about">About</a>
         <a href="https://henryvu.io/#work">Work</a>
@@ -96,38 +92,30 @@
         <a href="https://henryvu.io/#contact">Contact</a>
       </nav>
     </header>
-    <header>
+
+    <header class="home-header">
       <h1 class="title">Henry Vu</h1>
-      <p class="meta">Machine learning engineer in Dallas. Long-form writing on AI engineering and the algorithms underneath it.</p>
+      <p class="dek">Machine learning engineer in Dallas. Long-form writing on AI engineering and the algorithms underneath it.</p>
     </header>
 
-    <section>
-      <h2>Writing</h2>
+    <section class="contents" aria-label="Writing">
+      <h2>AI Engineering</h2>
+      <ol>
+        <li><span class="n">1</span><span class="t"><a href="series/ai-engineering/part1.html">What Fills the Context Window</a></span><span class="when">Feb 2026</span></li>
+        <li class="soon"><span class="n">2</span><span class="t">RAG, From Retrieval to Reasoning</span><span class="when">coming soon</span></li>
+      </ol>
 
-      <p class="series">AI Engineering</p>
-      <ul class="list-tight">
-        <li>
-          <a href="series/ai-engineering/part1.html">Part 1: What Fills the Context Window</a>
-        </li>
-        <li>
-          Part 2: RAG, From Retrieval to Reasoning (coming soon)
-        </li>
-      </ul>
-
-      <div class="dinkus" role="separator" aria-hidden="true">&#x2767;</div>
-
-      <p class="series">Multi-Armed Bandits</p>
-      <ul class="list-tight">
-        <li>
-          <a href="series/bandits/part1.html">Part 1: Foundations</a>
-        </li>
-        <li>Part 2: Advanced Algorithms (coming soon)</li>
-        <li>Part 3: Modern Theory (coming soon)</li>
-      </ul>
+      <h2>Multi-Armed Bandits</h2>
+      <ol>
+        <li><span class="n">1</span><span class="t"><a href="series/bandits/part1.html">Foundations</a></span><span class="when">Sep 2025</span></li>
+        <li class="soon"><span class="n">2</span><span class="t">Advanced Algorithms</span><span class="when">coming soon</span></li>
+        <li class="soon"><span class="n">3</span><span class="t">Modern Theory</span><span class="when">coming soon</span></li>
+      </ol>
     </section>
 
-    <footer class="footer">
-      <p>Set in Century Expanded and IM Fell English</p>
+    <footer class="colophon">
+      <div class="dinkus" aria-hidden="true">&#x2767;</div>
+      <p>Set in EB Garamond</p>
       <p class="social">
         <a href="https://github.com/HenryVu27">GitHub</a>
         <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a>

@@ -104,145 +104,125 @@ The conclusion should add something new, not restate the introduction with diffe
 
 ## Formatting & HTML Components
 
-All posts are hand-crafted HTML. Use the existing CSS classes and component patterns below. Do not introduce new CSS classes or inline styles unless absolutely necessary.
+All posts are hand-crafted HTML. Use the classes below and copy `templates/deep-dive.html` to start a post. No inline styles except a data value on a chart mark (`style="--w:40%"`).
+
+### Design Principles
+
+The blog is set like a well-made book with scientific figures in it, and it shares fonts and tokens with henryvu.io.
+
+- **One column.** Prose sits in a 660px column (about 70 characters per line). Never widen the text column; widen a figure instead with `.wide` (880px, centered on the column).
+- **Two voices.** EB Garamond carries the prose, headings, running head and navigation. The system sans (`var(--sans)`) is used only inside figures, tables, captions, code labels and interactive controls. Never set prose in sans or figure labels in serif.
+- **No boxes.** Nothing gets a fill, border-radius or drop shadow except code, which sits on a faint tint (`--tint`). Separate things with space and hairline rules (`--rule`).
+- **Pale marks, one accent.** In a figure most marks are `--mark` or `--mark-strong`. Spend `--mark-accent` (vermillion) on the one thing the figure is about. Categorical series use the validated palette in Design Tokens, in order.
+- **One ornament.** The fleuron (❧) appears once, at the end of a post. No section dividers, drop caps, hero images or Goudy initials.
+- **Typesetting.** Curly quotes and apostrophes in prose (run `python3 tools/smart_quotes.py <file>` on a new post), en dashes for ranges (500–2,000), real bold (600) and italic. The font files have no synthetic styles, and `font-synthesis: none` is set.
 
 ### Page Skeleton (Deep Dive Posts)
 
-Use `deepdive-template.html` as the starting point. The structure is:
-
 ```html
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>[Post Title] · Technical Blog</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="post-styles.css">
-  <!-- KaTeX (include only if post uses math) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-  <style>
-    /* Page-specific layout overrides go here (see bandits-part1.html for reference) */
-  </style>
-</head>
-<body>
-  <main class="page">
-    <nav class="nav">
-      <a href="index.html" class="back-btn">← Back</a>
-    </nav>
+<main class="page">
+  <header class="rh">                                   <!-- running head: author left, series right -->
+    <a class="rh-name" href="../../index.html">Henry Vu</a>
+    <span>Series Name</span>
+  </header>
 
-    <header>
-      <h1 class="title">[Post Title]</h1>
-      <div class="meta">Last updated: YYYY-MM-DD · X min read</div>
-      <hr>
-    </header>
+  <header class="post-header">
+    <p class="eyebrow">Series Name, Part 1 of 3</p>
+    <h1 class="title">Post Title</h1>
+    <div class="post-meta"><time datetime="2026-02-24">24 February 2026</time><span class="dot">&middot;</span>25 min read</div>
+  </header>
 
-    <div class="layout">
-      <aside class="toc">
-        <h2>Contents</h2>
-        <ul>
-          <li><a href="#section-id">
-            <span class="toc-section-number">1</span>
-            <span class="toc-section-title">Section Name</span>
-          </a></li>
-          <!-- ... more TOC entries -->
-        </ul>
-      </aside>
+  <div class="layout">
+    <aside class="toc"><div class="toc-sticky"><h2>Contents</h2><ul>
+      <li><a href="#section-id"><span class="toc-section-title">Section Name</span></a></li>
+    </ul></div></aside>
 
-      <article class="post">
-        <section id="section-id">
-          <h2>Section Title</h2>
-          <p>Content here...</p>
-        </section>
-        <!-- More sections. Each <section> gets a full-bleed divider via post-styles.css -->
-      </article>
-    </div>
+    <article class="post">
+      <section id="section-id"><h2>Section Title</h2><p>...</p></section>
+    </article>
+  </div>
 
-    <footer class="footer">© Henry Vu</footer>
-  </main>
-</body>
-</html>
+  <footer class="post-footer">
+    <div class="dinkus" aria-hidden="true">&#x2767;</div>
+    <nav class="series-nav"><div class="contents"><h2>Series Name</h2><ol>
+      <li><span class="n">1</span><span class="t">This Post</span><span class="when">this post</span></li>
+      <li class="soon"><span class="n">2</span><span class="t">Next Part</span><span class="when">coming soon</span></li>
+    </ol></div></nav>
+    <div class="colophon"><p class="social">...links...</p></div>
+  </footer>
+</main>
 ```
 
-**Key layout details:**
-- `.page` wraps everything. Deep dives override `max-width` for wider content.
-- `.layout` uses CSS grid: `300px` TOC column + content column. On mobile (<768px), collapses to single column.
-- Each `<section>` inside `.post` automatically gets a full-bleed divider between sections (via `post-styles.css` `.post section + section::before`).
-- `.meta` class for dates and read times (styled as muted gray text).
-- `.page-header` class available for constraining header width separately from content.
-
-### Series Navigation
-
-For multi-part series, add inside the `<aside class="toc">` after the TOC list:
-
-```html
-<div class="series-nav">
-  <h3>Series Title</h3>
-  <ul>
-    <li><strong>Part 1: Foundations</strong> (current)</li>
-    <li><a href="topic-part2.html">Part 2: Advanced Topics</a></li>
-    <li>Part 3: Applications (coming soon)</li>
-  </ul>
-</div>
-```
+- Load `styles.css`, `post-styles.css`, `deep-dive-layout.css` and `components.css`, plus `mode-toggle.css`, `code-blocks.css` and `prism-blog.css` when used. Preload `assets/fonts/ebgaramond-400.woff2`. Add `?v=YYYYMMDD` to every CSS and JS link and bump it on any change, or GitHub Pages serves new HTML with a cached old stylesheet.
+- The contents list sits in the left margin and follows the reader on screens 1340px and wider. Narrower screens show it above the text.
+- The series list goes at the end of the post, not in the header.
+- The Deep Dive / TLDR toggle (`.mode-toggle`) sits inside `.post-meta`. See part 1 of AI Engineering.
 
 ### Headers
 
-3-level hierarchy:
-- **`<h2>`** (36px, 600 weight) -- Major sections. Each gets its own `<section id="...">` and a TOC entry.
-- **`<h3>`** (19px) -- Subsections within a section.
-- **`<strong>`** -- Inline emphasis for mini-labels within paragraphs.
+- **`<h2>`** (30px, 500): major sections. Each gets a `<section id="...">` and a contents entry.
+- **`<h3>`** (22px, 600): subsections.
+- **`<strong>`** (600): concept introductions inside paragraphs.
 
 Headers should be descriptive noun phrases or occasionally questions:
 - Good: "The Regret and Finite-Armed Stochastic Bandits"
 - Good: "Why Context Length Matters"
 - Bad: "Section 3" / "More Details" / "Continued"
 
+### Figures
+
+Every hand-built diagram or chart is a `<figure class="fig">` (add `wide` for two-panel or detailed figures):
+
+```html
+<figure class="fig">
+  <div class="fig-head">
+    <h4 class="fig-title">Sentence-case title that names the finding</h4>
+    <span class="fig-note">Units or scope</span>
+  </div>
+  <!-- the graphic -->
+  <figcaption>One or two sentences on what to look at.</figcaption>
+</figure>
+```
+
+Building blocks in `components.css`:
+- **Bar rows** (`ol.bars` > `li` > `.row` with `.label`, `.plot` > `.bar[style="--w:40%"]` and `.value`): one neutral series with the value at the bar tip. `.bar.var` draws a dashed bar for sizes that vary. Rows can be links.
+- **Flow diagrams** (`.flow`, `.flow-node`, `.flow-arrow`, `.flow-stack`, `.flow-aside`): hairline nodes; `.flow-node.key` marks the nodes the figure is about. Wrap in `.scroll-x`. Flows stack vertically on phones.
+- **Segment strips** (`.strip-group`, `.strip-head`, `.strip`, `.seg`, `.strip-note`): prompt layouts, cache prefixes. `.seg.cached` is the darker neutral, `.seg.hot` the accent.
+- **Span rows** (`ol.spans` > `li` with `.label`, `.track` > `.bar[style="--x:16.1%; --w:25.8%"]`, `.value`, `.pct`, then `.spans-axis` > `.ticks`): each bar sits at its place on one shared scale, for showing how a fixed budget fills (a context window). `.bar.free` draws unused space as a dashed outline, `.bar.key` takes the accent.
+- **Notes under a figure** (`.fig-asides` > three `p` with a `strong` heading): short annotations in columns, stacked on phones. `.swatch` ties a note to the accent mark.
+
+Redraw terminal output and app screenshots as native figures from their numbers rather than embedding the image; link the original from the caption if it is evidence.
+
+Before adding a chart, check it against the dataviz rules: thin marks, no borders around marks, direct labels instead of legends where possible, text in text colors (never the series color), and a validated palette.
+
 ### Algorithm / Theorem Boxes
 
-Use for formal definitions, algorithm pseudocode, theorem statements, and problem setups:
+For definitions, pseudocode, theorem statements and titled tables. They are drawn like a table in a paper: an ink rule above and below, a sans title, no fill.
 
 ```html
 <div class="algorithm-box">
   <h4>Algorithm Name</h4>
-  <p><strong>Input:</strong> Parameters here</p>
   <ol>
     <li><strong>Step name:</strong> Description with math $x_i$</li>
-    <li><strong>Step name:</strong> More steps</li>
   </ol>
 </div>
 ```
 
-Styled with `background: #f5f4f0`, `border: 1px solid var(--border)`, `border-radius: 8px`. Used for:
-- Problem setup definitions
-- Algorithm pseudocode (ETC, UCB, etc.)
-- Theorem statements with their bound formulas
-- Properties/lemma collections
+A `<table>` directly after the `<h4>` drops the title rule, so the header row's rule does that job.
 
 ### Callout Blocks
 
-Use `.callout` class for supplementary notes, caveats, and key definitions:
-
-```html
-<div class="callout">
-  <p><strong>Note:</strong> This assumes rewards are σ-subgaussian...</p>
-</div>
-```
-
-Styled with `border: 1px solid var(--border)`, `border-radius: 8px`, transparent background.
+`.callout` sets supplementary notes and caveats in the secondary ink color with a 2px hairline on the left. No box.
 
 ### Code Blocks
 
 ```html
-<pre><code>// Pseudocode or real code
-function foo(input):
-  ensure invariants
-  return optimal_result</code></pre>
+<div class="code-block" data-filename="trimming.py" data-lang="python">
+<pre><code>def foo(): ...</code></pre>
+</div>
 ```
 
-Styled with `background: var(--code-bg)` (#f5f7fb), `border: 1px solid var(--border)`, `border-radius: 8px`, monospace font (Monaco, Menlo, Consolas). For inline code, just use `<code>term</code>`.
+`js/code-blocks.js` adds the filename label above the code, Prism highlighting (ink-on-paper colors in `prism-blog.css`) and collapse/expand. The code sits on `--tint` with no border. Inline `<code>` gets the same tint.
 
 **Code-prose-walkthrough rhythm.** This is one of the most defining structural patterns:
 1. Explain the concept and motivation in prose
@@ -258,6 +238,8 @@ KaTeX is loaded via CDN and auto-renders with these delimiters:
 - Inline math: `$...$` -- for terms in running text
 - Display math: `$$...$$` -- for important equations, centered on their own line
 
+KaTeX keeps its own Computer Modern faces (`katex-fixes.css` only fixes alignment). Long display math scrolls sideways inside its block instead of widening the page.
+
 **Rules:**
 - Always precede formulas with a plain-English explanation
 - Always follow formulas with an interpretation
@@ -271,7 +253,7 @@ For key equations that should stand out (like the regret decomposition), wrap in
 
 ### Proof Popovers
 
-For proofs that would break narrative flow, use the hover-based proof popover system. The reader sees a styled trigger button; hovering reveals the proof in a floating panel.
+For proofs that would break narrative flow, use the hover-based proof popover system. The reader sees a hairline frame around the statement; hovering reveals the proof on a paper card.
 
 **Trigger (inline, where the theorem/equation appears):**
 ```html
@@ -290,108 +272,47 @@ For proofs that would break narrative flow, use the hover-based proof popover sy
 </div>
 ```
 
-**Required scripts** (at bottom of `<body>`):
-```html
-<script src="proof-popup-hover.js"></script>
-```
-
-This script handles KaTeX rendering, hover show/hide with 300ms delay, Safari positioning fixes, and keyboard (Escape) dismissal. Triggers are styled as tan/brown buttons (`#d4d1c4`) with subtle shadows.
+Load `css/proof-popover.css` and `js/proof-popover.js`.
 
 ### Interactive Visualizations
 
-For interactive demos (charts, parameter sliders, etc.):
+Interactive demos follow the figure rules: `.viz-container.wide`, sans labels, no panels or backgrounds, hairline controls (`.control-btn`: 1px `--rule` border, no fill), sliders in ink. Chart colors come from the validated palette below, gridlines are `#e3dccf`, axes `#b9ae9b`, lines 2px. See the ETC vs UCB comparison in bandits part 1, whose styles live in that page's `<style>` block.
 
-```html
-<div class="viz-container">
-  <div class="viz-controls">
-    <div class="viz-controls-left">
-      <div class="control-group">
-        <label>Parameter: <span id="param-value">3</span></label>
-        <input type="range" id="param-slider" min="1" max="10" value="3">
-      </div>
-    </div>
-    <div class="viz-controls-right">
-      <button class="control-btn" id="run-btn">Run</button>
-      <button class="control-btn" id="settings-btn">Settings</button>
-    </div>
-  </div>
-  <canvas id="chart-canvas" width="800" height="400"></canvas>
-</div>
-```
-
-- `.viz-container`: `background: #f5f4f0`, matching the algorithm-box warmth.
-- `.viz-controls`: Flex layout with left (sliders/labels) and right (buttons) sections, separated by a bottom border.
-- `.control-btn`: Tan/brown buttons matching proof triggers (`#d4d1c4`, 120ms transitions, `translateY(1px)` on active).
-- `.control-group`: Vertical stack of label + input.
-
-### Settings Modal (for complex visualizations)
-
-```html
-<div class="settings-modal" id="settings-modal">
-  <div class="settings-content">
-    <h3>Settings</h3>
-    <!-- Configuration controls -->
-    <button class="control-btn" id="close-settings">Close</button>
-  </div>
-</div>
-```
-
-Toggle with `.visible` class. Fixed overlay with centered white card, `box-shadow: 0 8px 24px rgba(0,0,0,0.18)`.
-
-### Images / Figures
+### Images
 
 ```html
 <figure>
-  <img src="image-name.jpg" alt="Descriptive alt text" style="max-width:100%; height:auto;" />
+  <img src="image-name.jpg" alt="Descriptive alt text" loading="lazy">
+  <figcaption>Optional caption.</figcaption>
 </figure>
 ```
 
-Images get `max-width: 100%` and `border-radius: 8px` via `.post img`. Store image files in the root directory.
+No rounded corners, borders or shadows. Store images next to the post (or in the series' `images/` folder).
 
 ### Tables
 
-```html
-<table>
-  <thead><tr><th>Case</th><th>Time</th><th>Notes</th></tr></thead>
-  <tbody>
-    <tr><td>Small N</td><td>1.2ms</td><td>CPU bound</td></tr>
-    <tr><td>Large N</td><td>42ms</td><td>Cache misses dominate</td></tr>
-  </tbody>
-</table>
-```
-
-Full-width with `border-collapse: collapse`, `1px solid var(--border)` on cells. Keep to 3-5 columns. Use for performance benchmarks and comparison tables.
+Plain `<table>` with `<thead>`. Tables are set in the figure sans with tabular figures: an ink rule on top and bottom, a rule under the header, hairlines between rows, no vertical lines. Keep to 3-5 columns. Phones scroll wide tables sideways.
 
 ### Lists
 
-- **Unordered** (`<ul class="list-tight">`): For parallel concepts, features, options. Disc markers, 12px margin between items.
+- **Unordered** (`<ul class="list-tight">`): For parallel concepts, features, options.
 - **Ordered** (`<ol>`): For sequential steps, algorithms, ranked items.
 - Lists supplement prose -- write the paragraph first, use lists for sub-points.
 
 ### Blockquotes
 
-```html
-<blockquote>
-  <p>Quoted text from a paper, practitioner, or authority figure.</p>
-</blockquote>
-```
-
-Styled with `padding-left: 16px`, `border-left: 3px solid var(--border)`, muted text color.
+`<blockquote>` gets a 1px hairline on the left and the secondary ink color.
 
 ### Text Emphasis
 
 - `<strong>` for key terms on first introduction, important takeaways
 - `<em>` for paper titles, quoted phrases, slight emphasis
-- `<code>` for function names, variable names, CLI commands, file paths (styled with light blue-gray background)
-- `<span class="edit-green">` for highlighting additions/changes (green background) -- use sparingly
+- `<code>` for function names, variable names, CLI commands, file paths
+- `<span class="edit-green">` for highlighting additions/changes -- use sparingly
 
 ### Dividers
 
-Between sections, dividers are automatic via `post-styles.css` (`.post section + section::before`). For manual dividers elsewhere, use `<hr>` (styled as `1px solid var(--border)`). For full-bleed manual dividers:
-
-```html
-<div class="content-divider"></div>
-```
+None between sections; the space before each `<h2>` does that job. Use `<hr>` (a hairline) only when a page truly needs a break that is not a new section.
 
 ---
 
@@ -462,36 +383,43 @@ When discussing any technique or optimization:
 ### Stack
 
 - **Static HTML** -- No framework. Hand-crafted HTML files.
-- **CSS** -- `styles.css` (global layout, nav, footer, TOC, code blocks, typography) + `post-styles.css` (post-specific: h1-h3 sizing, section spacing, callouts, tables, blockquotes, images, full-bleed dividers)
+- **CSS** -- `styles.css` (fonts, tokens, base type, running head, index), `post-styles.css` (post header, prose, tables, math, references), `deep-dive-layout.css` (column, margin contents, `.wide`), `components.css` (figure kit, algorithm boxes, series list), plus `code-blocks.css`, `prism-blog.css`, `mode-toggle.css`, `proof-popover.css`, `katex-fixes.css`
 - **KaTeX v0.16.8** -- LaTeX math rendering via CDN
-- **Vanilla JS** -- `proof-popup-hover.js` (proof popovers + KaTeX auto-render), `safari-positioning-fix.js` (Safari compat)
+- **Vanilla JS** -- `js/code-blocks.js`, `js/mode-toggle.js`, `js/proof-popover.js`, `js/katex-init.js`
+- **Tools** -- `tools/subset_fonts.py` (rebuilds the EB Garamond subsets), `tools/smart_quotes.py` (curls quotes in a post's prose)
 - **GitHub Pages** -- Hosting at `www.henryvu.blog` (CNAME configured)
 
 ### File Conventions
 
-- Post files: lowercase, hyphen-separated: `topic-name.html` or `topic-part1.html`
-- Templates: `deepdive-template.html`, `tutorial-template.html`
-- Assets (images): Root directory, referenced directly (`src="MAB.jpg"`)
-- JS: Root directory (`proof-popup-hover.js`, `safari-positioning-fix.js`)
+- Post files: `series/<series>/partN.html`
+- Templates: `templates/deep-dive.html`, `templates/tutorial.html`
+- Fonts: `assets/fonts/` (EB Garamond 400, 500, 600, 400 italic; Latin plus Greek)
+- Images: next to the post or in the series' `images/` folder
 
 ### Design Tokens
 
 ```css
 :root {
-    --bg: #f3ebda;          /* vellum, shared with henryvu.io day theme */
-    --ink: #2a2118;         /* headings */
-    --text: #3f3428;        /* iron-gall ink */
-    --muted: #6b5b48;
-    --border: #d8cbb0;
-    --code-bg: #ebe0c9;
-    --vermillion: #7f2a1e;  /* madder; link hover */
-    --gold-deep: #7a5c14;   /* ornaments only */
+  --bg: #f3eee3;          /* cream paper, same as henryvu.io */
+  --ink: #1d1a16;         /* headings */
+  --text: #2a2622;        /* body */
+  --text-2: #56504a;      /* subtitles, quotes, figure labels */
+  --muted: #6e675e;       /* metadata, captions */
+  --rule: #d5cfc3;        /* hairlines */
+  --tint: #ebe5d8;        /* code, the only filled surface */
+  --accent: #7f2a1e;      /* vermillion: link hover */
+  --gold: #7a5c14;        /* the fleuron, focus ring */
+  --mark: #ddd5c6;        /* pale figure marks */
+  --mark-strong: #b9ae9b; /* neutral bars, node borders, arrows */
+  --mark-accent: #b84a32; /* the one mark a figure is about */
 }
 ```
 
-Body face is Century Expanded (self-hosted). The blog index (`body.home`) alone also loads IM Fell English and IM Fell English SC for its title, running head, series labels, and colophon, plus a 2.5 KB EB Garamond glyph subset for the fleuron; posts do not load them. Warm accent color for interactive elements: `#d4d1c4` (tan) with `#6b6a61` borders. Used on `.control-btn`, `.proof-popover-trigger`, and `.viz-container` / `.algorithm-box` backgrounds (`#f5f4f0`).
+Categorical chart palette (validated for color-vision deficiency on `--bg`, use in this order): `#2f6ea8` blue, `#b84a32` vermillion, `#23876a` verdigris, `#a87a12` ochre, `#c0648e` rose.
 
-Do not introduce new colors or fonts without explicit approval. The aesthetic is **minimal, monochrome, content-focused** with warm tan accents on interactive elements.
+Type: EB Garamond for everything except figure internals; body 21px/1.6 (19px on phones), title 46px/500, h2 30px/500, h3 22px/600; small caps for the running head, eyebrow, meta and contents. The system sans for figures, tables, captions and controls at 12-15px.
+
+Do not introduce new colors or fonts without explicit approval. The aesthetic is **a quiet book page**: cream paper, black ink, figures drawn with pale marks and one vermillion accent.
 
 ---
 

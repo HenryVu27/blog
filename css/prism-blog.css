@@ -1,10 +1,10 @@
 /* Custom Prism.js theme for henryvu.blog
-   Light IDE aesthetic with muted, tasteful syntax colors.
-   Designed to complement the warm minimal blog palette. */
+   Ink-on-paper syntax colors drawn from the blog palette:
+   vermillion keywords, manuscript-blue functions, olive strings, gray comments. */
 
 code[class*="language-"],
 pre[class*="language-"] {
-  color: #383a42;
+  color: #2a2622;
   text-shadow: none;
   direction: ltr;
   text-align: left;
@@ -15,18 +15,18 @@ pre[class*="language-"] {
   hyphens: none;
 }
 
-/* Token colors — muted One Light-inspired palette */
+/* Token colors */
 
 .token.comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
-  color: #a0a1a7;
+  color: #8a8274;
   font-style: italic;
 }
 
 .token.punctuation {
-  color: #383a42;
+  color: #2a2622;
 }
 
 .token.namespace {
@@ -40,7 +40,7 @@ pre[class*="language-"] {
 .token.constant,
 .token.symbol,
 .token.deleted {
-  color: #c05533;
+  color: #9a4a2c;
 }
 
 .token.selector,
@@ -49,7 +49,7 @@ pre[class*="language-"] {
 .token.char,
 .token.builtin,
 .token.inserted {
-  color: #50820a;
+  color: #4f6b2a;
 }
 
 .token.operator,
@@ -57,24 +57,24 @@ pre[class*="language-"] {
 .token.url,
 .language-css .token.string,
 .style .token.string {
-  color: #7b6a40;
+  color: #6e5f3c;
 }
 
 .token.atrule,
 .token.attr-value,
 .token.keyword {
-  color: #a626a4;
+  color: #7f2a1e;
 }
 
 .token.function,
 .token.class-name {
-  color: #3d6cb3;
+  color: #2f5d86;
 }
 
 .token.regex,
 .token.important,
 .token.variable {
-  color: #986801;
+  color: #7a5c14;
 }
 
 .token.important,
@@ -93,7 +93,7 @@ pre[class*="language-"] {
 /* Decorator support (Python @decorators) */
 .token.decorator,
 .token.annotation {
-  color: #986801;
+  color: #7a5c14;
 }
 
 /* Override Prism's default background/border for pre and code */

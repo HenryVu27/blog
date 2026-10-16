@@ -47,138 +47,16 @@
   <!-- RSS Feed -->
   <link rel="alternate" type="application/rss+xml" title="Henry Vu's Blog" href="https://www.henryvu.blog/feed.xml">
 
-  <!-- Fonts & Styles (EXISTING - do not change) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../css/styles.css">
-  <link rel="stylesheet" href="../../css/post-styles.css">
-  <link rel="stylesheet" href="../../css/deep-dive-layout.css">
-  <link rel="stylesheet" href="../../css/components.css">
-  <link rel="stylesheet" href="../../css/mode-toggle.css">
-  <link rel="stylesheet" href="../../css/prism-blog.css" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="../../css/code-blocks.css" media="print" onload="this.media='all'">
+  <!-- Fonts & Styles -->
+  <link rel="preload" href="../../assets/fonts/ebgaramond-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../../css/styles.css?v=20261015">
+  <link rel="stylesheet" href="../../css/post-styles.css?v=20261015">
+  <link rel="stylesheet" href="../../css/deep-dive-layout.css?v=20261015">
+  <link rel="stylesheet" href="../../css/components.css?v=20261015">
+  <link rel="stylesheet" href="../../css/mode-toggle.css?v=20261015">
+  <link rel="stylesheet" href="../../css/prism-blog.css?v=20261015" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="../../css/code-blocks.css?v=20261015" media="print" onload="this.media='all'">
   <script>try{if(localStorage.getItem('blog-reading-mode')!=='tldr')document.documentElement.classList.add('deep-dive-mode')}catch(e){}</script>
-  <style>
-    /* Hide section divider before Seven Components when Section 1 is hidden (TLDR mode) */
-    .post section.deep-dive-only + section::before { display: none; }
-    body.deep-dive-mode .post section.deep-dive-only + section::before { display: block; }
-
-    /* Context window diagram: pill hover */
-    .context-diagram a:hover > div:first-child { filter: brightness(0.93); }
-
-    /* Remove top margin so hero is flush with viewport top */
-    .page { margin-top: 0; }
-
-    /* Hero: full-width container so background never clips.
-       .page-header.hero-header beats .page-header specificity in deep-dive-layout.css */
-    .page-header.hero-header {
-      position: relative;
-      max-width: none;
-      width: 100vw;
-      margin-left: calc(-50vw + 50%);
-      padding: 104px 16px 204px;
-      background: url('OG1.jpg') center / cover no-repeat;
-      box-sizing: border-box;
-    }
-    .page-header.hero-header::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.35);
-      z-index: 0;
-      pointer-events: none;
-    }
-    .page-header.hero-header > * {
-      position: relative;
-      z-index: 1;
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .toc ul {
-      margin-top: 0;
-    }
-    .hero-header .meta {
-      margin-bottom: 20px;
-    }
-    .hero-header .mode-toggle {
-      margin-top: 0;
-      margin-bottom: 12px;
-    }
-    .hero-header .title,
-    .hero-header .meta,
-    .hero-header .back-btn,
-    .hero-header .series-nav h3,
-    .hero-header .series-nav li {
-      color: #fff;
-    }
-    /* Mode toggle: inactive = translucent, active = solid white */
-    .hero-header .mode-toggle button {
-      color: rgba(255,255,255,0.65);
-      position: relative;
-    }
-    .hero-header .mode-toggle button::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      bottom: -2px;
-      width: 100%;
-      height: 2px;
-      background: rgba(255,255,255,0.65);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 250ms ease;
-    }
-    .hero-header .mode-toggle button:hover:not(.active)::after {
-      transform: scaleX(1);
-    }
-    .hero-header .mode-toggle button.active {
-      color: #fff;
-      border-bottom-color: #fff;
-    }
-    .hero-header .mode-toggle button:hover:not(.active) {
-      color: rgba(255,255,255,0.9);
-    }
-    /* Series nav links: translucent, brighten on hover */
-    .hero-header .series-nav a {
-      color: rgba(255,255,255,0.7);
-      transition: color 150ms ease;
-      position: relative;
-    }
-    .hero-header .series-nav a::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      bottom: -1px;
-      width: 100%;
-      height: 1px;
-      background: rgba(255,255,255,0.7);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 250ms ease;
-    }
-    .hero-header .series-nav a:hover::after {
-      transform: scaleX(1);
-    }
-    .hero-header .series-nav a:hover {
-      color: #fff;
-    }
-    .hero-header .back-btn {
-      color: rgba(255,255,255,0.7);
-    }
-    .hero-header .back-btn:hover {
-      color: #fff;
-    }
-    .hero-header hr {
-      display: none;
-    }
-    @media (max-width: 1024px) {
-      .page-header.hero-header {
-        padding: 52px 16px 56px;
-      }
-    }
-  </style>
   <!-- KaTeX for Deep Dive math -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" media="print" onload="this.media='all'">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
@@ -316,38 +194,24 @@
 </head>
 <body>
   <main class="page">
-    <div class="page-header hero-header">
-      <nav class="nav">
-        <a href="../../index.html" class="back-btn">←</a>
-      </nav>
+    <header class="rh">
+      <a class="rh-name" href="../../index.html">Henry Vu</a>
+      <span>AI Engineering</span>
+    </header>
 
-      <header>
-        <h1 class="title">What Fills the Context Window</h1>
-        <div class="meta">
-          2026-02-24 · <span class="deep-dive-only">25 min read</span><span class="tldr-only">5 min read</span>
-        </div>
-        <div class="mode-toggle">
+    <header class="post-header">
+      <p class="eyebrow">AI Engineering, Part 1 of 5</p>
+      <h1 class="title">What Fills the Context Window</h1>
+      <div class="post-meta">
+        <span><time datetime="2026-02-24">24 February 2026</time><span class="dot">&middot;</span><span class="deep-dive-only">25 min read</span><span class="tldr-only">5 min read</span></span>
+        <div class="mode-toggle" role="group" aria-label="Reading mode">
           <button data-mode="deep-dive">Deep Dive</button>
           <button data-mode="tldr" class="active">TLDR</button>
         </div>
-        <hr>
-      </header>
-
-      <div class="series-nav">
-        <h3>AI Engineering Series</h3>
-        <ul>
-          <li>Part 1: What Fills the Context Window (current)</li>
-          <li>Part 2: RAG, From Retrieval to Reasoning (coming soon)</li>
-          <li>Part 3: Memory Engineering (coming soon)</li>
-          <li>Part 4: Building AI Agents (coming soon)</li>
-          <li>Part 5: Multi-Agent Systems (coming soon)</li>
-        </ul>
       </div>
-    </div>
+    </header>
 
-
-
-    <div class="layout" style="margin-top: 48px;">
+    <div class="layout">
       <aside class="toc deep-dive-only">
         <div class="toc-sticky">
           <h2>Contents</h2>
@@ -372,15 +236,15 @@
         <section id="from-prompts-to-context" class="deep-dive-only">
           <h2>From Prompts to Context</h2>
 
-          <p>When GPT-3 landed in 2020, early adopters quickly discovered that tiny changes in phrasing produced wildly different outputs. Swap "summarize" for "explain briefly," add "step by step," rearrange a few words, tell it to roleplay as a character with no safety guidelines, and the same model would go from incoherent to useful to giving you a recipe for homemade biological weapons. That sensitivity created an entire discipline called "prompt engineering", the craft of writing instructions that reliably steer language models toward useful behavior.</p>
+          <p>When GPT-3 landed in 2020, early adopters quickly discovered that tiny changes in phrasing produced wildly different outputs. Swap “summarize” for “explain briefly,” add “step by step,” rearrange a few words, tell it to roleplay as a character with no safety guidelines, and the same model would go from incoherent to useful to giving you a recipe for homemade biological weapons. That sensitivity created an entire discipline called “prompt engineering”, the craft of writing instructions that reliably steer language models toward useful behavior.</p>
 
-          <p>For a while, prompt engineering was the whole game. Your system prompt was a paragraph or two, the context window was 4K tokens, and the main skill was wordsmithing, finding the exact phrasing, the right few-shot examples, the magic "think step by step" incantation that unlocked the behavior you wanted.</p>
+          <p>For a while, prompt engineering was the whole game. Your system prompt was a paragraph or two, the context window was 4K tokens, and the main skill was wordsmithing, finding the exact phrasing, the right few-shot examples, the magic “think step by step” incantation that unlocked the behavior you wanted.</p>
 
-          <p>Context windows eventually went from 4K to 200K tokens, and models became intelligent enough that phrasing stopped being the bottleneck. Sometime around mid 2025, the community started using the term "context engineering" instead, and the new label caught on fast. <a href="#ref-karpathy">Andrej Karpathy</a> called it "the delicate art and science of filling the context window with just the right information for the next step." I like that framing because it puts the emphasis on information selection, not wordsmithing.</p>
+          <p>Context windows eventually went from 4K to 200K tokens, and models became intelligent enough that phrasing stopped being the bottleneck. Sometime around mid 2025, the community started using the term “context engineering” instead, and the new label caught on fast. <a href="#ref-karpathy">Andrej Karpathy</a> called it “the delicate art and science of filling the context window with just the right information for the next step.” I like that framing because it puts the emphasis on information selection, not wordsmithing.</p>
 
-          <p>Most agent failures I encounter today are context failures, where the model can do what I need but doesn't have the right information when it needs it. The system prompt is but one of seven components that fill the context window, and for a simple single-turn task, careful prompt engineering is all you need. But the moment you add retrieval, tools, multi-step reasoning, or agent workflows, the challenge shifts from "how do I phrase this instruction" to "what information does the model need to see right now, and how do I assemble it reliably."</p>
+          <p>Most agent failures I encounter today are context failures, where the model can do what I need but doesn’t have the right information when it needs it. The system prompt is but one of seven components that fill the context window, and for a simple single-turn task, careful prompt engineering is all you need. But the moment you add retrieval, tools, multi-step reasoning, or agent workflows, the challenge shifts from “how do I phrase this instruction” to “what information does the model need to see right now, and how do I assemble it reliably.”</p>
 
-          <p>This post walks through those seven components, the strategies for managing them, how they fail, and what a real token budget looks like in a diabetes management coaching agent I built with LangGraph. I'll go deeper on RAG in Part 2, memory in Part 3, agents in Part 4, and multi-agent coordination in Part 5.</p>
+          <p>This post walks through those seven components, the strategies for managing them, how they fail, and what a real token budget looks like in a diabetes management coaching agent I built with LangGraph. I’ll go deeper on RAG in Part 2, memory in Part 3, agents in Part 4, and multi-agent coordination in Part 5.</p>
 
         </section>
 
@@ -394,49 +258,27 @@
           <p>Every LLM call consumes a context window, a fixed-size buffer of tokens containing everything the model can see. What you put in that buffer determines what the model can do. Several people have converged on roughly the same decomposition (<a href="#ref-manus">Manus</a>, <a href="#ref-anthropic">Anthropic</a>, <a href="#ref-langchain">LangChain</a>, <a href="#ref-google-agents">Google</a>), and seven components turns out to be the right granularity.</p>
           </div>
 
-          <div style="border-radius:8px; padding:12px 14px; margin:24px 0; background:#ece6d6;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-              <span style="font-size:14px; font-weight:500; text-transform:uppercase; letter-spacing:0.05em; color:var(--fg);">Context Window</span>
-              <span style="font-size:14px; color:var(--fg);">8K-200K tokens</span>
+          <figure class="fig">
+            <div class="fig-head">
+              <h4 class="fig-title">What fills a context window</h4>
+              <span class="fig-note">Window: 8K&ndash;200K tokens</span>
             </div>
-            <div style="background:#f9f7f3; border-radius:6px; padding:16px 18px;">
-              <div class="context-diagram" style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
-                <a href="#comp-system-prompt" style="display:flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer;">
-                  <div style="width:20%; background:#efe6d4; border:1.5px solid #b8a88a; border-radius:3px; padding:6px 10px; color:#8a7a62; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:filter 0.15s;">System prompt</div>
-                  <span style="color:var(--muted); font-size:12px;">500-2,000</span>
-                </a>
-                <a href="#comp-user-prompt" style="display:flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer;">
-                  <div style="width:15%; background:#f2ebdd; border:1.5px solid #c4b69e; border-radius:3px; padding:6px 10px; color:#9a8c74; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:filter 0.15s;">User prompt</div>
-                  <span style="color:var(--muted); font-size:12px; font-style:italic;">variable</span>
-                </a>
-                <a href="#comp-state" style="display:flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer;">
-                  <div style="width:50%; background:#e8dece; border:1.5px solid #9a8970; border-radius:3px; padding:6px 10px; color:#7a6c58; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:filter 0.15s;">State + conversation history</div>
-                  <span style="color:var(--muted); font-size:12px;">500-5,000</span>
-                </a>
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <div style="width:15%; background:#f2ebdd; border:1.5px solid #c4b69e; border-radius:3px; padding:6px 10px; color:#9a8c74; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Long-term memory</div>
-                  <span style="color:var(--muted); font-size:12px; font-style:italic;">variable</span>
-                </div>
-                <a href="#comp-rag" style="display:flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer;">
-                  <div style="width:100%; background:#e2d7c5; border:1.5px solid #7a6c58; border-radius:3px; padding:6px 10px; color:#5e5344; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:filter 0.15s;">Retrieved information (RAG)</div>
-                  <span style="color:var(--muted); font-size:12px; white-space:nowrap;">0-10,000</span>
-                </a>
-                <a href="#comp-tools" style="display:flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer;">
-                  <div style="width:30%; background:#ece3d3; border:1.5px solid #a8987e; border-radius:3px; padding:6px 10px; color:#7e7060; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:filter 0.15s;">Tool definitions</div>
-                  <span style="color:var(--muted); font-size:12px;">500-3,000</span>
-                </a>
-                <a href="#comp-schema" style="display:flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer;">
-                  <div style="width:5%; min-width:80px; background:#f4ede0; border:1.5px solid #d1c4ac; border-radius:3px; padding:6px 10px; color:#8a7d6a; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:filter 0.15s;">Schema</div>
-                  <span style="color:var(--muted); font-size:12px;">50-500</span>
-                </a>
-              </div>
-            </div>
-          </div>
+            <ol class="bars">
+              <li><a class="row" href="#comp-system-prompt"><span class="label">System prompt</span><span class="plot"><span class="bar" style="--w:20%"></span><span class="value">500&ndash;2,000</span></span></a></li>
+              <li><a class="row" href="#comp-user-prompt"><span class="label">User prompt</span><span class="plot"><span class="bar var" style="--w:15%"></span><span class="value">variable</span></span></a></li>
+              <li><a class="row" href="#comp-state"><span class="label">State + conversation history</span><span class="plot"><span class="bar" style="--w:50%"></span><span class="value">500&ndash;5,000</span></span></a></li>
+              <li><div class="row"><span class="label">Long-term memory</span><span class="plot"><span class="bar var" style="--w:15%"></span><span class="value">variable</span></span></div></li>
+              <li><a class="row" href="#comp-rag"><span class="label">Retrieved information (RAG)</span><span class="plot"><span class="bar" style="--w:100%"></span><span class="value">0&ndash;10,000</span></span></a></li>
+              <li><a class="row" href="#comp-tools"><span class="label">Tool definitions</span><span class="plot"><span class="bar" style="--w:30%"></span><span class="value">500&ndash;3,000</span></span></a></li>
+              <li><a class="row" href="#comp-schema"><span class="label">Schema</span><span class="plot"><span class="bar" style="--w:4%"></span><span class="value">50&ndash;500</span></span></a></li>
+            </ol>
+            <figcaption>Typical tokens per component. Dashed bars change with every conversation.</figcaption>
+          </figure>
 
           <div class="deep-dive-only">
           <p> ~200k-token context window seems to be the ceiling for current frontier models, after which their output quality degrades substantially, despite most claiming support for 1M or even 2M tokens.</p>
 
-          <p>The other thing that diagram doesn't capture is <strong>thinking tokens</strong>. Claude's extended thinking, OpenAI's reasoning tokens (from the o-series through GPT-5), and Gemini's thinking budget all let the model do internal chain-of-thought before producing a visible response. These tokens are billed as output tokens (not cheap), but they're stripped from conversation history after each turn rather than carried forward as context. So for complex agentic tasks, allocating thinking budget can improve output quality without any of the context pressure that comes from stuffing more information into the window itself, though you pay in latency and output-token cost.</p>
+          <p>The other thing that diagram doesn’t capture is <strong>thinking tokens</strong>. Claude’s extended thinking, OpenAI’s reasoning tokens (from the o-series through GPT-5), and Gemini’s thinking budget all let the model do internal chain-of-thought before producing a visible response. These tokens are billed as output tokens (not cheap), but they’re stripped from conversation history after each turn rather than carried forward as context. So for complex agentic tasks, allocating thinking budget can improve output quality without any of the context pressure that comes from stuffing more information into the window itself, though you pay in latency and output-token cost.</p>
           </div>
 
           <div class="tldr-only">
@@ -451,9 +293,9 @@
           <div class="deep-dive-only">
           <h3 class="deep-dive-only" id="comp-system-prompt">System Prompt</h3>
 
-          <p>Of the seven, this is a natural place to start because it sets behavioral guidelines, role definitions, and available capabilities, i.e. the personality of an agent. What I didn't expect when I first started building agents is how much the system prompt wants to grow. Every failure mode tempts you to add another instruction, before you know it, the agent has become some Frankenstein monster with 4,000 tokens of rules that do everything (no clear boundaries) and sometimes contradict each other. One expensive lesson I've learned is to start minimal and iteratively add instructions based on observed failures. You may want to version your system prompts like application code now, with diffs and reviews, because a "small tweak" can break behavior three turns later in unexpected ways.</p>
+          <p>Of the seven, this is a natural place to start because it sets behavioral guidelines, role definitions, and available capabilities, i.e. the personality of an agent. What I didn’t expect when I first started building agents is how much the system prompt wants to grow. Every failure mode tempts you to add another instruction, before you know it, the agent has become some Frankenstein monster with 4,000 tokens of rules that do everything (no clear boundaries) and sometimes contradict each other. One expensive lesson I’ve learned is to start minimal and iteratively add instructions based on observed failures. You may want to version your system prompts like application code now, with diffs and reviews, because a “small tweak” can break behavior three turns later in unexpected ways.</p>
 
-          <p>My agent's system prompt is broken into XML-tagged sections:</p>
+          <p>My agent’s system prompt is broken into XML-tagged sections:</p>
           </div>
 
 <div class="code-block" data-filename="system_prompt.xml" data-lang="xml">
@@ -489,31 +331,44 @@
 </div>
 
           <div class="deep-dive-only">
-          <p>I started using XML tags mostly for my own sanity (it's easier to review a prompt when you can collapse sections), but it turns out LLMs respond better to structured input than unstructured dumps. Both <a href="#ref-anthropic">Anthropic</a> and <a href="#ref-google-agents">Google</a> recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which is nice to have once your prompt is 2,000+ tokens and three people are editing it concurrently.</p>
+          <p>I started using XML tags mostly for my own sanity (it’s easier to review a prompt when you can collapse sections), but it turns out LLMs respond better to structured input than unstructured dumps. Both <a href="#ref-anthropic">Anthropic</a> and <a href="#ref-google-agents">Google</a> recommend structured delimiters for this reason. The tags also give you a natural unit for version control diffs, which is nice to have once your prompt is 2,000+ tokens and three people are editing it concurrently.</p>
 
-          <p>Once your prompt gets complex enough, you start wanting to break individual sections out into their own files and load them on demand. Agent frameworks like Claude Code already do this with skills (workflow instructions like "debug systematically" or "do TDD") and plugins (third-party extensions) that only enter the context window when the current task calls for them. I used Claude Code to research this post, with agents spawning subagents and 70+ tools to synthesize points from research papers and technical posts. Here's how the context budget split mid-session:</p>
+          <p>Once your prompt gets complex enough, you start wanting to break individual sections out into their own files and load them on demand. Agent frameworks like Claude Code already do this with skills (workflow instructions like “debug systematically” or “do TDD”) and plugins (third-party extensions) that only enter the context window when the current task calls for them. I used Claude Code to research this post, with agents spawning subagents and 70+ tools to synthesize points from research papers and technical posts. Here’s how the context budget split mid-session:</p>
 
-          <div style="display:flex; gap:24px; align-items:flex-start; margin:24px 0;">
-            <figure style="margin:0; flex:0 0 55%;">
-              <img src="claude-code-context-usage.png" alt="Claude Code context usage breakdown: system prompt 3.4k tokens (1.7%), system tools 17.8k (8.9%), custom agents 399 (0.2%), memory files 9.8k (4.9%), skills 766 (0.4%), messages 51.6k (25.8%), free space 83k (41.6%), autocompact buffer 33k (16.5%), out of 200k total" style="max-width:100%; height:auto;" />
-            </figure>
-            <div style="flex:1; font-size:14px; line-height:1.7; color:var(--text);">
-              <p style="margin:0 0 20px 0;"><strong>Autocompact buffer (33k)</strong><br>The compress strategy baked into infrastructure. The system reserves 16.5% of the window for summarizing older messages as the conversation grows.</p>
-              <p style="margin:0 0 20px 0;"><strong>Subagent isolation</strong><br>Each subagent gets its own 200k window rather than sharing the orchestrator's. That's the isolate strategy, splitting work across multiple context windows instead of cramming everything into one.</p>
-              <p style="margin:0;"><strong>Composable modules</strong><br>Skills, plugins, memory files, and agent definitions each managed independently. Instead of one monolithic prompt, assemble each agent's context from only the pieces it needs.</p>
+          <figure class="fig wide">
+            <div class="fig-head">
+              <h4 class="fig-title">Context budget, mid-session</h4>
+              <span class="fig-note">claude-opus-4-6, 200k-token window</span>
             </div>
-          </div>
+            <ol class="spans">
+              <li><span class="label">System prompt</span><span class="track"><span class="bar" style="--x:0%; --w:1.7%"></span></span><span class="value">3.4k</span><span class="pct">1.7%</span></li>
+              <li><span class="label">System tools</span><span class="track"><span class="bar" style="--x:1.7%; --w:8.9%"></span></span><span class="value">17.8k</span><span class="pct">8.9%</span></li>
+              <li><span class="label">Custom agents</span><span class="track"><span class="bar" style="--x:10.6%; --w:0.2%"></span></span><span class="value">0.4k</span><span class="pct">0.2%</span></li>
+              <li><span class="label">Memory files</span><span class="track"><span class="bar" style="--x:10.8%; --w:4.9%"></span></span><span class="value">9.8k</span><span class="pct">4.9%</span></li>
+              <li><span class="label">Skills</span><span class="track"><span class="bar" style="--x:15.7%; --w:0.4%"></span></span><span class="value">0.8k</span><span class="pct">0.4%</span></li>
+              <li><span class="label">Messages</span><span class="track"><span class="bar" style="--x:16.1%; --w:25.8%"></span></span><span class="value">51.6k</span><span class="pct">25.8%</span></li>
+              <li><span class="label">Free space</span><span class="track"><span class="bar free" style="--x:41.9%; --w:41.6%"></span></span><span class="value">83.0k</span><span class="pct">41.6%</span></li>
+              <li><span class="label">Autocompact buffer</span><span class="track"><span class="bar key" style="--x:83.5%; --w:16.5%"></span></span><span class="value">33.0k</span><span class="pct">16.5%</span></li>
+            </ol>
+            <div class="spans-axis" aria-hidden="true"><span class="ticks"><span style="--x:0%">0</span><span style="--x:25%">50k</span><span style="--x:50%">100k</span><span style="--x:75%">150k</span><span style="--x:100%">200k</span></span></div>
+            <div class="fig-asides">
+              <p><strong><span class="swatch" aria-hidden="true"></span>Autocompact buffer (33k)</strong>The compress strategy baked into infrastructure. The system reserves 16.5% of the window for summarizing older messages as the conversation grows.</p>
+              <p><strong>Subagent isolation</strong>Each subagent gets its own 200k window rather than sharing the orchestrator’s. That’s the isolate strategy, splitting work across multiple context windows instead of cramming everything into one.</p>
+              <p><strong>Composable modules</strong>Skills, plugins, memory files, and agent definitions each managed independently. Instead of one monolithic prompt, assemble each agent’s context from only the pieces it needs.</p>
+            </div>
+            <figcaption>Redrawn from Claude Code’s <code>/context</code> output (<a href="claude-code-context-usage.png">original screenshot</a>). Each bar sits where its category falls in the window, so the rows read left to right as the window fills.</figcaption>
+          </figure>
 
 
           <h3 class="deep-dive-only" id="comp-user-prompt">User Prompt</h3>
 
-          <p>I spend the least time worrying about this one because it's the one thing I don't really control. User message can be anything, from well-structured to incoherent, concise to rambling, and your context engineering has to be robust enough to handle whatever arrives.</p>
+          <p>I spend the least time worrying about this one because it’s the one thing I don’t really control. User message can be anything, from well-structured to incoherent, concise to rambling, and your context engineering has to be robust enough to handle whatever arrives.</p>
 
           <h3 class="deep-dive-only" id="comp-state">State and Short-Term History</h3>
 
-          <p>This is where I've seen the most waste. The current conversation turns and prior exchanges serve as the working memory of your system, and the <a href="#ref-longmemeval">LongMemEval benchmark</a> showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
+          <p>This is where I’ve seen the most waste. The current conversation turns and prior exchanges serve as the working memory of your system, and the <a href="#ref-longmemeval">LongMemEval benchmark</a> showed that models given the full ~115K-token conversation history performed worse than models given only the relevant subset, which tells you everything about the cost of unfocused context. What you remove from history matters at least as much as what you keep.</p>
 
-          <p>In mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is but a view, not the source of truth. My agent's patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what's relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent's working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model's behavior to stale conversation history.</p>
+          <p>In mature systems, the authoritative data lives outside the window (database, filesystem, structured JSON store), and the context assembly function selects a <em>projection</em> for each turn. The context window is but a view, not the source of truth. My agent’s patient profile lives in a persistent store; what the model sees is a snapshot assembled fresh on every turn based on what’s relevant right now. This becomes much more important in Part 4 when the filesystem itself becomes the agent’s working memory, but even in a single-session agent, treating the window as a read-only view of external state keeps you from accidentally coupling your model’s behavior to stale conversation history.</p>
 
           <p>A simple block with state information is injected to give the model temporal awareness and continuity across the ReAct loop:</p>
           </div>
@@ -541,7 +396,7 @@
           <div class="deep-dive-only">
           <h3 class="deep-dive-only" id="comp-rag">Retrieved Information (RAG)</h3>
 
-          <p>I spend the most engineering time here. External knowledge from documents, databases, and APIs gets injected on-demand, and the design decision I keep coming back to is to let the model pull what it needs via tool calls rather than front-loading everything (unless latency is a concern). RAG is time-consuming also because of quality evaluation, as the model's output can fail for reasons that have nothing to do with what you retrieved, and standard metrics like recall@k don't capture whether the retrieved context actually helped the model reason correctly. Part 2 goes deep on retrieval and evaluation.</p>
+          <p>I spend the most engineering time here. External knowledge from documents, databases, and APIs gets injected on-demand, and the design decision I keep coming back to is to let the model pull what it needs via tool calls rather than front-loading everything (unless latency is a concern). RAG is time-consuming also because of quality evaluation, as the model’s output can fail for reasons that have nothing to do with what you retrieved, and standard metrics like recall@k don’t capture whether the retrieved context actually helped the model reason correctly. Part 2 goes deep on retrieval and evaluation.</p>
 
           </div>
 
@@ -563,15 +418,15 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
 
           <h3 class="deep-dive-only" id="comp-tools">Tool Definitions</h3>
 
-          <p>These consume context tokens regardless of whether they are used, and there's a genuine art to managing them. <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking, where tools stay in context but get suppressed at the decoding level through a state machine.</p>
+          <p>These consume context tokens regardless of whether they are used, and there’s a genuine art to managing them. <a href="#ref-inngest">Inngest</a> recommends removing any tool used less than 10% of the time because performance degrades as tool count grows. But <a href="#ref-manus">Manus</a> found that dynamically loading and removing tools breaks KV-cache (a 10x cost difference between cached and uncached tokens), so their solution is logits masking, where tools stay in context but get suppressed at the decoding level through a state machine.</p>
 
-          <p>I don't think there's a clean answer here yet. I'm currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you're at Manus's scale with dozens of tools, the cache math probably dominates.</p>
+          <p>I don’t think there’s a clean answer here yet. I’m currently leaning toward keeping tool counts low rather than worrying about cache-aware masking, mostly because my agents have 4-6 tools, not 40. If you’re at Manus’s scale with dozens of tools, the cache math probably dominates.</p>
 
-          <p>The broader principle from <a href="#ref-manus">Manus's engineering blog</a> applies regardless of tool count, which is to never mutate tokens already in the KV-cache prefix. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Both <a href="#ref-anthropic-caching">Anthropic</a> and <a href="#ref-openai-caching">OpenAI</a> now offer explicit cache control with up to 90% discounts on cached input tokens, but the gotchas will bite you. JSON key ordering instability in some languages (Swift, Go) can affect caches silently, toggling features like web search invalidates the system cache, and the cache follows a strict hierarchy (<code>tools</code> → <code>system</code> → <code>messages</code>) where changes at any level invalidate everything after it.</p>
+          <p>The broader principle from <a href="#ref-manus">Manus’s engineering blog</a> applies regardless of tool count, which is to never mutate tokens already in the KV-cache prefix. Even changing JSON key ordering in a tool definition invalidates the cache from that point forward, and with agentic workloads running at roughly a 100:1 input-to-output token ratio, cache hits are existential for cost at scale. Both <a href="#ref-anthropic-caching">Anthropic</a> and <a href="#ref-openai-caching">OpenAI</a> now offer explicit cache control with up to 90% discounts on cached input tokens, but the gotchas will bite you. JSON key ordering instability in some languages (Swift, Go) can affect caches silently, toggling features like web search invalidates the system cache, and the cache follows a strict hierarchy (<code>tools</code> → <code>system</code> → <code>messages</code>) where changes at any level invalidate everything after it.</p>
 
           <h3 class="deep-dive-only" id="comp-schema">Structured Output</h3>
 
-          <p>JSON schemas, type definitions, and output constraints are easy to overlook in a token budget because they feel like "free" structure, but the schema itself gets injected into the prompt behind the scenes. A moderately complex schemas, with nested objects with descriptions and enums, consume 300+ tokens, and that cost adds up pretty quickly at scale.</p>
+          <p>JSON schemas, type definitions, and output constraints are easy to overlook in a token budget because they feel like “free” structure, but the schema itself gets injected into the prompt behind the scenes. A moderately complex schemas, with nested objects with descriptions and enums, consume 300+ tokens, and that cost adds up pretty quickly at scale.</p>
           </div>
 
 
@@ -594,13 +449,13 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           </div>
 
           <div class="deep-dive-only">
-          <p>Every production context system I've seen uses some combination of four strategies, and <a href="#ref-langchain">LangChain's framework</a> gives them clean names.</p>
+          <p>Every production context system I’ve seen uses some combination of four strategies, and <a href="#ref-langchain">LangChain’s framework</a> gives them clean names.</p>
           </div>
 
           <h3 class="deep-dive-only">Writing</h3>
 
           <div class="deep-dive-only">
-          <p>Similar to how humans writes down notes for future references, agents also benefit from getting information out of the context window and into external backend storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. For example, the <a href="#ref-manus">Manus</a> team let their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the "lost-in-the-middle" problem across ~50 average tool calls. It's charmingly simple for a state-of-the-art agent.</p>
+          <p>Similar to how humans writes down notes for future references, agents also benefit from getting information out of the context window and into external backend storage for later retrieval. Scratchpads let the agent write intermediate notes during a session (observations, partial results, plans) that persist via tool calls or state objects without occupying the window continuously. For example, the <a href="#ref-manus">Manus</a> team let their agents maintain a <code>todo.md</code> file during complex tasks, writing and re-reading their plan to counteract the “lost-in-the-middle” problem across ~50 average tool calls. It’s charmingly simple for a state-of-the-art agent.</p>
 
           </div>
 
@@ -609,7 +464,7 @@ async def search_knowledge_base(query, document_type=None, tags=None, condition_
           <div class="deep-dive-only">
           <p>The complement of writing is retrieving relevant information back when needed. This includes reading back scratchpad notes from earlier steps, querying stored memories using embeddings or keyword search, and full RAG pipelines over documents or code. If you have many tools, you can use RAG over tool descriptions to pick the right one (<a href="#ref-rag-mcp">RAG-MCP paper</a> saw selection accuracy increase from 13.6% to 43.1% compared to exposing all tools at once).</p>
 
-          <p>Selection quality depends heavily on query quality. My agent rewrites the user's message into a self-contained retrieval query before searching:</p>
+          <p>Selection quality depends heavily on query quality. My agent rewrites the user’s message into a self-contained retrieval query before searching:</p>
           </div>
 
 <div class="code-block" data-filename="query_rewriter.py" data-lang="python">
@@ -629,7 +484,7 @@ async def rewrite(self, query, conversation_history, patient_profile):
 </div>
 
           <div class="deep-dive-only">
-          <p>A completely reasonable query like "My numbers have been all over the place lately" has almost zero retrieval value because there's no condition or medication context. The rewriter infers "post-meal readings" from the last 3 turns, adds the patient's diagnosis and medication context, and produces a query that actually hits relevant documents.</p>
+          <p>A completely reasonable query like “My numbers have been all over the place lately” has almost zero retrieval value because there’s no condition or medication context. The rewriter infers “post-meal readings” from the last 3 turns, adds the patient’s diagnosis and medication context, and produces a query that actually hits relevant documents.</p>
           </div>
 
           <h3 class="deep-dive-only">Compressing</h3>
@@ -638,12 +493,12 @@ async def rewrite(self, query, conversation_history, patient_profile):
           <p>The goal is to reduce tokens while maintaining task performance, and production systems benefit from a tiered approach that matches the intensity of compression to how much pressure the window is actually under (imagine Claude Code running on a million-line codebase and websearching the entire Internet in parallel). You can think of it as three tiers:</p>
 
           <ol>
-            <li><strong>Raw context</strong> when below ~80% capacity. If the window has room, don't compress at all. Raw turns carry more signal than any summary.</li>
+            <li><strong>Raw context</strong> when below ~80% capacity. If the window has room, don’t compress at all. Raw turns carry more signal than any summary.</li>
             <li><strong>Compact first</strong> when approaching the budget. Strip low-signal content (greetings, filler acknowledgments, tool call boilerplate) while keeping messages structurally intact. Low/no LLM call needed.</li>
-            <li><strong>Summarize</strong> only when compaction isn't enough. Replace older turns with a generated summary, preserving the recent window verbatim.</li>
+            <li><strong>Summarize</strong> only when compaction isn’t enough. Replace older turns with a generated summary, preserving the recent window verbatim.</li>
           </ol>
 
-          <p>The exact threshold is a judgment call that depends on your model and task, but I'd aim to start compacting somewhere in the 80-90% range rather than waiting until 95%. Let's call it the <strong>pre-rot threshold</strong>. By the time you're near 95%, attention quality has already started to degrade (this connects directly to the <a href="#failure-modes">distraction failure mode</a> in Section 4).</p>
+          <p>The exact threshold is a judgment call that depends on your model and task, but I’d aim to start compacting somewhere in the 80-90% range rather than waiting until 95%. Let’s call it the <strong>pre-rot threshold</strong>. By the time you’re near 95%, attention quality has already started to degrade (this connects directly to the <a href="#failure-modes">distraction failure mode</a> in Section 4).</p>
           </div>
 
 <div class="code-block" data-filename="context_manager.py" data-lang="python">
@@ -667,9 +522,9 @@ async def rewrite(self, query, conversation_history, patient_profile):
 </div>
 
           <div class="deep-dive-only">
-          <p>The <code>_compact</code> step does straightforward stripping of "thanks!", "ok sounds good", empty assistant acknowledgments, and tool call metadata that the model doesn't need to see on future turns. The summarization tier only fires when compaction alone can't get below 85% capacity, which in practice means conversations beyond ~15 turns.</p>
+          <p>The <code>_compact</code> step does straightforward stripping of “thanks!”, “ok sounds good”, empty assistant acknowledgments, and tool call metadata that the model doesn’t need to see on future turns. The summarization tier only fires when compaction alone can’t get below 85% capacity, which in practice means conversations beyond ~15 turns.</p>
 
-          <p>One interesting finding from the <a href="#ref-rcc">recurrent context compression</a> research: compressing instructions and context simultaneously degrades responses. You need to compress the data but preserve the instructions separately, since they're treated differently at an attention level.</p>
+          <p>One interesting finding from the <a href="#ref-rcc">recurrent context compression</a> research: compressing instructions and context simultaneously degrades responses. You need to compress the data but preserve the instructions separately, since they’re treated differently at an attention level.</p>
 
           <p>Trimming is the other half of compression. Production SDKs from both <a href="#ref-openai-agents">OpenAI</a> and <a href="#ref-anthropic-harness">Anthropic</a> trim in <strong>atomic turn groups</strong>, i.e. they group user messages, assistant messages, tool results that follow it, and remove them as a unit.</p>
           </div>
@@ -694,7 +549,7 @@ async def rewrite(self, query, conversation_history, patient_profile):
           <h3 class="deep-dive-only">Isolating</h3>
 
           <div class="deep-dive-only">
-          <p>Sometimes one context window isn't enough, and the right move is splitting information across separate processing units so each one gets a clean, focused window. Multi-agent systems give each sub-agent its own window focused on a specific subtask, returning a condensed summary (1,000-2,000 tokens) to the lead agent. <a href="#ref-huggingface-codeagent">HuggingFace's CodeAgent</a> isolates token-heavy objects in sandbox environments, keeping only references in the main context. You can also separate LLM-exposed fields from auxiliary context storage in your state schema, because not everything the system knows needs to be in the window.</p>
+          <p>Sometimes one context window isn’t enough, and the right move is splitting information across separate processing units so each one gets a clean, focused window. Multi-agent systems give each sub-agent its own window focused on a specific subtask, returning a condensed summary (1,000-2,000 tokens) to the lead agent. <a href="#ref-huggingface-codeagent">HuggingFace’s CodeAgent</a> isolates token-heavy objects in sandbox environments, keeping only references in the main context. You can also separate LLM-exposed fields from auxiliary context storage in your state schema, because not everything the system knows needs to be in the window.</p>
 
           <p>My agent isolates safety classification into separate LLM calls so the guardrail context never contaminates the main patient conversation:</p>
           </div>
@@ -720,9 +575,9 @@ graph.add_edge("output_gate", END)</code></pre>
 </div>
 
           <div class="deep-dive-only">
-          <p>The input gate sees only the latest user message and a short classification prompt. The output gate sees only the agent's response and a scope-checking prompt. Neither gate's context (safety rules, classification examples) appears in the main agent's window, keeping the patient conversation clean and focused.</p>
+          <p>The input gate sees only the latest user message and a short classification prompt. The output gate sees only the agent’s response and a scope-checking prompt. Neither gate’s context (safety rules, classification examples) appears in the main agent’s window, keeping the patient conversation clean and focused.</p>
 
-          <p>If you're building an agent and something feels off about the outputs, run through these four categories and ask which one you're neglecting. In my experience the answer is very often compression or isolation, less is more.</p>
+          <p>If you’re building an agent and something feels off about the outputs, run through these four categories and ask which one you’re neglecting. In my experience the answer is very often compression or isolation, less is more.</p>
           </div>
         </section>
 
@@ -737,13 +592,12 @@ graph.add_edge("output_gate", END)</code></pre>
           </div>
 
           <div class="deep-dive-only">
-          <p>When an agent misbehaves, my first question is always "what kind of context failure is this?" because the mitigations are completely different depending on the answer. The following four failure modes cover most of what goes wrong.</p>
+          <p>When an agent misbehaves, my first question is always “what kind of context failure is this?” because the mitigations are completely different depending on the answer. The following four failure modes cover most of what goes wrong.</p>
           </div>
 
-          <div class="algorithm-box" style="border:none; background:#ece6d6;">
+          <div class="algorithm-box">
             <h4>Four Context Failure Modes</h4>
-            <div style="background:#f9f7f3; border-radius:6px; overflow:hidden;">
-            <table style="margin:0; border-radius:6px;">
+            <table>
               <thead>
                 <tr><th>Mode</th><th>Cause</th><th>Fix</th></tr>
               </thead>
@@ -754,32 +608,31 @@ graph.add_edge("output_gate", END)</code></pre>
                 <tr><td>Clash</td><td>Contradictory instructions in prompt</td><td>Clear precedence hierarchy</td></tr>
               </tbody>
             </table>
-            </div>
           </div>
 
           <div class="deep-dive-only">
           <h3 class="deep-dive-only">Context Poisoning</h3>
 
-          <p>This is the scariest one. A hallucination or error enters the context and gets repeatedly referenced, compounding mistakes over time. Once a wrong fact lands in the conversation history, the model treats it as ground truth and builds on it. <a href="#ref-gemini-report">Google DeepMind's Gemini 2.5 technical report</a> showed just how bad this gets. A Pokemon-playing agent hallucinated the existence of an item called "TEA," wrote it into its goals scratchpad, and then spent hundreds of actions trying to find something that doesn't exist in the game. The agent also developed a "black-out strategy" (intentionally fainting all its Pokemon to teleport) rather than navigating normally. Once a hallucination enters a persistent scratchpad, the model treats it as ground truth and builds increasingly nonsensical plans on top of it. The fix is to validate information before writing to long-term memory, treating memory writes like database writes where you check constraints before committing.</p>
+          <p>This is the scariest one. A hallucination or error enters the context and gets repeatedly referenced, compounding mistakes over time. Once a wrong fact lands in the conversation history, the model treats it as ground truth and builds on it. <a href="#ref-gemini-report">Google DeepMind’s Gemini 2.5 technical report</a> showed just how bad this gets. A Pokemon-playing agent hallucinated the existence of an item called “TEA,” wrote it into its goals scratchpad, and then spent hundreds of actions trying to find something that doesn’t exist in the game. The agent also developed a “black-out strategy” (intentionally fainting all its Pokemon to teleport) rather than navigating normally. Once a hallucination enters a persistent scratchpad, the model treats it as ground truth and builds increasingly nonsensical plans on top of it. The fix is to validate information before writing to long-term memory, treating memory writes like database writes where you check constraints before committing.</p>
 
           <h3 class="deep-dive-only">Context Distraction</h3>
 
-          <p>A more subtle failure. The context grows so long that the model over-focuses on accumulated history and neglects what it learned during training. Beyond ~100k tokens, I've noticed agents tend toward repeating actions from history rather than synthesizing novel plans. Aggressive trimming and summarization help, along with actively removing completed or irrelevant sections. I suspect most people's context windows are 2-3x larger than they need to be.</p>
+          <p>A more subtle failure. The context grows so long that the model over-focuses on accumulated history and neglects what it learned during training. Beyond ~100k tokens, I’ve noticed agents tend toward repeating actions from history rather than synthesizing novel plans. Aggressive trimming and summarization help, along with actively removing completed or irrelevant sections. I suspect most people’s context windows are 2-3x larger than they need to be.</p>
 
           <p>This is why the <a href="#four-strategies">pre-rot threshold from Section 3</a> matters so much. If you wait until 95% capacity to compress, attention quality has already started to degrade.</p>
 
           <h3 class="deep-dive-only">Context Confusion</h3>
 
-          <p>Superfluous information gets treated as signal because the model can't distinguish noise from relevant information when everything is dumped in together. <a href="#ref-anthropic">Anthropic's</a> guiding principle is the right one here: "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome."; every token should "earn" its place.</p>
+          <p>Superfluous information gets treated as signal because the model can’t distinguish noise from relevant information when everything is dumped in together. <a href="#ref-anthropic">Anthropic’s</a> guiding principle is the right one here: “find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome.”; every token should “earn” its place.</p>
 
           <h3 class="deep-dive-only">Context Clash</h3>
 
-          <p>I find this the easiest to create accidentally. New information conflicts with existing information already in the prompt, and contradictory instructions produce unpredictable behavior. My own agent has one I caught during an audit for this post. The system prompt says "When READING information you already have in the patient context above, use it directly, do not re-fetch with <code>get_patient_profile</code>." But <code>get_patient_profile</code> is still available as a callable tool. The instruction and the tool list contradict each other. The agent sometimes calls the tool anyway, wasting a round-trip to fetch data that's already in the prompt. The fix is straightforward (remove the tool), but the clash was easy to miss because the instruction is in the <code>&lt;tools&gt;</code> section of the prompt and the tool definition is in Python code, and I never reviewed them side by side until I went looking for exactly this kind of problem.</p>
+          <p>I find this the easiest to create accidentally. New information conflicts with existing information already in the prompt, and contradictory instructions produce unpredictable behavior. My own agent has one I caught during an audit for this post. The system prompt says “When READING information you already have in the patient context above, use it directly, do not re-fetch with <code>get_patient_profile</code>.” But <code>get_patient_profile</code> is still available as a callable tool. The instruction and the tool list contradict each other. The agent sometimes calls the tool anyway, wasting a round-trip to fetch data that’s already in the prompt. The fix is straightforward (remove the tool), but the clash was easy to miss because the instruction is in the <code>&lt;tools&gt;</code> section of the prompt and the tool definition is in Python code, and I never reviewed them side by side until I went looking for exactly this kind of problem.</p>
           </div>
 
           <div class="theory-only">
             <div class="callout">
-              <p>There's a deeper mechanism behind context distraction that <a href="#ref-chroma">Chroma's research</a> calls <strong>context rot</strong>. They attribute it to the $O(n^2)$ pairwise token relationships in self-attention, where at 100K+ tokens the model's attention budget is spread across billions of pair interactions, and critical information gets drowned out. The full story is more nuanced than that framing suggests. Factors like positional encoding degradation (especially RoPE-based encodings at positions beyond the training distribution), attention sink phenomena where early tokens absorb disproportionate weight, or training data skewing toward shorter contexts, all contribute.</p>
+              <p>There’s a deeper mechanism behind context distraction that <a href="#ref-chroma">Chroma’s research</a> calls <strong>context rot</strong>. They attribute it to the $O(n^2)$ pairwise token relationships in self-attention, where at 100K+ tokens the model’s attention budget is spread across billions of pair interactions, and critical information gets drowned out. The full story is more nuanced than that framing suggests. Factors like positional encoding degradation (especially RoPE-based encodings at positions beyond the training distribution), attention sink phenomena where early tokens absorb disproportionate weight, or training data skewing toward shorter contexts, all contribute.</p>
               <p>The <strong>lost-in-the-middle</strong> finding (<a href="#ref-liu">Liu et al., 2023</a>) showed that performance degrades significantly when relevant information sits in the middle of long contexts versus the beginning or end. Liu et al. found a consistent U-shaped curve across models and settings, with accuracy dropping by 20%+ in some configurations. The exact magnitude varies by model, task, and number of documents, but the core result (middle positions perform worst) has been replicated across multiple studies and model families. (Frontier models have since made meaningful progress here, and the effect is less pronounced than when first measured.)</p>
             </div>
           </div>
@@ -799,52 +652,29 @@ graph.add_edge("output_gate", END)</code></pre>
           <p>All of the above is easier to understand with a concrete example, so let me walk through the diabetes management coaching assistant I built as a ReAct agent with LangGraph. The system prompt ranges from ~2,000 to ~4,050 tokens depending on session maturity, assembled dynamically from several blocks.</p>
           </div>
 
-          <div style="border-radius:8px; padding:16px; margin:24px 0; background:#ece6d6;">
-            <h4 style="font-family:var(--font-serif); margin:0 0 12px 0; font-size:19px; font-weight:500;">Gated Dual-Agent Pipeline</h4>
-            <div style="background:#f9f7f3; border-radius:6px; padding:24px; overflow-x:auto;">
-              <div style="display:flex; align-items:center; gap:0; min-width:700px; justify-content:center; flex-wrap:nowrap;">
-                <div style="background:#dce8f5; border:2px solid #4a7fb5; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
-                  <div style="font-weight:600; font-size:13px; color:#3b6a9a;">Patient</div>
-                  <div style="font-size:10px; color:#6a9ac7;">message</div>
-                </div>
-                <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
-                <div style="background:#fce4de; border:2px solid #d4694a; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
-                  <div style="font-weight:600; font-size:13px; color:#b8513a;">Input Gate</div>
-                  <div style="font-size:10px; color:#d4694a;">safety check</div>
-                </div>
-                <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
-                <div style="display:flex; flex-direction:column; gap:4px;">
-                  <div style="background:#d9eedc; border:2px solid #4a9e5c; border-radius:8px; padding:6px 12px; text-align:center;">
-                    <div style="font-weight:600; font-size:13px; color:#3a8249;">Pro Agent</div>
-                    <div style="font-size:10px; color:#5aaa6a;">complex + thinking</div>
-                  </div>
-                  <div style="background:#d6eded; border:2px solid #3d9494; border-radius:8px; padding:6px 12px; text-align:center;">
-                    <div style="font-weight:600; font-size:13px; color:#2e7a7a;">Flash Agent</div>
-                    <div style="font-size:10px; color:#4ea0a0;">simple queries</div>
-                  </div>
-                </div>
-                <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
-                <div style="background:#fce4de; border:2px solid #d4694a; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
-                  <div style="font-weight:600; font-size:13px; color:#b8513a;">Output Gate</div>
-                  <div style="font-size:10px; color:#d4694a;">scope check</div>
-                </div>
-                <div style="color:var(--border); font-size:18px; padding:0 6px;">&rarr;</div>
-                <div style="background:#fdf0d5; border:2px solid #c9953a; border-radius:8px; padding:8px 12px; text-align:center; min-width:70px;">
-                  <div style="font-weight:600; font-size:13px; color:#a67c2e;">Response</div>
-                </div>
-              </div>
-              <div style="display:flex; justify-content:center; margin-top:12px;">
-                <div style="border:1.5px dashed #9b7cc4; border-radius:8px; padding:8px 16px; display:flex; gap:16px; font-size:11px; color:#7a5faa; background:#efe8f6;">
-                  <span>Background: rolling summary</span>
-                  <span style="color:#c4b3da;">|</span>
-                  <span>profile updates</span>
-                  <span style="color:#c4b3da;">|</span>
-                  <span>outcome tracking</span>
-                </div>
-              </div>
-              <div style="text-align:center; margin-top:8px; font-size:12px; color:var(--muted);">Each node runs in its own isolated LLM call with its own context window</div>
+          <figure class="fig">
+            <div class="fig-head">
+              <h4 class="fig-title">Gated dual-agent pipeline</h4>
             </div>
-          </div>
+            <div class="scroll-x">
+              <div class="flow">
+                <div class="flow-node"><b>Patient</b><span>message</span></div>
+                <i class="flow-arrow" aria-hidden="true"></i>
+                <div class="flow-node key"><b>Input gate</b><span>safety check</span></div>
+                <i class="flow-arrow" aria-hidden="true"></i>
+                <div class="flow-stack">
+                  <div class="flow-node"><b>Pro agent</b><span>complex + thinking</span></div>
+                  <div class="flow-node"><b>Flash agent</b><span>simple queries</span></div>
+                </div>
+                <i class="flow-arrow" aria-hidden="true"></i>
+                <div class="flow-node key"><b>Output gate</b><span>scope check</span></div>
+                <i class="flow-arrow" aria-hidden="true"></i>
+                <div class="flow-node"><b>Response</b></div>
+              </div>
+              <div class="flow-aside"><b>Background</b><span>rolling summary</span><span>profile updates</span><span>outcome tracking</span></div>
+            </div>
+            <figcaption>Each node runs in its own isolated LLM call with its own context window.</figcaption>
+          </figure>
 
           <table>
             <thead>
@@ -915,10 +745,9 @@ graph.add_edge("output_gate", END)</code></pre>
           <p>This function is where all the context engineering actually happens. Load state, build the prompt from components, append the volatile state block at the end (so the static sections form a cacheable prefix), and trim the conversation using turn-group-aware removal. The <code>cache_control</code> breakpoint on the static block is key here as it tells the API where the reusable prefix ends, so everything before it gets reused across turns instead of re-processed.</p>
           </div>
 
-          <div class="algorithm-box deep-dive-only" style="border:none; background:#ece6d6;">
+          <div class="algorithm-box deep-dive-only">
             <h4>Context Engineering Techniques Used</h4>
-            <div style="background:#f9f7f3; border-radius:6px; overflow:hidden;">
-            <table style="margin:0; border-radius:6px;">
+            <table>
               <thead><tr><th>Category</th><th>Technique</th><th>Implementation</th></tr></thead>
               <tbody>
                 <tr><td>Structure</td><td>XML-tagged sections</td><td><code>&lt;identity&gt;</code>, <code>&lt;boundaries&gt;</code>, <code>&lt;patient-context&gt;</code>, etc.</td></tr>
@@ -932,7 +761,6 @@ graph.add_edge("output_gate", END)</code></pre>
                 <tr><td>Safety</td><td>Isolated gates</td><td>Input + output classifiers in separate LLM calls</td></tr>
               </tbody>
             </table>
-            </div>
           </div>
 
           <h3>Two Catches from My Own Audit</h3>
@@ -940,76 +768,46 @@ graph.add_edge("output_gate", END)</code></pre>
           <div class="tldr-only">
             <ul class="list-tight">
               <li><strong>KV-cache violation:</strong> Volatile state prepended to prompt prefix, invalidating cache every turn (10x cost). Fix: move to end.</li>
-              <li><strong>Profile-in-prompt-and-tool clash:</strong> <code>get_patient_profile</code> duplicates data already in system prompt; the tool's existence signals to the model that the profile might not be in context, making it less likely to trust data it already has.</li>
+              <li><strong>Profile-in-prompt-and-tool clash:</strong> <code>get_patient_profile</code> duplicates data already in system prompt; the tool’s existence signals to the model that the profile might not be in context, making it less likely to trust data it already has.</li>
             </ul>
           </div>
 
           <div class="deep-dive-only">
-          <p>When I audited this agent against the best practices I'd just finished researching, two problems jumped out that I wouldn't have caught without specifically looking.</p>
+          <p>When I audited this agent against the best practices I’d just finished researching, two problems jumped out that I wouldn’t have caught without specifically looking.</p>
 
           <p>The expensive one is a <strong>KV-cache violation</strong>. Look at the <code>prepare_context</code> code above. The volatile <code>&lt;conversation_state&gt;</code> block (which changes every turn with new turn count, new timestamp, new tool history) gets prepended to the start of the system prompt. KV-cache works by matching a prefix, so if the first N tokens are identical between calls, the provider can reuse the cached key-value pairs and charge you the cached rate. By putting volatile data at the very start, every single turn invalidates the entire cache. <a href="#ref-manus">Manus</a> reports this is a 10x cost difference (<span class="nokatex">$0.30/MTok cached vs $3/MTok uncached</span> on Claude Sonnet). To fix, just move the state block to the end of the prompt instead of the beginning, so the static sections (identity, boundaries, examples) form a stable prefix that caches across turns. The broader principle from <a href="#seven-components">Section 2</a> applies here too. You should treat the prompt prefix as append-only, sort sections by volatility, and let the stable parts form a cacheable prefix.</p>
           </div>
 
-          <div style="border-radius:8px; padding:16px; margin:24px 0; background:#ece6d6;">
-            <h4 style="font-family:var(--font-serif); margin:0 0 12px 0; font-size:19px; font-weight:500;">KV-Cache Prefix Ordering</h4>
-            <div style="background:#f9f7f3; border-radius:6px; padding:24px;">
-              <div style="margin-bottom:16px;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                  <span style="font-size:14px; font-weight:600; color:var(--vermillion);">Before</span>
-                  <span style="font-size:12px; color:var(--muted);">Cache breaks on every turn</span>
-                </div>
-                <div style="display:flex; gap:2px; font-size:11px; border-radius:6px; overflow:hidden;">
-                  <div style="background:#e8cbc0; border:1px solid #c9a99e; padding:8px 10px; min-width:100px; text-align:center; position:relative;">
-                    <div style="font-weight:600;">conversation_state</div>
-                    <div style="color:var(--vermillion); font-size:10px;">volatile</div>
-                  </div>
-                  <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center;">
-                    <div style="font-weight:500;">identity</div>
-                    <div style="color:var(--muted); font-size:10px;">static</div>
-                  </div>
-                  <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center;">
-                    <div style="font-weight:500;">boundaries</div>
-                    <div style="color:var(--muted); font-size:10px;">static</div>
-                  </div>
-                  <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center;">
-                    <div style="font-weight:500;">examples</div>
-                    <div style="color:var(--muted); font-size:10px;">static</div>
-                  </div>
-                  <div style="background:#e5dccb; border:1px solid var(--border); padding:8px 10px; flex:1; text-align:center; color:var(--muted);">...</div>
-                </div>
-                <div style="font-size:10px; color:var(--vermillion); margin-top:4px;">&uarr; Prefix changes every turn. 0% cache hit rate.</div>
-              </div>
-              <div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                  <span style="font-size:14px; font-weight:600; color:#5c7a4a;">After</span>
-                  <span style="font-size:12px; color:var(--muted);">Static prefix caches across turns</span>
-                </div>
-                <div style="display:flex; gap:2px; font-size:11px; border-radius:6px; overflow:hidden;">
-                  <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center;">
-                    <div style="font-weight:500;">identity</div>
-                    <div style="color:#5c7a4a; font-size:10px;">cached</div>
-                  </div>
-                  <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center;">
-                    <div style="font-weight:500;">boundaries</div>
-                    <div style="color:#5c7a4a; font-size:10px;">cached</div>
-                  </div>
-                  <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center;">
-                    <div style="font-weight:500;">examples</div>
-                    <div style="color:#5c7a4a; font-size:10px;">cached</div>
-                  </div>
-                  <div style="background:#d5dfc8; border:1px solid #b3c4a0; padding:8px 10px; flex:1; text-align:center; color:#5c7a4a;">...</div>
-                  <div style="background:#ece3c8; border:1px solid #d5c9a0; padding:8px 10px; min-width:100px; text-align:center;">
-                    <div style="font-weight:600;">conversation_state</div>
-                    <div style="color:#8a7a3c; font-size:10px;">volatile</div>
-                  </div>
-                </div>
-                <div class="nokatex" style="font-size:10px; color:#5c7a4a; margin-top:4px;">&uarr; Stable prefix. $0.30/MTok cached vs $3.00/MTok uncached (10x).</div>
-              </div>
+          <figure class="fig">
+            <div class="fig-head">
+              <h4 class="fig-title">KV-cache prefix ordering</h4>
             </div>
-          </div>
+            <div class="strip-group">
+              <div class="strip-head"><span class="fig-kicker">Before</span><span class="fig-note">Cache breaks on every turn</span></div>
+              <div class="strip">
+                <div class="seg hot wide-seg">conversation_<wbr>state<small>volatile</small></div>
+                <div class="seg">identity<small>static</small></div>
+                <div class="seg">boundaries<small>static</small></div>
+                <div class="seg">examples<small>static</small></div>
+                <div class="seg dim">&hellip;</div>
+              </div>
+              <div class="strip-note">&uarr; Prefix changes every turn. 0% cache hit rate.</div>
+            </div>
+            <div class="strip-group">
+              <div class="strip-head"><span class="fig-kicker">After</span><span class="fig-note">Static prefix caches across turns</span></div>
+              <div class="strip">
+                <div class="seg cached">identity<small>cached</small></div>
+                <div class="seg cached">boundaries<small>cached</small></div>
+                <div class="seg cached">examples<small>cached</small></div>
+                <div class="seg cached dim">&hellip;</div>
+                <div class="seg hot wide-seg">conversation_<wbr>state<small>volatile</small></div>
+              </div>
+              <div class="strip-note nokatex">&uarr; Stable prefix. $0.30/MTok cached vs $3.00/MTok uncached (10x).</div>
+            </div>
+          </figure>
 
           <div class="deep-dive-only">
-          <p>The subtler one is a <strong>profile-in-prompt-and-tool clash</strong>. The patient profile is already injected into the <code>&lt;patient-context&gt;</code> section of the system prompt on every turn. But <code>get_patient_profile</code> also exists as a callable tool. The tool exists to let the agent "check what it knows," but the agent already knows; it's right there in the prompt. The instruction says "use the profile in <code>&lt;patient-context&gt;</code> directly," but the tool's mere availability creates an implicit counter-signal. Removing the tool entirely fixed the redundant fetches and, more importantly, made the agent more confident in referencing profile data from the prompt.</p>
+          <p>The subtler one is a <strong>profile-in-prompt-and-tool clash</strong>. The patient profile is already injected into the <code>&lt;patient-context&gt;</code> section of the system prompt on every turn. But <code>get_patient_profile</code> also exists as a callable tool. The tool exists to let the agent “check what it knows,” but the agent already knows; it’s right there in the prompt. The instruction says “use the profile in <code>&lt;patient-context&gt;</code> directly,” but the tool’s mere availability creates an implicit counter-signal. Removing the tool entirely fixed the redundant fetches and, more importantly, made the agent more confident in referencing profile data from the prompt.</p>
           </div>
 
         </section>
@@ -1027,9 +825,9 @@ graph.add_edge("output_gate", END)</code></pre>
           <div class="deep-dive-only">
           <p>The one metric I track reliably is <strong>cache hit rate</strong>, because Anthropic hands it to you for free. Every API response includes <code>cache_read_input_tokens</code> and <code>cache_creation_input_tokens</code>, and the ratio tells you whether your prefix ordering is stable across turns. After fixing the <a href="#token-budget">KV-cache violation from Section 5</a>, my cache hit rate went from ~0% to ~85% on turns 2+, which I could verify directly from the billing dashboard. If your cache hit rate is low, something in your prompt prefix is changing between calls, and the fix is almost always moving volatile content later in the prompt.</p>
 
-          <p>Beyond that, keep an eye on <strong>cost per conversation</strong> (total API spend divided by completed sessions) because it rolls up cache efficiency, context size, model routing, and retrieval volume into a single number. <a href="#ref-letta-bench">Letta's Context-Bench</a> reinforces why this matters more than per-token price: <span class="nokatex">Claude Sonnet 4.5 led their benchmark at 74.0% accuracy for $24.58, while GPT-5 reached 72.67% for $43.56</span>, roughly 77% more expensive for slightly lower performance. Models with higher unit costs sometimes use far fewer tokens, so the aggregate figure is what counts.</p>
+          <p>Beyond that, keep an eye on <strong>cost per conversation</strong> (total API spend divided by completed sessions) because it rolls up cache efficiency, context size, model routing, and retrieval volume into a single number. <a href="#ref-letta-bench">Letta’s Context-Bench</a> reinforces why this matters more than per-token price: <span class="nokatex">Claude Sonnet 4.5 led their benchmark at 74.0% accuracy for $24.58, while GPT-5 reached 72.67% for $43.56</span>, roughly 77% more expensive for slightly lower performance. Models with higher unit costs sometimes use far fewer tokens, so the aggregate figure is what counts.</p>
 
-          <p>On the benchmarking side, <a href="#ref-contextbench">ContextBench</a> is worth knowing about. It tests whether coding agents can retrieve the right context from 66 real repositories across 8 languages, and the headline numbers are not great, as even SOTA models achieve block-level F1 below 0.45 and line-level F1 below 0.35. Higher recall was consistently favored over precision, suggesting it's better to include a few irrelevant chunks than to miss a critical one. Sophisticated scaffolding didn't necessarily lead to better retrieval either, which complicates the "just add more RAG infrastructure" instinct.</p>
+          <p>On the benchmarking side, <a href="#ref-contextbench">ContextBench</a> is worth knowing about. It tests whether coding agents can retrieve the right context from 66 real repositories across 8 languages, and the headline numbers are not great, as even SOTA models achieve block-level F1 below 0.45 and line-level F1 below 0.35. Higher recall was consistently favored over precision, suggesting it’s better to include a few irrelevant chunks than to miss a critical one. Sophisticated scaffolding didn’t necessarily lead to better retrieval either, which complicates the “just add more RAG infrastructure” instinct.</p>
 
           </div>
         </section>
@@ -1041,21 +839,21 @@ graph.add_edge("output_gate", END)</code></pre>
           <h2>Lesson</h2>
 
           <div class="tldr-only">
-            <p>Context engineering is mostly about removal, not addition. Every improvement involved taking something out or moving it around. Context strategy isn't portable across providers; test on every model you support. Input tokens can outnumber output tokens by 100:1 in heavy agentic workloads, so context-side optimization has economic leverage, and that makes this a skill worth knowing.</p>
+            <p>Context engineering is mostly about removal, not addition. Every improvement involved taking something out or moving it around. Context strategy isn’t portable across providers; test on every model you support. Input tokens can outnumber output tokens by 100:1 in heavy agentic workloads, so context-side optimization has economic leverage, and that makes this a skill worth knowing.</p>
           </div>
 
           <div class="deep-dive-only">
-          <p>If I had to distill this post into one actionable idea, it's that context engineering is mostly about removal, not addition. The instinct is always to add more information, more tools, more history, more instructions. But every improvement I've made to my agent involved taking something out or moving it around, not putting more in. Remove the redundant tool. Move the volatile state block to the end of the prompt. Compress proactively at 80-90% capacity instead of reactively at 95%. Trim in atomic turn groups instead of shaving individual messages.</p>
+          <p>If I had to distill this post into one actionable idea, it’s that context engineering is mostly about removal, not addition. The instinct is always to add more information, more tools, more history, more instructions. But every improvement I’ve made to my agent involved taking something out or moving it around, not putting more in. Remove the redundant tool. Move the volatile state block to the end of the prompt. Compress proactively at 80-90% capacity instead of reactively at 95%. Trim in atomic turn groups instead of shaving individual messages.</p>
 
-          <p>One caveat worth keeping in mind as you apply any of this. Context strategy isn't portable across providers. Different models have different attention patterns, different context window behaviors, and different sensitivities to prompt structure. What works for Claude might fail on GPT might fail on Gemini. I've been burned by this enough times that I now test prompts on every model I plan to support, rather than assuming my architecture generalizes.</p>
+          <p>One caveat worth keeping in mind as you apply any of this. Context strategy isn’t portable across providers. Different models have different attention patterns, different context window behaviors, and different sensitivities to prompt structure. What works for Claude might fail on GPT might fail on Gemini. I’ve been burned by this enough times that I now test prompts on every model I plan to support, rather than assuming my architecture generalizes.</p>
 
           <h3>Why I Think This Skill Has Legs</h3>
 
-          <p>We've spent decades aggregating essentially the entire body of human knowledge work into model weights you can query for cents. A question that once took a junior analyst half a day now costs a few pennies in API calls. But cheap isn't free, and you're still buying tokens. In production agent systems, input tokens outnumber output tokens by roughly 100:1, which means the context side of the bill dominates. I showed earlier that a single ordering mistake in my prompt produced a 10x cost difference, and if you scale that kind of waste to millions of conversations, even a 1% optimization on the input side ends up mattering more than a 50% optimization on the output side, simply because there's so much more of it.</p>
+          <p>We’ve spent decades aggregating essentially the entire body of human knowledge work into model weights you can query for cents. A question that once took a junior analyst half a day now costs a few pennies in API calls. But cheap isn’t free, and you’re still buying tokens. In production agent systems, input tokens outnumber output tokens by roughly 100:1, which means the context side of the bill dominates. I showed earlier that a single ordering mistake in my prompt produced a 10x cost difference, and if you scale that kind of waste to millions of conversations, even a 1% optimization on the input side ends up mattering more than a 50% optimization on the output side, simply because there’s so much more of it.</p>
 
-          <p>Wherever there's a cost curve with room to optimize, there tends to be demand for people who can optimize it. That was true for database query planning, for network packet routing, for GPU kernel tuning, and I think it'll be true for context assembly. Models will keep getting cheaper per token, but usage is growing faster than prices are dropping, and the gap between "the model can do this task" and "the model does this task reliably at scale" is exactly where context engineering lives.</p>
+          <p>Wherever there’s a cost curve with room to optimize, there tends to be demand for people who can optimize it. That was true for database query planning, for network packet routing, for GPU kernel tuning, and I think it’ll be true for context assembly. Models will keep getting cheaper per token, but usage is growing faster than prices are dropping, and the gap between “the model can do this task” and “the model does this task reliably at scale” is exactly where context engineering lives.</p>
 
-          <p>If you spot errors or have war stories from your own context engineering work, I'd love to hear about it on <a href="https://x.com/HenryVu27">X</a> or <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a>.</p>
+          <p>If you spot errors or have war stories from your own context engineering work, I’d love to hear about it on <a href="https://x.com/HenryVu27">X</a> or <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a>.</p>
           </div>
         </section>
 
@@ -1066,37 +864,52 @@ graph.add_edge("output_gate", END)</code></pre>
           <h2>References</h2>
 
           <ol>
-            <li id="ref-karpathy">Karpathy, A. "Context Engineering." <a href="https://x.com/karpathy/status/1937902205765607626">X/Twitter</a>, June 2025.</li>
-            <li id="ref-anthropic">Rajasekaran, P. et al. "Effective Context Engineering for AI Agents." <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic Engineering</a>, September 2025.</li>
-            <li id="ref-langchain">Martin, L. "Context Engineering for Agents." <a href="https://blog.langchain.com/context-engineering-for-agents/">LangChain Blog</a>, July 2025.</li>
+            <li id="ref-karpathy">Karpathy, A. “Context Engineering.” <a href="https://x.com/karpathy/status/1937902205765607626">X/Twitter</a>, June 2025.</li>
+            <li id="ref-anthropic">Rajasekaran, P. et al. “Effective Context Engineering for AI Agents.” <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic Engineering</a>, September 2025.</li>
+            <li id="ref-langchain">Martin, L. “Context Engineering for Agents.” <a href="https://blog.langchain.com/context-engineering-for-agents/">LangChain Blog</a>, July 2025.</li>
 
-            <li id="ref-manus">Ji, Y. "Context Engineering for AI Agents: Lessons from Building Manus." <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">Manus Blog</a>, July 2025.</li>
+            <li id="ref-manus">Ji, Y. “Context Engineering for AI Agents: Lessons from Building Manus.” <a href="https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus">Manus Blog</a>, July 2025.</li>
 
-            <li id="ref-inngest">Inngest. "Five Critical Lessons for Context Engineering." <a href="https://www.inngest.com/blog/five-lessons-for-context-engineering">inngest.com</a>, 2025.</li>
-            <li id="ref-ruler">Hsieh, C.-P. et al. "RULER: What's the Real Context Size of Your Long-Context Language Models?" <a href="https://arxiv.org/abs/2404.06654">arXiv:2404.06654</a>, 2024. Published at COLM 2024.</li>
-            <li id="ref-liu">Liu, N.F. et al. "Lost in the Middle: How Language Models Use Long Contexts." <a href="https://arxiv.org/abs/2307.03172">arXiv:2307.03172</a>, 2023. Published in TACL, 2024.</li>
-            <li id="ref-longmemeval">Wu, D. et al. "LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory." <a href="https://arxiv.org/abs/2410.10813">arXiv:2410.10813</a>, 2024. Published at ICLR 2025.</li>
-            <li id="ref-anthropic-harness">Anthropic. "How We Built Our Multi-Agent Research System." <a href="https://www.anthropic.com/engineering/built-multi-agent-research-system">Anthropic Engineering</a>, November 2025.</li>
-            <li id="ref-openai-agents">OpenAI. "Agents SDK." <a href="https://github.com/openai/openai-agents-python">GitHub</a>, 2025.</li>
-            <li id="ref-rcc">Huang, Y. et al. "Recurrent Context Compression: Efficiently Expanding the Context Window of LLM." <a href="https://arxiv.org/abs/2406.06110">arXiv:2406.06110</a>, 2024.</li>
-            <li id="ref-rag-mcp">Writer.com. "RAG-MCP: Mitigating Prompt Bloat in Tool-Augmented LLMs." <a href="https://arxiv.org/abs/2505.03275">arXiv:2505.03275</a>, 2025.</li>
+            <li id="ref-inngest">Inngest. “Five Critical Lessons for Context Engineering.” <a href="https://www.inngest.com/blog/five-lessons-for-context-engineering">inngest.com</a>, 2025.</li>
+            <li id="ref-ruler">Hsieh, C.-P. et al. “RULER: What’s the Real Context Size of Your Long-Context Language Models?” <a href="https://arxiv.org/abs/2404.06654">arXiv:2404.06654</a>, 2024. Published at COLM 2024.</li>
+            <li id="ref-liu">Liu, N.F. et al. “Lost in the Middle: How Language Models Use Long Contexts.” <a href="https://arxiv.org/abs/2307.03172">arXiv:2307.03172</a>, 2023. Published in TACL, 2024.</li>
+            <li id="ref-longmemeval">Wu, D. et al. “LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory.” <a href="https://arxiv.org/abs/2410.10813">arXiv:2410.10813</a>, 2024. Published at ICLR 2025.</li>
+            <li id="ref-anthropic-harness">Anthropic. “How We Built Our Multi-Agent Research System.” <a href="https://www.anthropic.com/engineering/built-multi-agent-research-system">Anthropic Engineering</a>, November 2025.</li>
+            <li id="ref-openai-agents">OpenAI. “Agents SDK.” <a href="https://github.com/openai/openai-agents-python">GitHub</a>, 2025.</li>
+            <li id="ref-rcc">Huang, Y. et al. “Recurrent Context Compression: Efficiently Expanding the Context Window of LLM.” <a href="https://arxiv.org/abs/2406.06110">arXiv:2406.06110</a>, 2024.</li>
+            <li id="ref-rag-mcp">Writer.com. “RAG-MCP: Mitigating Prompt Bloat in Tool-Augmented LLMs.” <a href="https://arxiv.org/abs/2505.03275">arXiv:2505.03275</a>, 2025.</li>
 
-            <li id="ref-letta-bench">Letta. "Context-Bench: Benchmarking Long-Horizon Agent Memory." <a href="https://www.letta.com/blog/context-bench">letta.com</a>, October 2025.</li>
-            <li id="ref-contextbench">Fournier, C. et al. "ContextBench: A Benchmark for Context Retrieval in Coding Agents." <a href="https://arxiv.org/abs/2602.05892">arXiv:2602.05892</a>, February 2026.</li>
-            <li id="ref-gemini-report">Google DeepMind. "Gemini 2.5: Our Most Intelligent AI Model." <a href="https://storage.googleapis.com/deepmind-media/gemini/gemini_v2_5_report.pdf">Technical Report</a>, 2025.</li>
-            <li id="ref-google-agents">Google. "Agent Development Kit: Build, Evaluate, and Deploy Agents." <a href="https://google.github.io/adk-docs/">google.github.io/adk-docs</a>, 2025.</li>
-            <li id="ref-huggingface-codeagent">HuggingFace. "Code Agents." <a href="https://huggingface.co/docs/smolagents/tutorials/code_agent">HuggingFace Docs</a>, 2025.</li>
-            <li id="ref-anthropic-caching">Anthropic. "Prompt Caching." <a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching">Anthropic Docs</a>, 2024.</li>
-            <li id="ref-openai-caching">OpenAI. "Prompt Caching." <a href="https://platform.openai.com/docs/guides/prompt-caching">OpenAI Docs</a>, 2024.</li>
-            <li id="ref-chroma">Hong, K., Troynikov, A., Huber, J. "Context Rot: How Increasing Input Tokens Impacts LLM Performance." <a href="https://research.trychroma.com/context-rot">Chroma Research</a>, July 2025.</li>
+            <li id="ref-letta-bench">Letta. “Context-Bench: Benchmarking Long-Horizon Agent Memory.” <a href="https://www.letta.com/blog/context-bench">letta.com</a>, October 2025.</li>
+            <li id="ref-contextbench">Fournier, C. et al. “ContextBench: A Benchmark for Context Retrieval in Coding Agents.” <a href="https://arxiv.org/abs/2602.05892">arXiv:2602.05892</a>, February 2026.</li>
+            <li id="ref-gemini-report">Google DeepMind. “Gemini 2.5: Our Most Intelligent AI Model.” <a href="https://storage.googleapis.com/deepmind-media/gemini/gemini_v2_5_report.pdf">Technical Report</a>, 2025.</li>
+            <li id="ref-google-agents">Google. “Agent Development Kit: Build, Evaluate, and Deploy Agents.” <a href="https://google.github.io/adk-docs/">google.github.io/adk-docs</a>, 2025.</li>
+            <li id="ref-huggingface-codeagent">HuggingFace. “Code Agents.” <a href="https://huggingface.co/docs/smolagents/tutorials/code_agent">HuggingFace Docs</a>, 2025.</li>
+            <li id="ref-anthropic-caching">Anthropic. “Prompt Caching.” <a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching">Anthropic Docs</a>, 2024.</li>
+            <li id="ref-openai-caching">OpenAI. “Prompt Caching.” <a href="https://platform.openai.com/docs/guides/prompt-caching">OpenAI Docs</a>, 2024.</li>
+            <li id="ref-chroma">Hong, K., Troynikov, A., Huber, J. “Context Rot: How Increasing Input Tokens Impacts LLM Performance.” <a href="https://research.trychroma.com/context-rot">Chroma Research</a>, July 2025.</li>
           </ol>
         </section>
 
       </article>
     </div>
 
-    <footer class="footer">
-      <a href="https://henryvu.io/">Portfolio</a> · <a href="https://x.com/HenryVu27">X</a> · <a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a> · <a href="https://github.com/HenryVu27">GitHub</a>
+    <footer class="post-footer">
+      <div class="dinkus" aria-hidden="true">&#x2767;</div>
+      <nav class="series-nav" aria-label="AI Engineering series">
+        <div class="contents">
+          <h2>AI Engineering</h2>
+          <ol>
+            <li><span class="n">1</span><span class="t">What Fills the Context Window</span><span class="when">this post</span></li>
+            <li class="soon"><span class="n">2</span><span class="t">RAG, From Retrieval to Reasoning</span><span class="when">coming soon</span></li>
+            <li class="soon"><span class="n">3</span><span class="t">Memory Engineering</span><span class="when">coming soon</span></li>
+            <li class="soon"><span class="n">4</span><span class="t">Building AI Agents</span><span class="when">coming soon</span></li>
+            <li class="soon"><span class="n">5</span><span class="t">Multi-Agent Systems</span><span class="when">coming soon</span></li>
+          </ol>
+        </div>
+      </nav>
+      <div class="colophon">
+        <p class="social"><a href="https://henryvu.io/">Portfolio</a><a href="https://x.com/HenryVu27">X</a><a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a><a href="https://github.com/HenryVu27">GitHub</a></p>
+      </div>
     </footer>
   </main>
 
@@ -1105,6 +918,6 @@ graph.add_edge("output_gate", END)</code></pre>
   <!-- Prism.js: syntax highlighting -->
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-  <script src="../../js/code-blocks.js"></script>
+  <script src="../../js/code-blocks.js?v=20261015"></script>
 </body>
 </html>

@@ -1,203 +1,131 @@
-/* Minimal, clean blog styles */
-/* Typeface: Century Expanded body + headings, Goudy Initialen drop caps */
+/* henryvu.blog: one Garamond for the prose, the system sans for everything inside a figure.
+   Fonts and tokens are shared with henryvu.io. */
 
-@import url('https://fonts.cdnfonts.com/css/goudy-initialen');
+/* ---------- Type ---------- */
+/* Static Latin + Greek subsets built by tools/subset_fonts.py; pages preload only 400. */
+@font-face { font-family: "EB Garamond"; src: url("../assets/fonts/ebgaramond-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "EB Garamond"; src: url("../assets/fonts/ebgaramond-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "EB Garamond"; src: url("../assets/fonts/ebgaramond-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "EB Garamond"; src: url("../assets/fonts/ebgaramond-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+/* Times New Roman scaled to Garamond's width and line metrics, so the swap does not move text */
+@font-face { font-family: "Garamond Fallback"; src: local("Times New Roman"), local("TimesNewRomanPSMT"); font-style: normal;
+  size-adjust: 95.2%; ascent-override: 105.8%; descent-override: 31.3%; line-gap-override: 0%; }
+@font-face { font-family: "Garamond Fallback"; src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT"); font-style: italic;
+  size-adjust: 95.2%; ascent-override: 105.8%; descent-override: 31.3%; line-gap-override: 0%; }
 
-@font-face {
-  font-family: "Century Expanded";
-  src: url("../Century Expanded Regular/Century Expanded Regular.otf") format("opentype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+/* ---------- Tokens ---------- */
+:root {
+  --bg: #f3eee3;        /* cream paper, same as henryvu.io */
+  --ink: #1d1a16;       /* headings */
+  --text: #2a2622;      /* body */
+  --text-2: #56504a;    /* subtitles, quotes, figure labels */
+  --muted: #6e675e;     /* metadata, captions */
+  --rule: #d5cfc3;      /* hairlines */
+  --tint: #ebe5d8;      /* code: the only filled surface on a page */
+  --accent: #7f2a1e;    /* vermillion: link hover, the one mark a figure is about */
+  --gold: #7a5c14;      /* ornament, focus ring */
+  --selection: #ecd9bd;
+
+  /* figure marks: most marks are pale, color goes to what the figure is about */
+  --mark: #ddd5c6;
+  --mark-strong: #b9ae9b;
+  --mark-accent: #b84a32;
+  --mark-accent-wash: #f0d9cf;
+
+  --serif: "EB Garamond", "Garamond Fallback", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --measure: 660px;
+  --wide: 880px;
+  --pad: clamp(20px, 5vw, 40px);
+  color-scheme: light;
 }
 
-:root{
-  --bg: #f3ebda;
-  --ink: #2a2118;
-  --text: #3f3428;
-  --muted: #6b5b48;
-  --accent: #2a2118;
-  --link: #2a2118;
-  --border: #d8cbb0;
-  --code-bg: #ebe0c9;
-  --vermillion: #7f2a1e;
-  --gold: #c9a84c;
-  --gold-deep: #7a5c14;
-  --manuscript-blue: #1a3a5c;
-  --font-serif: "Century Expanded", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-drop-cap: "Goudy Initialen", serif;
-  --font-display: "IM Fell English", "Iowan Old Style", Palatino, Georgia, serif;
-  --font-sc: "IM Fell English SC", "IM Fell English", Georgia, serif;
-  --font-ornament: "EB Garamond", var(--font-serif);
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; background: var(--bg); }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--serif); font-size: 21px; line-height: 1.6;
+  font-synthesis: none; font-kerning: normal;
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  font-variant-ligatures: common-ligatures;
 }
+::selection { background: var(--selection); color: var(--ink); }
+h1, h2, h3, h4 { color: var(--ink); font-weight: 500; text-wrap: balance; }
+p { text-wrap: pretty; }
+strong, b { font-weight: 600; }
+img { max-width: 100%; height: auto; }
 
-html,body{
-  margin:0;
-  padding:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family: var(--font-serif);
-  font-size: 21px;
-  font-weight: 500;
-  line-height:1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+a {
+  color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em;
+  text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+  transition: color .15s ease, text-decoration-color .15s ease;
 }
+a:hover { color: var(--accent); text-decoration-color: currentColor; }
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+button { font: inherit; color: inherit; }
 
-.page{
-  max-width: 600px;
-  margin: 80px auto 64px;
-  padding: 0 32px;
+code, kbd, pre, samp { font-family: var(--mono); font-variant-numeric: normal; font-variant-ligatures: none; }
+:not(pre) > code { font-size: .76em; color: var(--ink); background: var(--tint); padding: .12em .36em; border-radius: 3px; }
+pre {
+  font-size: 14px; line-height: 1.6; color: var(--ink); background: var(--tint);
+  margin: 1.4em 0; padding: 16px 18px; border-radius: 4px; overflow-x: auto;
 }
+pre code { font-size: inherit; background: none; padding: 0; }
 
-.title{
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: 44px;
-  font-weight: 300;
-  line-height: 1.2;
-  margin: 0 0 16px 0;
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2em 0; }
+.muted { color: var(--muted); }
+
+/* ---------- Page shell ---------- */
+.page { max-width: calc(var(--measure) + 2 * var(--pad)); margin: 0 auto; padding: 0 var(--pad) 72px; }
+
+/* running head: author on the left, the work on the right, like a book */
+.rh {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 20px; flex-wrap: wrap;
+  max-width: var(--measure); margin: 0 auto; padding: 26px 0 12px; border-bottom: 1px solid var(--rule);
+  font-variant-caps: small-caps; letter-spacing: .08em; font-size: 17px; color: var(--muted);
 }
+.rh a { color: inherit; text-decoration: none; }
+.rh a:hover, .rh .rh-name { color: var(--ink); }
+.rh-nav { display: flex; gap: 22px; flex-wrap: wrap; }
 
-h2{
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: 29px;
-  font-weight: 500;
-  margin: 24px 0 8px 0;
+.title { font-weight: 500; font-size: 46px; line-height: 1.08; letter-spacing: -.01em; margin: 0 0 14px; }
+.dek { font-style: italic; font-size: 22px; line-height: 1.45; color: var(--text-2); margin: 0; }
+.eyebrow { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 19px; color: var(--muted); margin: 0 0 10px; }
+
+/* colophon */
+.colophon { margin-top: 72px; text-align: center; color: var(--muted); font-variant-caps: small-caps; letter-spacing: .08em; font-size: 17px; line-height: 2; }
+.colophon p { margin: 0; }
+.colophon .social { display: flex; justify-content: center; gap: 26px; flex-wrap: wrap; }
+.colophon a { text-decoration: none; }
+.colophon a:hover { color: var(--ink); }
+.dinkus { text-align: center; font-size: 22px; line-height: 1; color: var(--gold); opacity: .8; margin: 0 0 20px; }
+
+/* ---------- Blog index: a contents page ---------- */
+.home .rh { justify-content: center; border-bottom: 0; }
+.home-header { padding: 88px 0 0; }
+.contents { margin-top: 64px; }
+.contents h2 { font-weight: 400; font-size: 19px; font-variant-caps: all-small-caps; letter-spacing: .1em; color: var(--muted); margin: 44px 0 6px; }
+.contents h2:first-child { margin-top: 0; }
+.contents ol { list-style: none; margin: 0; padding: 0; }
+.contents li { display: grid; grid-template-columns: 1.6em 1fr auto; column-gap: .5em; align-items: baseline; padding: 6px 0; }
+.contents .n { color: var(--muted); }
+.contents .t { font-weight: 500; color: var(--ink); }
+.contents .t a { text-decoration: none; }
+.contents .t a:hover { text-decoration: underline; }
+.contents .when { color: var(--muted); font-variant-caps: all-small-caps; letter-spacing: .06em; font-size: 19px; }
+.contents .soon .t { font-weight: 400; color: var(--muted); }
+
+/* ---------- 404 ---------- */
+.not-found { padding: 120px 0 0; text-align: center; }
+
+@media (max-width: 600px) {
+  body { font-size: 19px; }
+  .title { font-size: 36px; }
+  .dek { font-size: 20px; }
+  .home-header { padding-top: 56px; }
+  .contents li { grid-template-columns: 1.4em 1fr; }
+  .contents .when { grid-column: 2; }
 }
-
-.meta{
-  color: var(--muted);
-  font-size: 20px;
-  margin-bottom: 32px;
-}
-
-strong, b{
-  font-weight: 600;
-}
-
-hr{
-  border:0;
-  border-top:1px solid var(--border);
-  margin: 16px 0;
-}
-
-a{
-  color: var(--link);
-  text-decoration: none;
-  transition: color 150ms ease;
-}
-
-a:hover{
-  color: var(--vermillion);
-}
-
-ul,ol{
-  padding-left: 20px;
-}
-
-.list-tight{
-  list-style-type: disc;
-}
-
-.list-tight li{
-  margin: 12px 0;
-}
-
-code, pre, kbd{
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "Liberation Mono", monospace;
-}
-
-code{
-  background: var(--code-bg);
-  padding: 0 4px;
-  border-radius: 4px;
-  font-size: 0.82em;
-}
-
-pre{
-  background: var(--code-bg);
-  padding: 16px;
-  border-radius: 8px;
-  overflow:auto;
-  border: 1px solid var(--border);
-}
-
-.nav{
-  display:flex;
-  gap:16px;
-  align-items:center;
-  margin-bottom:32px;
-}
-
-.nav a{
-  color: var(--text);
-  text-decoration:none;
-}
-
-.nav a:hover{
-  color: var(--vermillion);
-}
-
-.back-btn{
-  font-size: 24px;
-  font-weight: 400;
-  color: var(--text);
-  text-decoration: none;
-  margin-bottom: 16px;
-  display: inline-block;
-}
-
-.back-btn:hover{
-  text-decoration: none;
-}
-
-.muted{color:var(--muted)}
-
-.toc{
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:12px 16px;
-  background:transparent;
-}
-
-.toc h2{
-  display: none;
-}
-
-.toc-section-number{
-  display: none;
-}
-
-.footer{
-  margin-top:64px;
-  color:var(--muted);
-  font-size:16px;
-  text-align:center;
-}
-
-
-
-/* ---- Blog index only (body.home): running head, small caps, fleuron, colophon ---- */
-.home .rh { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; flex-wrap: wrap;
-            padding: 0 0 14px; margin-bottom: 44px; border-bottom: 1px solid var(--border);
-            font-family: var(--font-sc); letter-spacing: .1em; font-size: 15px; color: var(--muted); }
-.home .rh a { color: inherit; text-decoration: none; }
-.home .rh a:hover, .home .rh .rh-name { color: var(--ink); }
-.home .rh-nav { display: flex; gap: 22px; flex-wrap: wrap; }
-.home .title { font-family: var(--font-display); font-weight: 400; font-size: 56px; line-height: 1; margin-bottom: 12px; }
-.home .meta { font-style: italic; margin-bottom: 40px; }
-.home h2 { font-family: var(--font-display); font-weight: 400; font-size: 34px; margin: 0 0 16px; }
-.home .series { font-family: var(--font-sc); letter-spacing: .1em; font-size: 16px; color: var(--muted); margin: 28px 0 6px; }
-.home .list-tight { list-style: none; padding-left: 0; }
-.home .list-tight li { position: relative; padding-left: 1rem; }
-.home .list-tight li::before { content: ""; position: absolute; left: 0; top: .72em; width: 3px; height: 3px; border-radius: 50%; background: var(--muted); opacity: .6; }
-.home .dinkus { text-align: center; font-family: var(--font-ornament); font-size: 22px; line-height: 1; color: var(--gold-deep); opacity: .8; margin: 36px 0 20px; }
-.home .footer { margin-top: 72px; font-family: var(--font-sc); letter-spacing: .1em; font-size: 14px; line-height: 2; }
-.home .footer hr { display: none; }
-.home .footer p { margin: 0; }
-.home .footer .social { display: flex; justify-content: center; gap: 26px; flex-wrap: wrap; }
-.home .footer a { color: inherit; text-decoration: none; }
-.home .footer a:hover { color: var(--ink); }

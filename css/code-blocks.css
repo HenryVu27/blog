@@ -1,112 +1,32 @@
-/* IDE-style code blocks with title bar and collapse */
+/* Code blocks: a faint tint and nothing else. The filename sits above the code as a small label. */
 
-.code-block {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin: 16px 0;
-  overflow: hidden;
-  background: var(--code-bg);
-}
+.code-block { margin: 1.6em 0; }
 
-/* Title bar (static label, not interactive) */
-.code-header {
-  display: flex;
-  align-items: center;
-  padding: 8px 14px;
-  background: var(--border);
-  border-bottom: 1px solid var(--border);
-  user-select: none;
-}
+.code-header { padding: 0 0 6px; user-select: none; }
+.code-filename { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 0; }
 
-.code-filename {
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "Liberation Mono", monospace;
-  font-size: 13px;
-  font-weight: 500;
-  color: #555;
-  letter-spacing: 0.01em;
-}
-
-/* Code body: animated via max-height */
 .code-body {
-  position: relative;
-  overflow: hidden;
+  position: relative; overflow: hidden; background: var(--tint); border-radius: 4px;
   transition: max-height 350ms ease;
 }
-
-/* Fade bottom edge of code when collapsed using CSS mask */
+/* fade the bottom edge while collapsed */
 .code-block.collapsed .code-body {
-  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
 }
 
-/* Arrow toggle (sits inside .code-block after .code-body, seamless) */
-.code-arrow {
-  display: flex;
-  justify-content: center;
-  padding: 2px 0 6px;
-  cursor: pointer;
-}
+.code-arrow { display: flex; justify-content: center; padding: 4px 0 0; cursor: pointer; }
+.code-arrow svg { width: 16px; height: 16px; color: var(--mark-strong); transition: color 150ms ease, transform 350ms ease; }
+.code-arrow:hover svg { color: var(--ink); }
+.code-block:not(.collapsed) .code-arrow svg { transform: rotate(180deg); }
 
-.code-arrow svg {
-  width: 16px;
-  height: 16px;
-  color: #aaa;
-  transition: color 150ms ease, transform 350ms ease;
-}
+.code-block pre { margin: 0; border: 0; border-radius: 0; background: transparent; padding: 16px 18px; font-size: 13.5px; line-height: 1.6; }
+.code-block pre code { background: transparent; padding: 0; border-radius: 0; font-size: inherit; }
 
-.code-arrow:hover svg {
-  color: #666;
-}
+.code-body pre::-webkit-scrollbar { height: 6px; }
+.code-body pre::-webkit-scrollbar-track { background: transparent; }
+.code-body pre::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
 
-/* Flip arrow when expanded */
-.code-block:not(.collapsed) .code-arrow svg {
-  transform: rotate(180deg);
-}
-
-/* Override global pre styles when inside .code-block */
-.code-block pre {
-  margin: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  padding: 16px;
-  font-size: 14px;
-  line-height: 1.55;
-}
-
-.code-block pre code {
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-  font-size: 14px;
-}
-
-/* Horizontal scrollbar styling */
-.code-body::-webkit-scrollbar {
-  height: 6px;
-}
-
-.code-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.code-body::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-/* Responsive: smaller padding on mobile */
 @media (max-width: 768px) {
-  .code-block pre {
-    padding: 12px;
-    font-size: 13px;
-  }
-
-  .code-header {
-    padding: 6px 12px;
-  }
-
-  .code-filename {
-    font-size: 12px;
-  }
+  .code-block pre { padding: 12px 14px; font-size: 12.5px; }
 }

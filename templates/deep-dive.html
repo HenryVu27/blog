@@ -3,25 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Deep Dive Title · Your Blog</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/styles.css">
-  <link rel="stylesheet" href="../css/post-styles.css">
-  <link rel="stylesheet" href="../css/deep-dive-layout.css">
-  <link rel="stylesheet" href="../css/components.css">
+  <title>Deep Dive Title · Henry Vu</title>
+  <link rel="preload" href="../assets/fonts/ebgaramond-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../css/styles.css?v=20261015">
+  <link rel="stylesheet" href="../css/post-styles.css?v=20261015">
+  <link rel="stylesheet" href="../css/deep-dive-layout.css?v=20261015">
+  <link rel="stylesheet" href="../css/components.css?v=20261015">
 </head>
 <body>
   <main class="page">
-    <nav class="nav">
-      <a href="../index.html" class="back-btn">←</a>
-    </nav>
+    <header class="rh">
+      <a class="rh-name" href="../index.html">Henry Vu</a>
+      <span>Series Name</span>
+    </header>
 
-    <header>
+    <header class="post-header">
+      <p class="eyebrow">Series Name, Part 1 of 3</p>
       <h1 class="title">Inside Algorithm Z</h1>
-      <div class="meta">Last updated: 2025-09-17 · 18 min read</div>
-      <hr>
+      <div class="post-meta"><time datetime="2025-09-17">17 September 2025</time><span class="dot">&middot;</span>18 min read</div>
     </header>
 
     <div class="layout">
@@ -29,46 +28,60 @@
         <div class="toc-sticky">
           <h2>Contents</h2>
           <ul>
-            <li><a href="#intro"><span class="toc-section-number">1</span><span class="toc-section-title">Introduction</span></a></li>
-            <li><a href="#theory"><span class="toc-section-number">2</span><span class="toc-section-title">Theory</span></a></li>
-            <li><a href="#impl"><span class="toc-section-number">3</span><span class="toc-section-title">Implementation</span></a></li>
-            <li><a href="#perf"><span class="toc-section-number">4</span><span class="toc-section-title">Performance</span></a></li>
-            <li><a href="#conclusion"><span class="toc-section-number">5</span><span class="toc-section-title">Conclusion</span></a></li>
+            <li><a href="#intro"><span class="toc-section-title">Introduction</span></a></li>
+            <li><a href="#theory"><span class="toc-section-title">Theory</span></a></li>
+            <li><a href="#impl"><span class="toc-section-title">Implementation</span></a></li>
+            <li><a href="#perf"><span class="toc-section-title">Performance</span></a></li>
+            <li><a href="#conclusion"><span class="toc-section-title">Conclusion</span></a></li>
           </ul>
         </div>
       </aside>
 
       <article class="post">
         <section id="intro">
-          <p>In this deep dive we focus on correctness, complexity, and design trade‑offs.</p>
+          <h2>Introduction</h2>
+          <p>In this deep dive we focus on correctness, complexity, and design trade-offs.</p>
         </section>
 
         <section id="theory">
           <h2>Theory</h2>
           <p>Outline the problem, assumptions, and notation. Include proofs or citations as needed.</p>
-          <pre><code>// Pseudocode
-function foo(input):
-  ensure invariants
-  return optimal_result</code></pre>
+          <div class="algorithm-box">
+            <h4>Algorithm 1: Foo</h4>
+            <ol>
+              <li><strong>Setup:</strong> ensure invariants</li>
+              <li><strong>Loop:</strong> return the optimal result</li>
+            </ol>
+          </div>
         </section>
 
         <section id="impl">
           <h2>Implementation Notes</h2>
-          <ul class="list-tight">
-            <li>Data structures and invariants</li>
-            <li>Error handling and edge cases</li>
-            <li>Parallelism and memory behavior</li>
-          </ul>
+          <div class="code-block" data-filename="foo.py" data-lang="python">
+<pre><code>def foo(xs):
+    return max(xs)</code></pre>
+          </div>
         </section>
 
         <section id="perf">
           <h2>Performance</h2>
           <p>Discuss complexity, empirical results, and bottlenecks.</p>
+          <figure class="fig">
+            <div class="fig-head">
+              <h4 class="fig-title">Latency by input size</h4>
+              <span class="fig-note">p50, milliseconds</span>
+            </div>
+            <ol class="bars">
+              <li><div class="row"><span class="label">Small N</span><span class="plot"><span class="bar" style="--w:3%"></span><span class="value">1.2 ms</span></span></div></li>
+              <li><div class="row"><span class="label">Large N</span><span class="plot"><span class="bar" style="--w:100%"></span><span class="value">42 ms</span></span></div></li>
+            </ol>
+            <figcaption>One sentence on what to look at, starting with the finding.</figcaption>
+          </figure>
           <table>
             <thead><tr><th>Case</th><th>Time</th><th>Notes</th></tr></thead>
             <tbody>
-              <tr><td>Small N</td><td>1.2ms</td><td>CPU bound</td></tr>
-              <tr><td>Large N</td><td>42ms</td><td>Cache misses dominate</td></tr>
+              <tr><td>Small N</td><td>1.2 ms</td><td>CPU bound</td></tr>
+              <tr><td>Large N</td><td>42 ms</td><td>Cache misses dominate</td></tr>
             </tbody>
           </table>
         </section>
@@ -80,10 +93,22 @@ function foo(input):
       </article>
     </div>
 
-    <footer class="footer">© Your Name · <a href="#">RSS</a></footer>
+    <footer class="post-footer">
+      <div class="dinkus" aria-hidden="true">&#x2767;</div>
+      <nav class="series-nav" aria-label="Series">
+        <div class="contents">
+          <h2>Series Name</h2>
+          <ol>
+            <li><span class="n">1</span><span class="t">Inside Algorithm Z</span><span class="when">this post</span></li>
+            <li class="soon"><span class="n">2</span><span class="t">Next Part</span><span class="when">coming soon</span></li>
+          </ol>
+        </div>
+      </nav>
+      <div class="colophon">
+        <p class="social"><a href="https://henryvu.io/">Portfolio</a><a href="https://x.com/HenryVu27">X</a><a href="https://www.linkedin.com/in/henry-vu27/">LinkedIn</a><a href="https://github.com/HenryVu27">GitHub</a></p>
+      </div>
+    </footer>
   </main>
-  
+  <script src="../js/code-blocks.js?v=20261015"></script>
 </body>
 </html>
-
-

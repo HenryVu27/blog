@@ -1,52 +1,122 @@
-/* Reusable post components */
-/* Series navigation, algorithm boxes, theorem boxes, etc. */
+/* Reusable post components. Everything inside a figure is set in the system sans, marks are pale,
+   and the one accent goes to whatever the figure is about. No boxes: space and hairlines separate. */
 
-.series-nav {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  margin: 24px 0 0 0;
+/* ---------- Figure frame ---------- */
+.fig {
+  margin-block: 2.6em; color: var(--text-2);
+  font-family: var(--sans); font-size: 14px; line-height: 1.45;
+  font-variant-numeric: lining-nums tabular-nums;
 }
-.series-nav h3 {
-  font-family: var(--font-serif);
-  margin: 0 0 12px 0;
-  font-size: 22px;
-  font-weight: 400;
-}
-.series-nav ul {
-  margin: 0;
-  padding-left: 20px;
-}
+.fig-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; margin: 0 0 18px; }
+.post .fig-title { font-family: var(--sans); font-size: 15px; font-weight: 600; line-height: 1.3; letter-spacing: -.005em; color: var(--ink); margin: 0; }
+.fig-note { font-size: 13px; color: var(--muted); }
+.fig-kicker { font-size: 13px; font-weight: 600; color: var(--ink); margin: 0 0 2px; }
+.fig .fig-caption, .fig figcaption { margin-top: 16px; }
+.fig .scroll-x { overflow-x: auto; }
 
-.algorithm-box {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  margin: 16px 0;
-  background: var(--code-bg);
-}
-.algorithm-box h4 {
-  font-family: var(--font-serif);
-  margin: 0 0 12px 0;
-  font-size: 19px;
-  font-weight: 500;
-}
+/* ---------- Bar rows: label, bar, value at the tip ---------- */
+.post .bars { list-style: none; margin: 0; padding: 0; }
+.post .bars li { margin: 0; padding: 0; }
+.bars .row { display: grid; grid-template-columns: 190px 1fr; align-items: center; column-gap: 16px; padding: 5px 0; color: inherit; text-decoration: none; }
+.bars .label { color: var(--ink); }
+.bars .plot { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.bars .bar { flex: none; width: calc(var(--w) * .8); min-width: 6px; height: 12px; background: var(--mark-strong); border-radius: 0 3px 3px 0; transition: background .15s ease; }
+.bars .bar.var { background: none; border: 1px dashed var(--mark-strong); border-left-style: solid; }
+.bars .value { flex: none; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.bars a.row:hover .bar:not(.var) { background: var(--mark-accent); }
+.bars a.row:hover .bar.var { border-color: var(--mark-accent); }
+.bars a.row:hover .label { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; }
 
-.theorem-box {
-  border-left: 3px solid var(--accent);
-  padding-left: 16px;
-  margin: 16px 0;
-  background: rgba(0,0,0,0.02);
-  border-radius: 0 8px 8px 0;
+/* ---------- Span rows: each bar sits at its place on one shared scale (a window filling up) ---------- */
+.post .spans { list-style: none; margin: 0; padding: 0; }
+.post .spans li { margin: 0; padding: 0; }
+.spans li, .spans-axis { display: grid; grid-template-columns: 170px minmax(0, 1fr) 52px 44px; column-gap: 14px; align-items: center; }
+.spans .label { padding: 5px 0; color: var(--ink); }
+.spans .track {
+  position: relative; align-self: stretch; border-right: 1px solid var(--rule);
+  background: repeating-linear-gradient(to right, var(--rule) 0 1px, transparent 1px 25%);
 }
+.spans .bar { position: absolute; top: 50%; left: var(--x); width: var(--w); min-width: 2px; height: 12px; margin-top: -6px; background: var(--mark-strong); border-radius: 2px; }
+.spans .bar.free { background: var(--bg); border: 1px dashed var(--mark-strong); }
+.spans .bar.key { background: var(--mark-accent); }
+.spans .value, .spans .pct { text-align: right; white-space: nowrap; }
+.spans .value { color: var(--ink); }
+.spans .pct { font-size: 13px; color: var(--muted); }
+.spans-axis { margin-top: 4px; font-size: 12px; color: var(--muted); }
+.spans-axis .ticks { grid-column: 2; position: relative; height: 1.3em; }
+.spans-axis .ticks span { position: absolute; left: var(--x); transform: translateX(-50%); }
+.spans-axis .ticks span:first-child { transform: none; }
+.spans-axis .ticks span:last-child { transform: translateX(-100%); }
 
-.duality-box {
-  border: 2px solid var(--accent);
-  border-radius: 8px;
-  padding: 16px;
-  margin: 16px 0;
-  background: rgba(0,0,0,0.02);
+/* ---------- Notes set under a figure, one per column ---------- */
+.fig-asides { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 28px; }
+.post .fig-asides p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--text-2); }
+.fig-asides strong { display: block; margin-bottom: 3px; color: var(--ink); font-weight: 600; }
+.fig-asides .swatch { display: inline-block; width: 9px; height: 9px; margin-right: 7px; border-radius: 2px; background: var(--mark-accent); }
+
+/* ---------- Flow diagram: hairline nodes, thin arrows ---------- */
+.flow { display: flex; align-items: center; justify-content: center; min-width: 640px; padding: 4px 0; }
+.flow-node { flex: none; padding: 9px 14px; text-align: center; border: 1px solid var(--mark-strong); border-radius: 3px; background: var(--bg); }
+.flow-node b { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.flow-node span { display: block; font-size: 12px; color: var(--muted); }
+.flow-node.key { border-color: var(--mark-accent); box-shadow: inset 0 0 0 1px var(--mark-accent); }
+.flow-stack { display: flex; flex-direction: column; gap: 8px; }
+.flow-arrow { flex: 1 1 18px; min-width: 18px; max-width: 40px; height: 1px; background: var(--mark-strong); position: relative; margin: 0 6px; }
+.flow-arrow::after { content: ""; position: absolute; right: -1px; top: -3px; border: 3.5px solid transparent; border-left: 6px solid var(--mark-strong); border-right: 0; }
+.flow-aside { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 18px; margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--mark-strong); font-size: 12.5px; color: var(--muted); }
+.flow-aside b { font-weight: 600; color: var(--text-2); }
+
+/* ---------- Segment strips (prompt layouts, cache prefixes) ---------- */
+.strip-group + .strip-group { margin-top: 22px; }
+.strip-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.strip { display: flex; gap: 2px; }
+.seg { flex: 1 1 auto; padding: 7px 8px; text-align: center; background: var(--mark); color: var(--ink); font-size: 12.5px; font-weight: 500; }
+.seg:first-child { border-radius: 3px 0 0 3px; }
+.seg:last-child { border-radius: 0 3px 3px 0; }
+.seg small { display: block; font-size: 11px; font-weight: 400; color: var(--text-2); }
+.seg.wide-seg { flex-grow: 1.6; }
+.seg.dim { color: var(--muted); }
+.seg.cached { background: var(--mark-strong); }
+.seg.cached small { color: var(--ink); }
+.seg.hot { background: var(--mark-accent); color: #fff; }
+.seg.hot small { color: #f6e3dc; }
+.strip-note { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+
+/* ---------- Algorithm and definition boxes: rules, not boxes ---------- */
+.algorithm-box { margin: 2em 0; padding: 0 0 6px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.post .algorithm-box > h4 {
+  margin: 0 0 12px; padding: 10px 0 9px; border-bottom: 1px solid var(--rule);
+  font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: .02em; color: var(--ink);
 }
+.algorithm-box > :last-child { margin-bottom: 10px; }
+/* a titled table: the header row's rule does the job of the title rule */
+.post .algorithm-box > h4:has(+ table) { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+.post .algorithm-box > table { margin: 0; border: 0; }
+.algorithm-box > table:last-child { margin-bottom: 0; }
 
-.edit-green { background: #e6ffed; border-radius: 3px; padding: 0 2px; }
+.edit-green { background: #e3ead2; border-radius: 2px; padding: 0 2px; }
+
+/* ---------- Series list at the end of a post ---------- */
+.series-nav { margin: 0; }
+.series-nav .contents { margin-top: 0; }
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 760px) {
+  .fig-asides { grid-template-columns: 1fr; gap: 16px; }
+}
+@media (max-width: 600px) {
+  .bars .row { grid-template-columns: 1fr; row-gap: 3px; padding: 6px 0; }
+  .spans li { grid-template-columns: minmax(0, 1fr) auto auto; row-gap: 3px; padding: 6px 0 10px; }
+  .spans .label { padding: 0; }
+  /* gridlines would break between stacked rows: show each row's whole window as one hairline instead */
+  .spans .track { grid-column: 1 / -1; grid-row: 2; height: 12px; border-right: 0; background: linear-gradient(var(--rule), var(--rule)) center / 100% 1px no-repeat; }
+  .spans-axis { grid-template-columns: minmax(0, 1fr); }
+  .spans-axis .ticks { grid-column: 1; }
+  .fig .scroll-x { overflow-x: visible; }
+  .flow { flex-direction: column; min-width: 0; }
+  .flow-stack { flex-direction: row; }
+  .flow-arrow { flex: none; width: 1px; min-width: 0; height: 18px; max-width: none; margin: 6px 0; }
+  .flow-arrow::after { right: -3px; top: auto; bottom: -1px; border: 3.5px solid transparent; border-top: 6px solid var(--mark-strong); border-bottom: 0; }
+  .seg { padding: 6px 4px; font-size: 11px; }
+  .seg small { font-size: 10px; }
+}

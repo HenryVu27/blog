@@ -1,1 +1,12 @@
-.claude/.DS_Store
+.DS_Store
+
+# Working files kept locally, not published
+.claude/
+CLAUDE.md
+2507.13334v2.pdf
+series/*/*-research.md
+series/*/*.draft.html
+series/*/carousel.html
+series/*/carousel-slides/
+series/*/capture-carousel.py
+series/*/substack-*

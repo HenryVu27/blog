@@ -18,7 +18,7 @@
       <title>Multi-Armed Bandits: Foundations</title>
       <link>https://www.henryvu.blog/series/bandits/part1.html</link>
       <guid>https://www.henryvu.blog/series/bandits/part1.html</guid>
-      <pubDate>Mon, 24 Feb 2026 00:00:00 GMT</pubDate>
+      <pubDate>Wed, 17 Sep 2025 00:00:00 GMT</pubDate>
       <description>Deep dive into the exploration-exploitation tradeoff. Covers regret, finite-armed stochastic bandits, concentration inequalities, Explore-then-Commit, and Upper Confidence Bound (UCB) with interactive visualizations.</description>
     </item>
   </channel>

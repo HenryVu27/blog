@@ -10,7 +10,7 @@ This blog publishes long-form, citation-dense technical articles about AI/ML eng
 
 ## Author
 
-Henry Vu - AI/ML Engineer
+Henry Vu, Machine Learning Engineer
 - Website: https://www.henryvu.blog
 - Portfolio: https://henryvu.io/
 - LinkedIn: https://www.linkedin.com/in/henry-vu27/
